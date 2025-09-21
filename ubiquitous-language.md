@@ -5,12 +5,12 @@
 
 ## Core Domain Terms
 
-### Investment Entities
+### Basic Entities
 
-**Position**
-- Definition: A holding of a specific security (stock, ETF, or bond) aggregated across all accounts
-- Attributes: Security identifier, total quantity, average cost basis, current value
-- Example: "100 shares of Apple stock with average cost of $150"
+**Account**
+- Definition: A brokerage account holding investments
+- Note: Account type (IKE, IKZE, normal) is tracked but doesn't affect calculations
+- Attributes: Account name, broker name, account identifier
 
 
 
@@ -21,10 +21,12 @@
 
 
 
-**Account**
-- Definition: A brokerage account holding investments
-- Note: Account type (IKE, IKZE, normal) is tracked but doesn't affect calculations
-- Attributes: Account name, broker name, account identifier
+### Aggregated Concepts
+
+**Position**
+- Definition: A holding of a specific security (stock, ETF, or bond) aggregated across all accounts
+- Attributes: Security identifier, total quantity, average cost basis, current value
+- Example: "100 shares of Apple stock with average cost of $150"
 
 
 
@@ -35,7 +37,14 @@
 
 
 
-### Financial Metrics
+### Basic Financial Metrics
+
+**Invested Amount**
+- Definition: The total amount of money originally spent to acquire positions
+- Based on: Average cost method for calculations
+- Currency: PLN
+
+
 
 **Current Value**
 - Definition: The present market value of a position or portfolio
@@ -44,12 +53,7 @@
 
 
 
-**Invested Amount**
-- Definition: The total amount of money originally spent to acquire positions
-- Based on: Average cost method for calculations
-- Currency: PLN
-
-
+### Calculated Metrics
 
 **Unrealized P&L (Profit & Loss)**
 - Definition: The gain or loss on positions that haven't been sold yet
@@ -79,20 +83,20 @@
 
 
 
-### Transactions & Activities
+### Operations
+
+**Import**
+- Definition: Process of loading position or transaction data into the system
+- Sources: Broker CSV files or manual entry
+- Purpose: Initial data population and updates
+
+
 
 **Transaction**
 - Definition: A recorded buy or sell action for a security
 - Types: Buy, Sell
 - Attributes: Date, security, quantity, price, account
 - Note: Dividends excluded from MVP scope
-
-
-
-**Import**
-- Definition: Process of loading position or transaction data into the system
-- Sources: Broker CSV files or manual entry
-- Purpose: Initial data population and updates
 
 
 
