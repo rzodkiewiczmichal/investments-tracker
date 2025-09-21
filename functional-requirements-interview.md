@@ -51,7 +51,7 @@
 
 **Q:** What are the main actions you perform? (buy, sell, dividends, transfers between accounts)
 
-**A:** Only buy, sell, dividends
+**A:** Only buy, sell, dividends (Note: Later clarified - only tracking current positions, not historical sells)
 
 
 
@@ -205,6 +205,12 @@
 **Q:** When you buy/sell the same stock multiple times, do you need to track each purchase separately (lots) or just the total position?
 
 **A:** Just the total position, no need to track individual lots. Not even sure this is needed, MVP of my system is: import all my owned positions from brokers, show me total
+
+
+
+**Q:** Do you need to track instruments you sold and no longer own?
+
+**A:** No, I only care about what I currently own. No need to track historical positions or realized gains from past sales
 
 
 

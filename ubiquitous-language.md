@@ -55,23 +55,16 @@
 
 ### Calculated Metrics
 
-**Unrealized P&L (Profit & Loss)**
-- Definition: The gain or loss on positions that haven't been sold yet
-- Formula: Current Value - Invested Amount (for held positions)
+**P&L (Profit & Loss)**
+- Definition: The gain or loss on current positions
+- Formula: Current Value - Invested Amount
 - Display: Amount in PLN and percentage
 
 
 
-**Realized P&L**
-- Definition: The actual gain or loss from positions that have been sold
-- Calculation Method: Average cost basis
-- Display: Amount in PLN
-
-
-
 **Total Return**
-- Definition: The overall gain or loss including both realized and unrealized
-- Formula: (Current Value + Realized P&L) - Total Invested Amount
+- Definition: The overall gain or loss on current holdings
+- Formula: Current Value - Total Invested Amount
 - Display: Amount in PLN and percentage
 
 
@@ -93,10 +86,10 @@
 
 
 **Transaction**
-- Definition: A recorded buy or sell action for an instrument
-- Types: Buy, Sell
+- Definition: A recorded buy action for an instrument
+- Types: Buy only (sells not tracked - only current positions matter)
 - Attributes: Date, instrument, quantity, price, account
-- Note: Dividends excluded from MVP scope
+- Note: Sell transactions and dividends excluded from scope
 
 
 
