@@ -6,6 +6,15 @@ Feature: Data Import
   I want to import position data from brokers
   So that the system has current investment information
 
+  # NOTE: Each broker has a different export format
+  # TODO: Add specific scenarios for each broker's format once samples are provided:
+  # - Broker A format (to be defined)
+  # - Broker B format (to be defined)
+  # - Broker C format (to be defined)
+  # - IKE account format (to be defined)
+  # - IKZE account format (to be defined)
+  # - Polish Government Bonds account format (to be defined)
+
   Scenario: Import positions from CSV file
     Given I have a CSV file from "Broker A" with position data
     And the CSV contains:
