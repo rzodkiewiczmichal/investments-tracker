@@ -14,19 +14,19 @@
 
 
 
-**Security**
+**Instrument**
 - Definition: A tradeable financial instrument (stock, ETF, or Polish government bond)
 - Types: Stock, Stock ETF, Bond ETF, Polish Government Bond
-- Attributes: Symbol/identifier, name, security type, current price
+- Attributes: Symbol/identifier, name, instrument type, current price
 
 
 
 ### Aggregated Concepts
 
 **Position**
-- Definition: A holding of a specific security (stock, ETF, or bond) aggregated across all accounts
-- Attributes: Security identifier, total quantity, average cost basis, current value
-- Example: "100 shares of Apple stock with average cost of $150"
+- Definition: A holding of a specific instrument (stock, ETF, or bond) aggregated across all accounts
+- Attributes: Instrument identifier, total quantity, average cost basis, current value
+- Example: "100 shares of Apple stock with average cost of 600 PLN"
 
 
 
@@ -93,9 +93,9 @@
 
 
 **Transaction**
-- Definition: A recorded buy or sell action for a security
+- Definition: A recorded buy or sell action for an instrument
 - Types: Buy, Sell
-- Attributes: Date, security, quantity, price, account
+- Attributes: Date, instrument, quantity, price, account
 - Note: Dividends excluded from MVP scope
 
 
@@ -130,7 +130,7 @@
 
 ## Business Rules
 
-1. **Aggregation Rule**: All positions in the same security across different accounts are combined into a single position view
+1. **Aggregation Rule**: All positions in the same instrument across different accounts are combined into a single position view
 
 2. **Cost Basis Rule**: Average cost method is used for all profit/loss calculations
 
