@@ -15,65 +15,78 @@ Feature: Data Import
   # - IKZE account format (to be defined)
   # - Polish Government Bonds account format (to be defined)
 
-  Scenario: Import positions from CSV file
-    Given I have a CSV file from "Broker A" with position data
-    And the CSV contains:
-      | Instrument | Quantity | Average Cost | Current Price |
-      | Apple      | 100      | 600         | 650          |
-      | Microsoft  | 50       | 1200        | 1300         |
-    When I import the CSV file
-    Then the system should create 2 positions
-    And the position for "Apple" should have 100 shares at 600 PLN average cost
-    And the position for "Microsoft" should have 50 shares at 1200 PLN average cost
-    And I should see a success message "Imported 2 positions from Broker A"
+  # Generic import scenario (format will be replaced with specific broker formats)
+  Scenario: Import positions from broker file
+    Given I have an export file from "Broker A" with position data
+    And the file contains valid position data
+    When I import the file
+    Then the positions should be created in the system
+    And I should see a success message "Import completed successfully"
 
-  Scenario: Import positions from multiple brokers
-    Given I have already imported positions from "Broker A"
-    And "Broker A" has 50 shares of "Apple" at 600 PLN
-    When I import positions from "Broker B"
-    And "Broker B" has 30 shares of "Apple" at 620 PLN
-    Then the aggregated position for "Apple" should have 80 shares
-    And the average cost should be 607.50 PLN
+  # NOTE: Import is one-time operation in MVP - no updates via import
 
-  Scenario: Manual position entry
-    Given I want to manually add a position
-    When I enter the following position data:
-      | Field         | Value           |
-      | Instrument    | Tesla           |
-      | Quantity      | 25              |
-      | Average Cost  | 800             |
-      | Account       | Broker C        |
-    Then a new position for "Tesla" should be created
-    And the position should have 25 shares at 800 PLN average cost
+  # Validation Scenarios for Required Fields
 
-  Scenario: Import validation - missing required fields
-    Given I have a CSV file with missing quantity data
-    When I try to import the CSV file
-    Then I should see an error message "Import failed: Quantity is required"
+  Scenario: Import validation - missing instrument identifier
+    Given I have an import file with a row missing instrument name
+    When I try to import the file
+    Then I should see an error "Row 2: Instrument identifier is required"
     And no positions should be created
 
-  Scenario: Import validation - negative values
-    Given I have a CSV file with negative quantity
-    When I try to import the CSV file
-    Then I should see an error message "Import failed: Quantity must be positive"
+  Scenario: Import validation - missing quantity
+    Given I have an import file with a row missing quantity
+    When I try to import the file
+    Then I should see an error "Row 3: Quantity is required"
     And no positions should be created
 
-  Scenario: Update existing positions
-    Given I have an existing position of 100 shares of "Apple" at 600 PLN
-    When I import updated data with 120 shares of "Apple" at 610 PLN
-    Then the position for "Apple" should be updated to 120 shares
-    And the average cost should be 610 PLN
-    And I should see a message "Updated 1 position"
+  Scenario: Import validation - missing account identifier
+    Given I have an import file without account information
+    When I try to import the file
+    Then I should see an error "Account identifier is required"
+    And no positions should be created
 
-  Scenario: Import Polish government bonds
-    Given I have bond data to import
-    When I import the following bond position:
-      | Field           | Value                    |
-      | Instrument Type | Polish Government Bond   |
-      | Series          | EDO0435                  |
-      | Invested Amount | 100000                   |
-      | Current Value   | 103500                   |
-      | Account         | Government Bonds Account |
-    Then a bond position should be created
-    And the position should show invested amount of 100000 PLN
-    And the position should show current value of 103500 PLN
+  Scenario: Import validation - invalid quantity (negative)
+    Given I have an import file with quantity "-50"
+    When I try to import the file
+    Then I should see an error "Row 2: Quantity must be positive"
+    And no positions should be created
+
+  Scenario: Import validation - invalid quantity (zero)
+    Given I have an import file with quantity "0"
+    When I try to import the file
+    Then I should see an error "Row 2: Quantity must be greater than zero"
+    And no positions should be created
+
+  Scenario: Import validation - invalid quantity (non-numeric)
+    Given I have an import file with quantity "ABC"
+    When I try to import the file
+    Then I should see an error "Row 2: Quantity must be a number"
+    And no positions should be created
+
+  Scenario: Import validation - invalid average cost
+    Given I have an import file with average cost "-100"
+    When I try to import the file
+    Then I should see an error "Row 2: Average cost must be positive"
+    And no positions should be created
+
+  Scenario: Import with missing optional fields
+    Given I have an import file with:
+      | Instrument | Quantity | Account  |
+      | Apple      | 100      | Broker A |
+      | Microsoft  | 50       | Broker A |
+    And average cost is not provided
+    When I import the file
+    Then positions should be created without cost basis
+    And I should see a warning "2 positions imported without average cost - manual entry required"
+
+  Scenario: Import aggregation across accounts
+    Given I import file from "Broker A" with 50 shares of "Apple"
+    And I import file from "Broker B" with 30 shares of "Apple"
+    When I view my portfolio
+    Then I should see a single position for "Apple" with 80 shares
+
+  Scenario: Import duplicate prevention
+    Given I have already imported data from "Broker A"
+    When I try to import the same file again
+    Then I should see a message "This file has already been imported"
+    And no duplicate positions should be created

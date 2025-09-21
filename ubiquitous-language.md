@@ -79,9 +79,16 @@
 ### Operations
 
 **Import**
-- Definition: Process of loading position or transaction data into the system
-- Sources: Broker CSV files or manual entry
-- Purpose: Initial data population and updates
+- Definition: Process of loading position data into the system (one-time operation in MVP)
+- Sources: Broker export files in various formats
+- Purpose: Initial data population only (no updates in MVP)
+- Required Fields:
+  - **Instrument Identifier** (name, ticker, or ISIN)
+  - **Quantity** (number of shares/units owned)
+  - **Account Identifier** (to track which broker/account)
+- Optional Fields (can be calculated or updated later):
+  - **Average Cost** (if not provided, needs manual entry)
+  - **Current Price** (can be updated separately)
 
 
 
