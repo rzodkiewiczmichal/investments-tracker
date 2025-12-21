@@ -101,33 +101,40 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ### Version 0.2 - "Multi-Account Aggregation"
 
-**Goal:** Prove the core business value - aggregating positions across multiple accounts
+**Goal:** Prove the core business value - aggregating positions across multiple accounts with real-time pricing
 
 **Functional Scope:**
 - Multiple account support
 - Position aggregation across accounts (same instrument in different accounts)
 - Account-level and aggregated views
 - Add first CSV import adapter (choose simplest broker format)
+- Automatic price fetching from Yahoo Finance API during import
+- Display last price refresh timestamp in portfolio
 
-**Requirements in Scope:** 13 new FRs + 1 new NFR (33 FRs total, 38 NFRs total)
+**Requirements in Scope:** 18 new FRs + 1 new NFR (38 FRs total, 38 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
 **Key Capabilities:**
 - Multi-account position aggregation
 - First CSV import format support
+- Yahoo Finance API integration for current prices
+- Price validation and error handling
 - Account-level and aggregated portfolio views
 - Enhanced average cost calculation across accounts
+- Last price refresh date display
 
 **Out of Scope:**
 - XIRR calculations (deferred to v0.3)
 - Additional broker formats (deferred to v0.5)
-- Price management (deferred to v0.4)
+- Automated daily price updates (deferred to v2.1)
 - Polish government bonds (deferred to v0.6)
 - Reconciliation (deferred to v0.7)
 
 **Non-Functional Scope:**
 - Import validation framework
+- Yahoo Finance API integration
+- API error handling and retry logic
 - Enhanced test coverage for aggregation logic
 - Performance testing with 50+ positions
 
@@ -135,22 +142,28 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Multi-account position aggregation logic
 - Import domain service
 - Broker format adapter pattern
+- Price value object with timestamp
+- Yahoo Finance API adapter (port & adapter)
 
 
 **Success Criteria:**
 - ✅ Can track positions in 3-5 different accounts
 - ✅ Same instrument in multiple accounts aggregates correctly
 - ✅ Can import positions from 1 broker format
+- ✅ Prices automatically fetched from Yahoo Finance during import
+- ✅ Portfolio displays last price refresh timestamp
 - ✅ Import validation catches all error cases
+- ✅ API errors handled gracefully with clear error messages
 - ✅ Average cost calculation works correctly across accounts
 
-**Complexity:** Medium
+**Complexity:** Medium-High (added API integration)
 
 
 **Key Learning Objectives:**
 - DDD aggregation patterns
-- Adapter pattern for imports
+- Adapter pattern for imports and external APIs
 - Cross-aggregate calculations
+- External API integration and error handling
 
 ---
 
@@ -206,61 +219,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 0.4 - "Price Management"
-
-**Goal:** Enable easy price updates and value tracking
-
-**Functional Scope:**
-- Manual price update UI for individual instruments
-- Bulk price update via CSV import
-- Price history tracking (for audit purposes)
-- Automatic portfolio recalculation on price changes
-
-**Requirements in Scope:** 5 new FRs + 1 new NFR (42 FRs total, 39 NFRs total)
-
-> See `planning/requirements-by-version.md` for complete requirement ID mapping
-
-**Key Capabilities:**
-- Manual price updates (single instrument)
-- Bulk price updates via CSV
-- Price history tracking and audit trail
-- Automatic portfolio recalculation on price changes
-
-**Out of Scope:**
-- Automated price updates via API (deferred to v2.1)
-- Price update history view (deferred to v1.0)
-- Polish government bonds (deferred to v0.6)
-- Reconciliation (deferred to v0.7)
-- Additional broker formats (deferred to v0.5)
-
-**Non-Functional Scope:**
-- Price data validation
-- Audit trail for price changes
-- Price history storage and retrieval
-
-**Domain Model Changes:**
-- Price value object with history
-- Price update domain events
-- Price import adapter
-
-
-**Success Criteria:**
-- ✅ Can update price for single instrument via UI
-- ✅ Can import 50+ prices via CSV in one operation
-- ✅ Price changes trigger portfolio recalculation
-- ✅ Price history is auditable
-- ✅ Invalid prices are rejected with clear errors
-
-**Complexity:** Small-Medium
-
-**Key Learning Objectives:**
-- Domain events
-- Audit trail implementation
-- Event-driven recalculation
-
----
-
-### Version 0.5 - "Complete Import Coverage"
+### Version 0.4 - "Complete Import Coverage"
 
 **Goal:** Support all 6 broker formats
 
@@ -270,7 +229,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Import preview before commit
 - Import history tracking
 
-**Requirements in Scope:** 0 new FRs (extends FR-021) + 0 new NFRs (extends NFR-046) (42 FRs total, 39 NFRs total)
+**Requirements in Scope:** 0 new FRs (extends FR-021) + 0 new NFRs (extends NFR-046) (38 FRs total, 38 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
@@ -281,9 +240,9 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Comprehensive format validation
 
 **Out of Scope:**
-- Import duplicate prevention (deferred to v1.0)
-- Polish government bonds (deferred to v0.6)
-- Reconciliation (deferred to v0.7)
+- Import duplicate prevention (deferred to v0.7)
+- Polish government bonds (deferred to v0.5)
+- Reconciliation (deferred to v0.6)
 
 **Non-Functional Scope:**
 - Character encoding handling (Polish characters)
@@ -313,7 +272,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 0.6 - "Polish Government Bonds Support"
+### Version 0.5 - "Polish Government Bonds Support"
 
 **Goal:** Support all instrument types user owns
 
@@ -323,20 +282,19 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Manual entry for bonds
 - Bond value updates
 
-**Requirements in Scope:** 3 new FRs + 0 new NFRs (45 FRs total, 39 NFRs total)
+**Requirements in Scope:** 2 new FRs + 0 new NFRs (40 FRs total, 38 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
 **Key Capabilities:**
 - Polish government bonds support
 - Bond-specific valuation (held to maturity)
-- Manual entry and value updates for bonds
+- Manual entry for bonds (constant pricing logic)
 - Complete instrument type coverage
 
 **Out of Scope:**
-- Import duplicate prevention (deferred to v1.0)
-- Price update history (deferred to v1.0)
-- Reconciliation (deferred to v0.7)
+- Import duplicate prevention (deferred to v0.7)
+- Reconciliation (deferred to v0.6)
 
 **Non-Functional Scope:**
 - Bond-specific validation rules
@@ -363,7 +321,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 0.7 - "Reconciliation"
+### Version 0.6 - "Reconciliation"
 
 **Goal:** Data accuracy verification against broker statements
 
@@ -374,7 +332,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Reconciliation tolerance settings
 - Reconciliation history
 
-**Requirements in Scope:** 5 new FRs + 0 new NFRs (50 FRs total, 39 NFRs total)
+**Requirements in Scope:** 5 new FRs + 0 new NFRs (45 FRs total, 38 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
@@ -385,9 +343,8 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Reconciliation tolerance configuration
 
 **Out of Scope:**
-- Reconciliation history view (deferred to v1.0)
-- Import duplicate prevention (deferred to v1.0)
-- Price update history (deferred to v1.0)
+- Reconciliation history view (deferred to v0.7)
+- Import duplicate prevention (deferred to v0.7)
 
 **Non-Functional Scope:**
 - Reconciliation report generation
@@ -416,7 +373,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 1.0 - "Feature Complete Local Version"
+### Version 0.7 - "Feature Complete Local Version"
 
 **Goal:** Production-ready for personal daily use (local deployment)
 
@@ -426,21 +383,20 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - User documentation
 - Backup and restore procedures
 
-**Requirements in Scope:** 3 new FRs + 2 updated NFRs (54 FRs total, 41 NFRs total)
+**Requirements in Scope:** 2 new FRs + 2 updated NFRs (47 FRs total, 40 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
 **Key Capabilities:**
 - Import duplicate prevention
-- Price update history view
 - Reconciliation history view
 - Production-ready polish and refinement
 - Complete test coverage (85%+)
 - Performance validated for 500 positions
 
 **Out of Scope:**
-- Cloud deployment (deferred to v2.0)
-- Automated price updates (deferred to v2.1)
+- Cloud deployment (deferred to v1.0)
+- Automated daily price updates (deferred to v1.1)
 - Partial sales tracking (deferred to future)
 
 **Non-Functional Scope:**
@@ -472,7 +428,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 2.0 - "Cloud Deployment"
+### Version 1.0 - "Cloud Deployment"
 
 **Goal:** Migrate to cloud infrastructure with authentication
 
@@ -481,7 +437,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Authentication mechanism (OAuth2, basic auth, or other)
 - User profile management
 
-**Requirements in Scope:** 0 new FRs + 9 new NFRs (54 FRs total, 50 NFRs total)
+**Requirements in Scope:** 0 new FRs + 9 new NFRs (47 FRs total, 49 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
@@ -494,7 +450,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 - Production cloud monitoring
 
 **Out of Scope:**
-- Automated price updates (deferred to v2.1)
+- Automated daily price updates (deferred to v1.1)
 - Mobile responsiveness (optional future)
 - Accessibility features (optional future)
 - Export capabilities (optional future)
@@ -533,25 +489,25 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 2.1 - "Automated Price Updates"
+### Version 1.1 - "Automated Daily Price Updates"
 
-**Goal:** Eliminate manual price updates via API integration
+**Goal:** Automated daily price refresh without user intervention
 
 **Functional Scope:**
-- Integration with free price API (Yahoo Finance, Alpha Vantage, or similar)
-- Scheduled daily price updates
-- API error handling and fallback
-- Price source configuration
+- Scheduled daily price updates from Yahoo Finance API
+- Background job scheduling
+- Price refresh for all instruments
+- Error notification and retry logic
 
-**Requirements in Scope:** 0 new FRs + 1 enhanced NFR (54 FRs total, 50 NFRs total)
+**Requirements in Scope:** 0 new FRs + 1 enhanced NFR (47 FRs total, 49 NFRs total)
 
 > See `planning/requirements-by-version.md` for complete requirement ID mapping
 
 **Key Capabilities:**
-- Automated daily price updates via API
+- Automated daily price refresh (scheduled job)
 - API rate limit handling
-- Price source adapter pattern
-- Fallback to manual updates
+- Error notification system
+- Price update history tracking
 
 **Out of Scope:**
 - Partial sales tracking (optional future)
@@ -579,7 +535,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Version 2.2 - "Advanced Analytics"
+### Version 1.2 - "Advanced Analytics"
 
 **Goal:** Portfolio allocation and risk metrics
 
@@ -609,7 +565,7 @@ This roadmap defines a clear versioning strategy that resolves conflicts between
 
 ---
 
-### Future Versions (3.0+) - Ideas Only
+### Future Versions (2.0+) - Ideas Only
 
 **Potential Features:**
 - Multi-currency support (full implementation)

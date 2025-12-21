@@ -304,70 +304,56 @@ Requirements are organized into the following categories:
 
 ## 5. Price Management
 
-### FR-051: Manual Price Update for Single Instrument
+### FR-051: Fetch Prices from Yahoo Finance API
 **Category:** Price Management
 **Priority:** Must Have
-**Description:** User can update the current price for a single instrument, triggering automatic recalculation of position and portfolio values.
-**Related Scenarios:** Manual price update for single instrument
+**Description:** System fetches current market prices from Yahoo Finance API during position import and stores them in database, enabling portfolio valuation calculations.
+**Related Scenarios:** Import positions with API price fetch
 **Cucumber Tags:** @FR-051
-**Dependencies:** FR-011
-**Target Version:** v0.4
+**Dependencies:** FR-021
+**Target Version:** v0.2
 
-### FR-052: Bulk Price Update from File
+### FR-052: ~~Bulk Price Update from File~~ [DELETED]
+**Status:** REMOVED - Manual price updates replaced by API-based approach
+
+### FR-053: Price Changes Affect Portfolio Metrics
 **Category:** Price Management
 **Priority:** Must Have
-**Description:** User can import a CSV file containing prices for multiple instruments, updating all prices in a single operation and recalculating portfolio values.
-**Related Scenarios:** Bulk price update from file
-**Cucumber Tags:** @FR-052
-**Dependencies:** FR-051
-**Target Version:** v0.4
-
-### FR-053: Price Update Affects Portfolio Metrics
-**Category:** Price Management
-**Priority:** Must Have
-**Description:** When instrument price is updated, system automatically recalculates affected position values and portfolio-level metrics (P&L, return percentage).
-**Related Scenarios:** Manual price update for single instrument
-- Bulk price update from file
-- Price update affects portfolio metrics
+**Description:** When prices are fetched from API and stored, system automatically recalculates affected position values and portfolio-level metrics (P&L, return percentage).
+**Related Scenarios:** Import positions with API price fetch
 **Cucumber Tags:** @FR-053
 **Dependencies:** FR-051, FR-001
-**Target Version:** v0.4
+**Target Version:** v0.2
 
-### FR-054: Price Validation - Negative Price
+### FR-054: API Price Validation - Negative Price
 **Category:** Price Management
 **Priority:** Must Have
-**Description:** System validates that price values are positive and rejects price update with clear error message if negative.
-**Related Scenarios:** Price validation - negative price
+**Description:** System validates that prices fetched from API are positive and handles API errors gracefully if negative values are returned.
+**Related Scenarios:** API price validation
 **Cucumber Tags:** @FR-054
 **Dependencies:** FR-051
-**Target Version:** v0.4
+**Target Version:** v0.2
 
-### FR-055: Price Validation - Zero Price
+### FR-055: API Price Validation - Zero Price
 **Category:** Price Management
 **Priority:** Must Have
-**Description:** System validates that price values are greater than zero and rejects price update with clear error message if zero.
-**Related Scenarios:** Price validation - zero price
+**Description:** System validates that prices fetched from API are greater than zero and handles API errors gracefully if zero values are returned.
+**Related Scenarios:** API price validation
 **Cucumber Tags:** @FR-055
 **Dependencies:** FR-051
-**Target Version:** v0.4
+**Target Version:** v0.2
 
-### FR-056: View Price Update History
+### FR-056: Display Last Price Refresh Date
 **Category:** Price Management
-**Priority:** Should Have
-**Description:** User can view historical price changes for an instrument showing date, old price, new price, and percentage change.
-**Related Scenarios:** View price update history
+**Priority:** Must Have
+**Description:** Portfolio view displays the date and time when prices were last fetched from API, allowing user to know data freshness.
+**Related Scenarios:** Display last price refresh date in portfolio
 **Cucumber Tags:** @FR-056
 **Dependencies:** FR-051
-**Target Version:** v1.0
+**Target Version:** v0.2
 
-### FR-057: Polish Government Bond Value Update
-**Category:** Price Management
-**Priority:** Should Have
-**Description:** User can update the current value of Polish government bond positions (different from stock price update), triggering P&L recalculation.
-**Related Scenarios:** Polish government bond value update
-**Cucumber Tags:** @FR-057
-**Dependencies:** FR-043
-**Target Version:** v0.6
+### FR-057: ~~Polish Government Bond Value Update~~ [DELETED]
+**Status:** REMOVED - Polish government bonds use constant pricing logic, no price updates needed
 
 ---
 
