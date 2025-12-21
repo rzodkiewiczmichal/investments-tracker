@@ -15,6 +15,8 @@ Feature: Data Import
   # - IKZE account format (to be defined)
   # - Polish Government Bonds account format (to be defined)
 
+  @FR-021
+  @v0.2 @v0.5 @import
   # Generic import scenario (format will be replaced with specific broker formats)
   Scenario: Import positions from broker file
     Given I have an export file from "Broker A" with position data
@@ -27,48 +29,64 @@ Feature: Data Import
 
   # Validation Scenarios for Required Fields
 
+  @FR-022
+  @v0.2 @import @validation
   Scenario: Import validation - missing instrument identifier
     Given I have an import file with a row missing instrument name
     When I try to import the file
     Then I should see an error "Row 2: Instrument identifier is required"
     And no positions should be created
 
+  @FR-023
+  @v0.2 @import @validation
   Scenario: Import validation - missing quantity
     Given I have an import file with a row missing quantity
     When I try to import the file
     Then I should see an error "Row 3: Quantity is required"
     And no positions should be created
 
+  @FR-024
+  @v0.2 @import @validation
   Scenario: Import validation - missing account identifier
     Given I have an import file without account information
     When I try to import the file
     Then I should see an error "Account identifier is required"
     And no positions should be created
 
+  @FR-025
+  @v0.2 @import @validation
   Scenario: Import validation - invalid quantity (negative)
     Given I have an import file with quantity "-50"
     When I try to import the file
     Then I should see an error "Row 2: Quantity must be positive"
     And no positions should be created
 
+  @FR-026
+  @v0.2 @import @validation
   Scenario: Import validation - invalid quantity (zero)
     Given I have an import file with quantity "0"
     When I try to import the file
     Then I should see an error "Row 2: Quantity must be greater than zero"
     And no positions should be created
 
+  @FR-027
+  @v0.2 @import @validation
   Scenario: Import validation - invalid quantity (non-numeric)
     Given I have an import file with quantity "ABC"
     When I try to import the file
     Then I should see an error "Row 2: Quantity must be a number"
     And no positions should be created
 
+  @FR-028
+  @v0.2 @import @validation
   Scenario: Import validation - invalid average cost
     Given I have an import file with average cost "-100"
     When I try to import the file
     Then I should see an error "Row 2: Average cost must be positive"
     And no positions should be created
 
+  @FR-029
+  @v0.2 @import @validation
   Scenario: Import with missing optional fields
     Given I have an import file with:
       | Instrument | Quantity | Account  |
@@ -79,12 +97,16 @@ Feature: Data Import
     Then positions should be created without cost basis
     And I should see a warning "2 positions imported without average cost - manual entry required"
 
+  @FR-030 @FR-005 @FR-071 @FR-093
+  @v0.2 @import @multi-account @aggregation
   Scenario: Import aggregation across accounts
     Given I import file from "Broker A" with 50 shares of "Apple"
     And I import file from "Broker B" with 30 shares of "Apple"
     When I view my portfolio
     Then I should see a single position for "Apple" with 80 shares
 
+  @FR-031
+  @v1.0 @import @validation
   Scenario: Import duplicate prevention
     Given I have already imported data from "Broker A"
     When I try to import the same file again

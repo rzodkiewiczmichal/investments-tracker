@@ -8,6 +8,9 @@
 *.swp
 *.swo
 
+# Temporary analysis files
+temp/
+
 # Build files
 target/
 build/

@@ -6,6 +6,8 @@ Feature: Price Updates
   I want to update current prices for instruments
   So that portfolio values are accurate
 
+  @FR-051 @FR-053 @FR-081
+  @v0.4 @price-management
   Scenario: Manual price update for single instrument
     Given I have a position in "Apple"
     And the last price was 600 PLN
@@ -14,6 +16,8 @@ Feature: Price Updates
     And the position value should be recalculated
     And I should see "Price updated for Apple"
 
+  @FR-052 @FR-053 @FR-081
+  @v0.4 @price-management
   Scenario: Bulk price update from file
     Given I have positions in multiple instruments
     When I import a price file with:
@@ -25,6 +29,8 @@ Feature: Price Updates
     And portfolio values should be recalculated
     And I should see "Updated prices for 3 instruments"
 
+  @FR-053 @FR-001 @FR-081 @FR-083 @FR-084
+  @v0.4 @price-management @portfolio @metrics
   Scenario: Price update affects portfolio metrics
     Given I have 100 shares of "Apple" bought at 600 PLN
     And the current price is 600 PLN
@@ -33,18 +39,24 @@ Feature: Price Updates
     Then my portfolio P&L should show +6000 PLN
     And my portfolio return should show +10%
 
+  @FR-054
+  @v0.4 @price-management @validation
   Scenario: Price validation - negative price
     Given I have a position in "Microsoft"
     When I try to update the price to -100 PLN
     Then I should see an error "Price must be positive"
     And the price should not be updated
 
+  @FR-055
+  @v0.4 @price-management @validation
   Scenario: Price validation - zero price
     Given I have a position in "Microsoft"
     When I try to update the price to 0 PLN
     Then I should see an error "Price cannot be zero"
     And the price should not be updated
 
+  @FR-056
+  @v1.0 @price-management @history
   Scenario: View price update history
     Given I have updated prices multiple times for "Apple"
     When I view price history for "Apple"
@@ -53,6 +65,8 @@ Feature: Price Updates
       | 2025-09-16 | 600      | 650      | +8.33% |
       | 2025-09-15 | 580      | 600      | +3.45% |
 
+  @FR-057 @FR-043 @FR-081 @FR-083
+  @v0.6 @price-management @bonds
   Scenario: Polish government bond value update
     Given I have Polish government bonds
     And the current value is 100000 PLN
