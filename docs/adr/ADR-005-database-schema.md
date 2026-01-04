@@ -77,10 +77,12 @@ CREATE TABLE instruments (
     price_updated_at        TIMESTAMP,
     created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                 BIGINT NOT NULL DEFAULT 0,  -- Optimistic locking (JPA @Version)
 
     CONSTRAINT instruments_symbol_not_empty CHECK (TRIM(symbol) <> ''),
     CONSTRAINT instruments_name_not_empty CHECK (TRIM(name) <> ''),
-    CONSTRAINT instruments_price_positive CHECK (current_price_amount IS NULL OR current_price_amount > 0)
+    CONSTRAINT instruments_price_positive CHECK (current_price_amount IS NULL OR current_price_amount > 0),
+    CONSTRAINT instruments_currency_pln CHECK (current_price_currency = 'PLN' OR current_price_currency IS NULL)
 );
 ```
 
@@ -89,6 +91,8 @@ CREATE TABLE instruments (
 - `current_price_amount`: Nullable - may not be set initially
 - `DECIMAL(19, 4)`: Money precision decision (see ADR-006)
 - `price_updated_at`: Track staleness for price refresh
+- `version`: Optimistic locking to prevent concurrent price update conflicts
+- `instruments_currency_pln`: Enforce PLN-only currency for v0.1 (FR-089)
 
 #### 3. positions (Position Aggregate Root)
 
@@ -104,6 +108,7 @@ CREATE TABLE positions (
 
     CONSTRAINT positions_quantity_positive CHECK (total_quantity > 0),
     CONSTRAINT positions_cost_positive CHECK (avg_cost_basis_amount > 0),
+    CONSTRAINT positions_currency_pln CHECK (avg_cost_basis_currency = 'PLN'),
     CONSTRAINT fk_positions_instrument FOREIGN KEY (instrument_symbol)
         REFERENCES instruments(symbol) ON DELETE RESTRICT
 );
@@ -132,6 +137,7 @@ CREATE TABLE account_holdings (
 
     CONSTRAINT account_holdings_quantity_positive CHECK (quantity > 0),
     CONSTRAINT account_holdings_cost_positive CHECK (cost_basis_amount > 0),
+    CONSTRAINT account_holdings_currency_pln CHECK (cost_basis_currency = 'PLN'),
     CONSTRAINT fk_account_holdings_position FOREIGN KEY (instrument_symbol)
         REFERENCES positions(instrument_symbol) ON DELETE CASCADE,
     CONSTRAINT fk_account_holdings_account FOREIGN KEY (account_id)
@@ -195,14 +201,13 @@ account_holdings     accounts
 
 ```sql
 CREATE INDEX idx_account_holdings_account ON account_holdings(account_id);
-CREATE INDEX idx_account_holdings_instrument ON account_holdings(instrument_symbol);
 CREATE INDEX idx_accounts_broker_name ON accounts(broker_name);
 ```
 
 **Rationale**:
 - `account_holdings(account_id)`: For "view all holdings in account X" queries
-- `account_holdings(instrument_symbol)`: For loading Position aggregate with all holdings
 - `accounts(broker_name)`: For filtering accounts by broker
+- Note: No separate index needed on `account_holdings(instrument_symbol)` - composite PRIMARY KEY `(instrument_symbol, account_id)` efficiently handles queries on leading column
 
 #### Query Performance Indexes
 
@@ -245,6 +250,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION increment_version()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.version = OLD.version + 1;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER update_accounts_updated_at BEFORE UPDATE ON accounts
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -256,12 +269,16 @@ CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON positions
 
 CREATE TRIGGER update_account_holdings_updated_at BEFORE UPDATE ON account_holdings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER increment_instruments_version BEFORE UPDATE ON instruments
+    FOR EACH ROW EXECUTE FUNCTION increment_version();
 ```
 
 **Rationale**:
 - Automatic `updated_at` maintenance
+- Automatic version increment for optimistic locking on `instruments`
 - No application code needed to track updates
-- Consistent timestamp semantics
+- Consistent timestamp and version semantics
 
 ### Soft Delete Decision
 

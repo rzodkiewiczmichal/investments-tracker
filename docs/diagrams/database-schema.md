@@ -27,6 +27,7 @@ erDiagram
         TIMESTAMP price_updated_at "nullable"
         TIMESTAMP created_at
         TIMESTAMP updated_at
+        BIGINT version "optimistic lock"
     }
 
     positions {

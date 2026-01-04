@@ -52,10 +52,12 @@ CREATE TABLE instruments (
     price_updated_at        TIMESTAMP,
     created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                 BIGINT NOT NULL DEFAULT 0,  -- Optimistic locking (JPA @Version)
 
     CONSTRAINT instruments_symbol_not_empty CHECK (TRIM(symbol) <> ''),
     CONSTRAINT instruments_name_not_empty CHECK (TRIM(name) <> ''),
-    CONSTRAINT instruments_price_positive CHECK (current_price_amount IS NULL OR current_price_amount > 0)
+    CONSTRAINT instruments_price_positive CHECK (current_price_amount IS NULL OR current_price_amount > 0),
+    CONSTRAINT instruments_currency_pln CHECK (current_price_currency = 'PLN' OR current_price_currency IS NULL)
 );
 
 CREATE INDEX idx_instruments_type ON instruments(instrument_type);
@@ -67,6 +69,7 @@ COMMENT ON COLUMN instruments.instrument_type IS 'STOCK, ETF, BOND_ETF, or POLIS
 COMMENT ON COLUMN instruments.current_price_amount IS 'Current price per unit in currency (nullable - may not be set initially)';
 COMMENT ON COLUMN instruments.current_price_currency IS 'Currency of price (always PLN in v0.1)';
 COMMENT ON COLUMN instruments.price_updated_at IS 'Timestamp when price was last fetched from external source';
+COMMENT ON COLUMN instruments.version IS 'Optimistic locking version (JPA @Version)';
 
 -- ============================================================================
 -- TABLE: positions
@@ -86,6 +89,7 @@ CREATE TABLE positions (
 
     CONSTRAINT positions_quantity_positive CHECK (total_quantity > 0),
     CONSTRAINT positions_cost_positive CHECK (avg_cost_basis_amount > 0),
+    CONSTRAINT positions_currency_pln CHECK (avg_cost_basis_currency = 'PLN'),
     CONSTRAINT fk_positions_instrument FOREIGN KEY (instrument_symbol)
         REFERENCES instruments(symbol) ON DELETE RESTRICT
 );
@@ -119,6 +123,7 @@ CREATE TABLE account_holdings (
 
     CONSTRAINT account_holdings_quantity_positive CHECK (quantity > 0),
     CONSTRAINT account_holdings_cost_positive CHECK (cost_basis_amount > 0),
+    CONSTRAINT account_holdings_currency_pln CHECK (cost_basis_currency = 'PLN'),
     CONSTRAINT fk_account_holdings_position FOREIGN KEY (instrument_symbol)
         REFERENCES positions(instrument_symbol) ON DELETE CASCADE,
     CONSTRAINT fk_account_holdings_account FOREIGN KEY (account_id)
@@ -126,7 +131,6 @@ CREATE TABLE account_holdings (
 );
 
 CREATE INDEX idx_account_holdings_account ON account_holdings(account_id);
-CREATE INDEX idx_account_holdings_instrument ON account_holdings(instrument_symbol);
 
 COMMENT ON TABLE account_holdings IS 'Individual holdings within Position aggregate (composite key)';
 COMMENT ON COLUMN account_holdings.instrument_symbol IS 'Part of composite key, references position';
@@ -167,13 +171,21 @@ COMMENT ON COLUMN audit_log.changed_by IS 'User or system that made the change (
 COMMENT ON COLUMN audit_log.change_details IS 'JSONB with before/after values, reason, source, etc.';
 
 -- ============================================================================
--- TRIGGERS: Update timestamps automatically
+-- TRIGGERS: Update timestamps and version columns automatically
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION increment_version()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.version = OLD.version + 1;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -190,7 +202,11 @@ CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON positions
 CREATE TRIGGER update_account_holdings_updated_at BEFORE UPDATE ON account_holdings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER increment_instruments_version BEFORE UPDATE ON instruments
+    FOR EACH ROW EXECUTE FUNCTION increment_version();
+
 COMMENT ON FUNCTION update_updated_at_column() IS 'Automatically update updated_at timestamp on row update';
+COMMENT ON FUNCTION increment_version() IS 'Automatically increment version column for optimistic locking';
 
 -- ============================================================================
 -- SCHEMA VALIDATION QUERIES (for testing)
