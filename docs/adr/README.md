@@ -23,6 +23,8 @@ We use the Michael Nygard format with the following structure:
 | [ADR-002](ADR-002-value-objects-and-entities.md) | Value Objects and Entities | Accepted | 2026-01-04 |
 | [ADR-003](ADR-003-domain-vs-application-services.md) | Domain vs Application Services | Accepted | 2026-01-04 |
 | [ADR-004](ADR-004-package-structure.md) | Package Structure | Accepted | 2026-01-04 |
+| [ADR-005](ADR-005-database-schema.md) | Database Schema Design | Accepted | 2026-01-04 |
+| [ADR-006](ADR-006-money-representation.md) | Money Representation | Accepted | 2026-01-04 |
 
 ## Process
 
