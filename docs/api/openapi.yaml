@@ -1,0 +1,811 @@
+openapi: 3.0.3
+
+info:
+  title: Investment Tracker API
+  version: 0.1.0
+  description: |
+    REST API for tracking investment positions and portfolio metrics across multiple broker accounts.
+
+    **v0.1 MVP Features:**
+    - Portfolio viewing with aggregated metrics
+    - Position listing and details
+    - Manual position entry
+    - Account management
+
+    **Architecture:**
+    - Hexagonal architecture with clear separation of concerns
+    - Multi-layer validation (Controller → Application → Domain)
+    - OTLP observability with trace ID in all error responses
+    - Consistent error format across all endpoints
+
+    **Related Documentation:**
+    - ADR-009: REST API Structure
+    - ADR-010: Error Handling Strategy
+    - ADR-011: Data Validation Strategy
+
+  contact:
+    name: Investment Tracker Development Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Portfolio
+    description: Portfolio-level aggregated metrics
+  - name: Positions
+    description: Individual position management
+  - name: Accounts
+    description: Broker account management
+
+paths:
+  /portfolio:
+    get:
+      tags:
+        - Portfolio
+      summary: Get portfolio summary
+      description: |
+        Returns aggregated portfolio metrics across all accounts.
+
+        **Features:**
+        - Total current value (market value of all positions)
+        - Total invested amount (total cost basis)
+        - Total profit/loss (unrealized gains)
+        - Total return percentage
+        - Position count
+
+        **Empty Portfolio:** Returns zeros if no positions exist (FR-004)
+      operationId: getPortfolio
+      responses:
+        '200':
+          description: Portfolio summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioSummaryDTO'
+              examples:
+                portfolioWithPositions:
+                  summary: Portfolio with 3 positions
+                  value:
+                    totalCurrentValue:
+                      amount: 150000.00
+                      currency: PLN
+                    totalInvestedAmount:
+                      amount: 120000.00
+                      currency: PLN
+                    totalProfitLoss:
+                      amount: 30000.00
+                      currency: PLN
+                    totalReturnPercentage: 25.00
+                    positionsCount: 3
+                    lastUpdatedAt: "2026-01-11T10:30:00Z"
+                emptyPortfolio:
+                  summary: Empty portfolio
+                  value:
+                    totalCurrentValue:
+                      amount: 0.00
+                      currency: PLN
+                    totalInvestedAmount:
+                      amount: 0.00
+                      currency: PLN
+                    totalProfitLoss:
+                      amount: 0.00
+                      currency: PLN
+                    totalReturnPercentage: 0.00
+                    positionsCount: 0
+                    lastUpdatedAt: "2026-01-11T10:30:00Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+              example:
+                timestamp: "2026-01-11T10:30:00Z"
+                status: 500
+                error: "Internal Server Error"
+                message: "An unexpected error occurred while processing your request"
+                path: "/api/v1/portfolio"
+                traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+
+  /positions:
+    get:
+      tags:
+        - Positions
+      summary: List all positions
+      description: |
+        Returns a list of all positions sorted by current value descending (FR-014).
+
+        **Sorting Options:**
+        - currentValue (default): Sort by market value
+        - returnPercentage: Sort by return percentage
+        - profitLoss: Sort by profit/loss amount
+        - quantity: Sort by quantity
+
+        **v0.1 Note:** No pagination - returns all positions.
+      operationId: listPositions
+      parameters:
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [currentValue, returnPercentage, profitLoss, quantity]
+            default: currentValue
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+      responses:
+        '200':
+          description: Positions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionsResponse'
+              example:
+                positions:
+                  - id: "550e8400-e29b-41d4-a716-446655440001"
+                    instrumentName: "Apple Inc."
+                    instrumentSymbol: "AAPL"
+                    instrumentType: "STOCK"
+                    quantity: 100.00000000
+                    averageCost:
+                      amount: 600.0000
+                      currency: "PLN"
+                    currentValue:
+                      amount: 65000.00
+                      currency: "PLN"
+                    investedAmount:
+                      amount: 60000.00
+                      currency: "PLN"
+                    profitLoss:
+                      amount: 5000.00
+                      currency: "PLN"
+                    returnPercentage: 8.33
+                  - id: "550e8400-e29b-41d4-a716-446655440002"
+                    instrumentName: "iShares Core S&P 500 ETF"
+                    instrumentSymbol: "CSPX.L"
+                    instrumentType: "ETF"
+                    quantity: 50.00000000
+                    averageCost:
+                      amount: 800.0000
+                      currency: "PLN"
+                    currentValue:
+                      amount: 45000.00
+                      currency: "PLN"
+                    investedAmount:
+                      amount: 40000.00
+                      currency: "PLN"
+                    profitLoss:
+                      amount: 5000.00
+                      currency: "PLN"
+                    returnPercentage: 12.50
+                totalCount: 2
+        '400':
+          description: Invalid query parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+              example:
+                timestamp: "2026-01-11T10:30:00Z"
+                status: 400
+                error: "Bad Request"
+                message: "Invalid sort parameter"
+                path: "/api/v1/positions"
+                traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+    post:
+      tags:
+        - Positions
+      summary: Create new position manually
+      description: |
+        Creates a new position by manual entry (FR-041, FR-042).
+
+        **Validation Rules:**
+        - Instrument name: Required, non-empty (FR-044)
+        - Instrument symbol: Required, non-empty (FR-044)
+        - Instrument type: Required, must be STOCK or ETF
+        - Account ID: Required, must reference existing account
+        - Quantity: Required, must be greater than zero (FR-045)
+        - Average cost: Required, must be greater than zero (FR-046)
+
+        **Conflict Detection:**
+        - Returns 409 if position already exists for this instrument in this account
+      operationId: createPosition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddPositionCommand'
+            examples:
+              stockPosition:
+                summary: Create stock position
+                value:
+                  instrumentName: "Apple Inc."
+                  instrumentSymbol: "AAPL"
+                  instrumentType: "STOCK"
+                  accountId: "550e8400-e29b-41d4-a716-446655440000"
+                  quantity: 100.00000000
+                  averageCost: 600.0000
+              etfPosition:
+                summary: Create ETF position
+                value:
+                  instrumentName: "iShares Core S&P 500 ETF"
+                  instrumentSymbol: "CSPX.L"
+                  instrumentType: "ETF"
+                  accountId: "550e8400-e29b-41d4-a716-446655440000"
+                  quantity: 50.00000000
+                  averageCost: 800.0000
+      responses:
+        '201':
+          description: Position created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionDetailDTO'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440001"
+                instrumentName: "Apple Inc."
+                instrumentSymbol: "AAPL"
+                instrumentType: "STOCK"
+                accountId: "550e8400-e29b-41d4-a716-446655440000"
+                accountName: "Main Broker Account"
+                quantity: 100.00000000
+                averageCost:
+                  amount: 600.0000
+                  currency: "PLN"
+                currentPrice:
+                  amount: 650.0000
+                  currency: "PLN"
+                currentValue:
+                  amount: 65000.00
+                  currency: "PLN"
+                investedAmount:
+                  amount: 60000.00
+                  currency: "PLN"
+                profitLoss:
+                  amount: 5000.00
+                  currency: "PLN"
+                returnPercentage: 8.33
+                createdAt: "2026-01-11T10:30:00Z"
+                updatedAt: "2026-01-11T10:30:00Z"
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+              examples:
+                multipleValidationErrors:
+                  summary: Multiple validation errors
+                  value:
+                    timestamp: "2026-01-11T10:30:00Z"
+                    status: 400
+                    error: "Bad Request"
+                    message: "Validation failed"
+                    details:
+                      - field: "instrumentName"
+                        message: "Instrument name is required"
+                        rejectedValue: null
+                      - field: "quantity"
+                        message: "Quantity must be greater than zero"
+                        rejectedValue: -10
+                      - field: "averageCost"
+                        message: "Average cost must be greater than zero"
+                        rejectedValue: 0
+                    path: "/api/v1/positions"
+                    traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+                negativeQuantity:
+                  summary: Negative quantity error
+                  value:
+                    timestamp: "2026-01-11T10:30:00Z"
+                    status: 400
+                    error: "Bad Request"
+                    message: "Validation failed"
+                    details:
+                      - field: "quantity"
+                        message: "Quantity must be greater than zero"
+                        rejectedValue: -10
+                    path: "/api/v1/positions"
+                    traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+              example:
+                timestamp: "2026-01-11T10:30:00Z"
+                status: 404
+                error: "Not Found"
+                message: "Account with ID 550e8400-e29b-41d4-a716-446655440099 not found"
+                path: "/api/v1/positions"
+                traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+        '409':
+          description: Position already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+              example:
+                timestamp: "2026-01-11T10:30:00Z"
+                status: 409
+                error: "Conflict"
+                message: "Position already exists for instrument AAPL in account Main Broker Account"
+                path: "/api/v1/positions"
+                traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /positions/{id}:
+    get:
+      tags:
+        - Positions
+      summary: Get position details
+      description: |
+        Returns detailed information for a specific position (FR-011, FR-012).
+
+        **Includes:**
+        - All fields from position summary
+        - Account details (ID and name)
+        - Current price (from Yahoo Finance or manual update)
+        - Timestamps (created, updated)
+      operationId: getPosition
+      parameters:
+        - name: id
+          in: path
+          description: Position UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+      responses:
+        '200':
+          description: Position found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionDetailDTO'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440001"
+                instrumentName: "Apple Inc."
+                instrumentSymbol: "AAPL"
+                instrumentType: "STOCK"
+                accountId: "550e8400-e29b-41d4-a716-446655440000"
+                accountName: "Main Broker Account"
+                quantity: 100.00000000
+                averageCost:
+                  amount: 600.0000
+                  currency: "PLN"
+                currentPrice:
+                  amount: 650.0000
+                  currency: "PLN"
+                currentValue:
+                  amount: 65000.00
+                  currency: "PLN"
+                investedAmount:
+                  amount: 60000.00
+                  currency: "PLN"
+                profitLoss:
+                  amount: 5000.00
+                  currency: "PLN"
+                returnPercentage: 8.33
+                createdAt: "2026-01-01T00:00:00Z"
+                updatedAt: "2026-01-11T10:30:00Z"
+        '404':
+          description: Position not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+              example:
+                timestamp: "2026-01-11T10:30:00Z"
+                status: 404
+                error: "Not Found"
+                message: "Position with ID 550e8400-e29b-41d4-a716-446655440099 not found"
+                path: "/api/v1/positions/550e8400-e29b-41d4-a716-446655440099"
+                traceId: "4bf92f3570d1d8c4517b702d7d6e8319"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: List all accounts
+      description: |
+        Returns list of all broker accounts available for position assignment.
+
+        **v0.1 Note:** Single account only. Multi-account support in v0.2+.
+      operationId: listAccounts
+      responses:
+        '200':
+          description: Accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountsResponse'
+              example:
+                accounts:
+                  - id: "550e8400-e29b-41d4-a716-446655440000"
+                    name: "Main Broker Account"
+                    broker: "ING"
+                    accountType: "NORMAL"
+                    createdAt: "2026-01-01T00:00:00Z"
+                totalCount: 1
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+
+components:
+  schemas:
+    # Portfolio Schemas
+    PortfolioSummaryDTO:
+      type: object
+      description: Aggregated portfolio metrics across all accounts
+      required:
+        - totalCurrentValue
+        - totalInvestedAmount
+        - totalProfitLoss
+        - totalReturnPercentage
+        - positionsCount
+        - lastUpdatedAt
+      properties:
+        totalCurrentValue:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Total market value of all positions
+        totalInvestedAmount:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Total cost basis of all positions
+        totalProfitLoss:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Total unrealized profit/loss
+        totalReturnPercentage:
+          type: number
+          format: double
+          description: Total return percentage ((currentValue - investedAmount) / investedAmount * 100)
+          example: 25.00
+        positionsCount:
+          type: integer
+          format: int32
+          description: Number of positions in portfolio
+          example: 3
+        lastUpdatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when portfolio was last updated (ISO 8601 UTC)
+          example: "2026-01-11T10:30:00Z"
+
+    # Position Schemas
+    PositionSummaryDTO:
+      type: object
+      description: Summary information for a single position
+      required:
+        - id
+        - instrumentName
+        - instrumentSymbol
+        - instrumentType
+        - quantity
+        - averageCost
+        - currentValue
+        - investedAmount
+        - profitLoss
+        - returnPercentage
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Position unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        instrumentName:
+          type: string
+          description: Full name of the instrument
+          example: "Apple Inc."
+        instrumentSymbol:
+          type: string
+          description: Ticker symbol or ISIN
+          example: "AAPL"
+        instrumentType:
+          $ref: '#/components/schemas/InstrumentType'
+        quantity:
+          type: number
+          format: decimal
+          description: Total quantity across all accounts (8 decimal places)
+          example: 100.00000000
+        averageCost:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Weighted average cost basis per share
+        currentValue:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Current market value (quantity × current price)
+        investedAmount:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Total invested amount (quantity × average cost)
+        profitLoss:
+          $ref: '#/components/schemas/MoneyDTO'
+          description: Unrealized profit/loss (currentValue - investedAmount)
+        returnPercentage:
+          type: number
+          format: double
+          description: Return percentage ((currentValue - investedAmount) / investedAmount * 100)
+          example: 8.33
+
+    PositionDetailDTO:
+      allOf:
+        - $ref: '#/components/schemas/PositionSummaryDTO'
+        - type: object
+          description: Detailed position information including account and timestamps
+          required:
+            - accountId
+            - accountName
+            - currentPrice
+            - createdAt
+            - updatedAt
+          properties:
+            accountId:
+              type: string
+              format: uuid
+              description: Account UUID this position belongs to
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            accountName:
+              type: string
+              description: Account name for display
+              example: "Main Broker Account"
+            currentPrice:
+              $ref: '#/components/schemas/MoneyDTO'
+              description: Current price per share from Yahoo Finance
+            createdAt:
+              type: string
+              format: date-time
+              description: Timestamp when position was created (ISO 8601 UTC)
+              example: "2026-01-01T00:00:00Z"
+            updatedAt:
+              type: string
+              format: date-time
+              description: Timestamp when position was last updated (ISO 8601 UTC)
+              example: "2026-01-11T10:30:00Z"
+
+    PositionsResponse:
+      type: object
+      description: Response containing list of positions
+      required:
+        - positions
+        - totalCount
+      properties:
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionSummaryDTO'
+          description: List of position summaries
+        totalCount:
+          type: integer
+          format: int32
+          description: Total number of positions
+          example: 2
+
+    # Command Schemas
+    AddPositionCommand:
+      type: object
+      description: Command to create a new position manually
+      required:
+        - instrumentName
+        - instrumentSymbol
+        - instrumentType
+        - accountId
+        - quantity
+        - averageCost
+      properties:
+        instrumentName:
+          type: string
+          description: Full name of the instrument (FR-044)
+          minLength: 1
+          maxLength: 255
+          example: "Apple Inc."
+        instrumentSymbol:
+          type: string
+          description: Ticker symbol or ISIN (FR-044)
+          minLength: 1
+          maxLength: 50
+          example: "AAPL"
+        instrumentType:
+          $ref: '#/components/schemas/InstrumentType'
+          description: Type of instrument (STOCK or ETF for v0.1)
+        accountId:
+          type: string
+          format: uuid
+          description: Account UUID to assign position to
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        quantity:
+          type: number
+          format: decimal
+          description: Quantity of shares (FR-045 - must be greater than zero)
+          minimum: 0.00000001
+          exclusiveMinimum: true
+          example: 100.00000000
+        averageCost:
+          type: number
+          format: decimal
+          description: Average cost per share in PLN (FR-046 - must be greater than zero)
+          minimum: 0.0001
+          exclusiveMinimum: true
+          example: 600.0000
+
+    # Account Schemas
+    AccountDTO:
+      type: object
+      description: Broker account information
+      required:
+        - id
+        - name
+        - broker
+        - accountType
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Account unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          description: Account name
+          example: "Main Broker Account"
+        broker:
+          type: string
+          description: Broker name
+          example: "ING"
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when account was created (ISO 8601 UTC)
+          example: "2026-01-01T00:00:00Z"
+
+    AccountsResponse:
+      type: object
+      description: Response containing list of accounts
+      required:
+        - accounts
+        - totalCount
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountDTO'
+          description: List of accounts
+        totalCount:
+          type: integer
+          format: int32
+          description: Total number of accounts
+          example: 1
+
+    # Value Object Schemas
+    MoneyDTO:
+      type: object
+      description: Money value with currency (ADR-006 - DECIMAL(19,4) precision)
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: number
+          format: decimal
+          description: Monetary amount with 4 decimal places
+          example: 600.0000
+        currency:
+          type: string
+          description: ISO 4217 currency code (always PLN in v0.1)
+          enum: [PLN]
+          example: "PLN"
+
+    # Enum Schemas
+    InstrumentType:
+      type: string
+      description: Type of financial instrument
+      enum:
+        - STOCK
+        - ETF
+        - BOND_ETF
+        - POLISH_GOV_BOND
+      example: "STOCK"
+
+    AccountType:
+      type: string
+      description: Type of broker account
+      enum:
+        - NORMAL
+        - IKE
+        - IKZE
+      example: "NORMAL"
+
+    # Error Schemas
+    ErrorResponseDTO:
+      type: object
+      description: Standard error response format (ADR-010)
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+        - traceId
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when error occurred (ISO 8601 UTC)
+          example: "2026-01-11T10:30:00Z"
+        status:
+          type: integer
+          format: int32
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: HTTP status text
+          example: "Bad Request"
+        message:
+          type: string
+          description: User-friendly error message (NFR-053)
+          example: "Validation failed"
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationErrorDTO'
+          description: Field-level validation errors (optional, only for 400 validation errors)
+        path:
+          type: string
+          description: Request path that caused the error
+          example: "/api/v1/positions"
+        traceId:
+          type: string
+          description: OTLP trace ID for debugging (NFR-054)
+          example: "4bf92f3570d1d8c4517b702d7d6e8319"
+
+    ValidationErrorDTO:
+      type: object
+      description: Field-level validation error details
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          description: Field name that failed validation
+          example: "quantity"
+        message:
+          type: string
+          description: User-friendly validation error message
+          example: "Quantity must be greater than zero"
+        rejectedValue:
+          description: Value that was rejected (optional, omitted if null)
+          example: -10
