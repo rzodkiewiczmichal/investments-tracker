@@ -14,7 +14,7 @@ temp/
 # Build files
 target/
 build/
-out/
+/out/
 *.class
 
 # Package files

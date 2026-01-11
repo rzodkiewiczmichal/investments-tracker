@@ -126,5 +126,54 @@ Claude should judge which type to use based on:
 ❌ **Bad redundancy:**
 - Both documents contain identical lists of requirement IDs for each version
 
+## Code Quality and Build Verification
+
+### Mandatory Build Verification
+
+**Rule:** Always verify that code compiles and tests pass after making changes.
+
+**Rationale:** Broken builds waste time and block progress. Claude must verify changes work before presenting them to the user.
+
+**Guidelines:**
+
+1. **After code changes:**
+   - Run `./gradlew build` to verify compilation and tests
+   - Fix any compilation errors immediately
+   - Fix any test failures immediately
+   - Never present broken code to the user
+
+2. **When creating tests:**
+   - Ensure tests compile
+   - Ensure tests pass (or pass on empty packages if appropriate)
+   - Use `.allowEmptyShould(true)` for ArchUnit tests that should pass on empty packages
+
+3. **Before marking work complete:**
+   - Run full build: `./gradlew clean build`
+   - Verify all tests pass
+   - Check for any warnings or deprecations
+
+4. **Build commands:**
+   ```bash
+   # Full build with tests
+   ./gradlew clean build
+
+   # Compile only (faster check)
+   ./gradlew compileJava compileTestJava
+
+   # Run tests only
+   ./gradlew test
+   ```
+
+5. **What to check:**
+   - ✅ Code compiles (no syntax errors)
+   - ✅ All tests pass (or appropriately pass on empty packages)
+   - ✅ No new warnings introduced
+   - ✅ Architecture tests enforce boundaries
+
+**Consequences of not verifying:**
+- User wastes time debugging Claude's broken code
+- Erodes trust in Claude's output
+- Slows development velocity
+
 ---
-*Last updated: 2025-11-10*
+*Last updated: 2026-01-11*
