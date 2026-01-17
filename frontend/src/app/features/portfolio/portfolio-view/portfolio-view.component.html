@@ -1,0 +1,99 @@
+<div class="portfolio-view">
+  <header class="page-header">
+    <h1>Portfolio</h1>
+    <a routerLink="/positions/new" class="btn btn-primary">Add Position</a>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">Loading portfolio data...</div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      <p>{{ error() }}</p>
+      <button (click)="loadData()" class="btn btn-secondary">Retry</button>
+    </div>
+  }
+
+  @if (!loading() && !error() && portfolio()) {
+    <section class="portfolio-summary">
+      <h2>Summary</h2>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <span class="label">Total Value</span>
+          <span class="value">{{ formatMoney(portfolio()!.totalCurrentValue.amount) }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Invested</span>
+          <span class="value">{{ formatMoney(portfolio()!.totalInvestedAmount.amount) }}</span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Profit/Loss</span>
+          <span class="value" [class]="getProfitLossClass(portfolio()!.totalProfitLoss.amount)">
+            {{ formatMoney(portfolio()!.totalProfitLoss.amount) }}
+          </span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Return</span>
+          <span class="value" [class]="getProfitLossClass(portfolio()!.totalReturnPercentage)">
+            {{ formatPercentage(portfolio()!.totalReturnPercentage) }}
+          </span>
+        </div>
+        <div class="summary-card">
+          <span class="label">Positions</span>
+          <span class="value">{{ portfolio()!.positionsCount }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="positions-list">
+      <h2>Positions</h2>
+      @if (positions().length === 0) {
+        <div class="empty-state">
+          <p>No positions yet. Add your first position to get started.</p>
+          <a routerLink="/positions/new" class="btn btn-primary">Add Position</a>
+        </div>
+      } @else {
+        <table class="positions-table">
+          <thead>
+            <tr>
+              <th>Instrument</th>
+              <th>Type</th>
+              <th class="numeric">Quantity</th>
+              <th class="numeric">Avg Cost</th>
+              <th class="numeric">Current Value</th>
+              <th class="numeric">P&L</th>
+              <th class="numeric">Return</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (position of positions(); track position.id) {
+              <tr [routerLink]="['/positions', position.id]" class="clickable">
+                <td>
+                  <div class="instrument-info">
+                    <span class="name">{{ position.instrumentName }}</span>
+                    <span class="symbol">{{ position.instrumentSymbol }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="instrument-type" [class]="position.instrumentType.toLowerCase()">
+                    {{ position.instrumentType }}
+                  </span>
+                </td>
+                <td class="numeric">{{ formatQuantity(position.quantity) }}</td>
+                <td class="numeric">{{ formatMoney(position.averageCost.amount) }}</td>
+                <td class="numeric">{{ formatMoney(position.currentValue.amount) }}</td>
+                <td class="numeric" [class]="getProfitLossClass(position.profitLoss.amount)">
+                  {{ formatMoney(position.profitLoss.amount) }}
+                </td>
+                <td class="numeric" [class]="getProfitLossClass(position.returnPercentage)">
+                  {{ formatPercentage(position.returnPercentage) }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</div>

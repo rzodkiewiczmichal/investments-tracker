@@ -1,0 +1,89 @@
+<div class="position-details">
+  <header class="page-header">
+    <a routerLink="/portfolio" class="back-link">&larr; Back to Portfolio</a>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">Loading position details...</div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      <p>{{ error() }}</p>
+      <a routerLink="/portfolio" class="btn btn-secondary">Back to Portfolio</a>
+    </div>
+  }
+
+  @if (!loading() && !error() && position()) {
+    <div class="position-header">
+      <div class="instrument-info">
+        <h1>{{ position()!.instrumentName }}</h1>
+        <div class="meta">
+          <span class="symbol">{{ position()!.instrumentSymbol }}</span>
+          <span class="instrument-type" [class]="position()!.instrumentType.toLowerCase()">
+            {{ position()!.instrumentType }}
+          </span>
+        </div>
+      </div>
+      <div class="account-info">
+        <span class="label">Account</span>
+        <span class="value">{{ position()!.accountName }}</span>
+      </div>
+    </div>
+
+    <section class="metrics-section">
+      <h2>Performance</h2>
+      <div class="metrics-grid">
+        <div class="metric-card highlight">
+          <span class="label">Current Value</span>
+          <span class="value">{{ formatMoney(position()!.currentValue.amount) }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="label">Invested Amount</span>
+          <span class="value">{{ formatMoney(position()!.investedAmount.amount) }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="label">Profit/Loss</span>
+          <span class="value" [class]="getProfitLossClass(position()!.profitLoss.amount)">
+            {{ formatMoney(position()!.profitLoss.amount) }}
+          </span>
+        </div>
+        <div class="metric-card">
+          <span class="label">Return</span>
+          <span class="value" [class]="getProfitLossClass(position()!.returnPercentage)">
+            {{ formatPercentage(position()!.returnPercentage) }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section class="metrics-section">
+      <h2>Position Details</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="label">Quantity</span>
+          <span class="value">{{ formatQuantity(position()!.quantity) }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="label">Average Cost</span>
+          <span class="value">{{ formatMoney(position()!.averageCost.amount) }}</span>
+        </div>
+        <div class="metric-card">
+          <span class="label">Current Price</span>
+          <span class="value">{{ formatMoney(position()!.currentPrice.amount) }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="metadata-section">
+      <div class="metadata-item">
+        <span class="label">Created</span>
+        <span class="value">{{ formatDate(position()!.createdAt) }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="label">Last Updated</span>
+        <span class="value">{{ formatDate(position()!.updatedAt) }}</span>
+      </div>
+    </section>
+  }
+</div>

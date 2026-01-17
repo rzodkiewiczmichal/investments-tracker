@@ -1,0 +1,240 @@
+.portfolio-view {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: #1a1a1a;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  color: #c00;
+
+  p {
+    margin: 0 0 1rem 0;
+  }
+}
+
+.portfolio-summary {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.25rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.summary-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .label {
+    font-size: 0.875rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+
+    &.positive {
+      color: #0a8a0a;
+    }
+
+    &.negative {
+      color: #d32f2f;
+    }
+
+    &.neutral {
+      color: #666;
+    }
+  }
+}
+
+.positions-list {
+  h2 {
+    font-size: 1.25rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+}
+
+.empty-state {
+  background: #f9f9f9;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 3rem;
+  text-align: center;
+
+  p {
+    margin: 0 0 1rem 0;
+    color: #666;
+  }
+}
+
+.positions-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    color: #1a1a1a;
+  }
+
+  .numeric {
+    text-align: right;
+  }
+
+  .clickable {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background: #f9f9f9;
+    }
+  }
+
+  .instrument-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .name {
+      font-weight: 500;
+    }
+
+    .symbol {
+      font-size: 0.875rem;
+      color: #666;
+    }
+  }
+
+  .instrument-type {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+
+    &.stock {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.etf {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+
+    &.bond_etf {
+      background: #fff3e0;
+      color: #ef6c00;
+    }
+
+    &.polish_gov_bond {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+  }
+
+  .positive {
+    color: #0a8a0a;
+  }
+
+  .negative {
+    color: #d32f2f;
+  }
+
+  .neutral {
+    color: #666;
+  }
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  font-size: 1rem;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.btn-primary {
+  background: #1976d2;
+  color: #fff;
+
+  &:hover {
+    background: #1565c0;
+  }
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+
+  &:hover {
+    background: #d0d0d0;
+  }
+}
