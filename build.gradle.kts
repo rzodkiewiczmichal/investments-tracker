@@ -1,5 +1,6 @@
 plugins {
     java
+    jacoco
     id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -63,6 +64,9 @@ dependencies {
 
     // ArchUnit - Architecture Testing
     testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+
+    // JUnit Platform Suite (for Cucumber runner)
+    testImplementation("org.junit.platform:junit-platform-suite:1.11.3")
 }
 
 dependencyManagement {
@@ -79,6 +83,14 @@ tasks.withType<Test> {
     }
 }
 
+// Exclude Cucumber tests from default test task (run via cucumberTest)
+tasks.test {
+    filter {
+        excludeTestsMatching("*RunCucumber*")
+        excludeTestsMatching("*CucumberTest*")
+    }
+}
+
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     enabled = true
     archiveBaseName.set("investments-tracker")
@@ -87,4 +99,90 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
 
 tasks.named<Jar>("jar") {
     enabled = false
+}
+
+// JaCoCo Configuration
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/InvestmentTrackerApplication.class",
+                    "**/dto/**",
+                    "**/config/**",
+                    "**/*JpaEntity.class"
+                )
+            }
+        })
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+    }
+}
+
+// Separate test task for integration tests
+tasks.register<Test>("integrationTest") {
+    description = "Runs integration tests with Testcontainers"
+    group = "verification"
+
+    useJUnitPlatform()
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    shouldRunAfter(tasks.test)
+
+    filter {
+        includeTestsMatching("*IntegrationTest")
+        includeTestsMatching("*IT")
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+// Separate test task for Cucumber BDD tests
+tasks.register<Test>("cucumberTest") {
+    description = "Runs Cucumber BDD tests"
+    group = "verification"
+
+    useJUnitPlatform()
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    shouldRunAfter(tasks.named("integrationTest"))
+
+    filter {
+        includeTestsMatching("*CucumberTest")
+        includeTestsMatching("*RunCucumber*")
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+
+    systemProperty("cucumber.junit-platform.naming-strategy", "long")
+}
+
+// Add integrationTest and cucumberTest to check task
+tasks.named("check") {
+    dependsOn(tasks.named("integrationTest"))
 }
