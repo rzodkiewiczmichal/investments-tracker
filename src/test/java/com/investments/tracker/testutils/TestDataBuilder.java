@@ -1,4 +1,4 @@
-package com.investments.tracker.fixtures;
+package com.investments.tracker.testutils;
 
 import java.math.BigDecimal;
 

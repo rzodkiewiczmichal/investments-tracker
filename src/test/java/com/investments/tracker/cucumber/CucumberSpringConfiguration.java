@@ -27,7 +27,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @CucumberContextConfiguration
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-@ActiveProfiles("cucumber")
+@ActiveProfiles("bdd")
 public class CucumberSpringConfiguration {
 
     /**

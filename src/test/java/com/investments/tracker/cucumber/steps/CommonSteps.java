@@ -15,6 +15,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * - Database cleanup before scenarios
  * - Common setup operations
  * </p>
+ * <p>
+ * <b>Why some Given steps are empty:</b><br>
+ * Cucumber requires step definitions for ALL steps in feature files, including
+ * Background steps. These "context-setting" steps (e.g., "Given I have positions
+ * in multiple accounts") describe the precondition state but don't perform actions.
+ * The actual data setup happens in scenario-specific steps. These empty implementations
+ * satisfy Cucumber's requirement while keeping the feature files readable.
+ * </p>
  */
 public class CommonSteps {
 

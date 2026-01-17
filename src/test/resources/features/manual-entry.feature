@@ -2,7 +2,7 @@
 # Domain: Investment Tracking System
 
 Feature: Manual Position Entry
-  As a system administrator
+  As an individual investor
   I want to manually enter position data
   So that I can add positions when import is not available
 

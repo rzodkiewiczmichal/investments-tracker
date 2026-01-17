@@ -1,16 +1,22 @@
-package com.investments.tracker.fixtures;
+package com.investments.tracker.testutils;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 
 /**
- * Helper class for integration tests.
+ * Helper class for direct database operations in tests.
  * <p>
  * Provides utility methods for:
- * - Database cleanup
- * - Test data insertion
- * - Common assertions
+ * - Database cleanup (before scenarios/tests)
+ * - Direct test data insertion (bypassing API for faster setup)
+ * - Record counting and existence checks
+ * </p>
+ * <p>
+ * <b>Usage:</b> This helper can be used in:
+ * - Integration tests (testing repositories, controllers)
+ * - BDD step definitions (for fast data setup in Given steps)
+ * - Any test requiring direct database access
  * </p>
  *
  * @see <a href="../../docs/adr/ADR-012-test-architecture.md">ADR-012: Test Architecture</a>

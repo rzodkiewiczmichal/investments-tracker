@@ -1,9 +1,9 @@
-# Cucumber Profile Configuration
-# Used by Cucumber BDD tests with Testcontainers PostgreSQL
+# BDD (Behavior-Driven Development) Profile Configuration
+# Used by behavior tests (Cucumber) with Testcontainers PostgreSQL
 
 spring:
   application:
-    name: investments-tracker-cucumber
+    name: investments-tracker-bdd
 
   # Database Configuration - Overridden by Testcontainers in CucumberSpringConfiguration
   datasource:
