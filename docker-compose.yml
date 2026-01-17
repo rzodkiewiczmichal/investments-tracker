@@ -1,0 +1,101 @@
+# Investment Tracker - Local Development Environment
+# See: docs/adr/ADR-014-docker-compose-configuration.md
+
+version: '3.8'
+
+services:
+  # PostgreSQL 16 - Primary Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: investments-tracker-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-investments_tracker}
+      POSTGRES_USER: ${POSTGRES_USER:-tracker_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tracker_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tracker_user} -d ${POSTGRES_DB:-investments_tracker}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tracker-network
+    restart: unless-stopped
+
+  # Grafana Tempo - OTLP Trace Collector
+  tempo:
+    image: grafana/tempo:latest
+    container_name: investments-tracker-tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./infrastructure/observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/tmp/tempo
+    ports:
+      - "3200:3200"   # Tempo UI
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - tracker-network
+    restart: unless-stopped
+
+  # Grafana - Observability Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: investments-tracker-grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_SERVER_HTTP_PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infrastructure/observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - tempo
+    networks:
+      - tracker-network
+    restart: unless-stopped
+
+  # Spring Boot Application (Optional)
+  # Uncomment to run application in Docker
+  # For active development, run locally: ./gradlew bootRun
+  #
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: investments-tracker-app
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-investments_tracker}
+  #     - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-tracker_user}
+  #     - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-tracker_password}
+  #     - MANAGEMENT_OTLP_TRACING_ENDPOINT=http://tempo:4318/v1/traces
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     tempo:
+  #       condition: service_started
+  #   networks:
+  #     - tracker-network
+  #   restart: unless-stopped
+
+networks:
+  tracker-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  tempo_data:
+    driver: local
+  grafana_data:
+    driver: local

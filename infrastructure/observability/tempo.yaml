@@ -1,0 +1,30 @@
+# Grafana Tempo Configuration
+# See: docs/adr/ADR-014-docker-compose-configuration.md
+# See: docs/adr/ADR-015-otlp-observability-strategy.md
+
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        # gRPC endpoint for OTLP
+        grpc:
+          endpoint: 0.0.0.0:4317
+        # HTTP endpoint for OTLP (used by Spring Boot)
+        http:
+          endpoint: 0.0.0.0:4318
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/traces
+    wal:
+      path: /tmp/tempo/wal
+
+# Allow searching traces without duration limit
+query_frontend:
+  search:
+    max_duration: 0s

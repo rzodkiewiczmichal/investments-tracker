@@ -32,6 +32,33 @@ Claude Code will not be just agentic code help - will use all handy MCP servers 
 ## Project Location
 GitHub repository cloned in this directory
 
+## Project Tracking
+
+### GitHub Issues
+The project uses GitHub Issues for comprehensive task tracking and project management.
+
+**Issue Structure:**
+- **Epics:** High-level features/phases (e.g., "Design Phase Epic", "v0.1 MVP")
+- **Sub-Issues:** Specific tasks within epics (e.g., "Domain Model Design", "Infrastructure Setup")
+- **Labels:** Categorize issues (epic, v0.1, design, infrastructure, testing, etc.)
+
+**GitHub MCP Server Integration:**
+Claude has direct access to GitHub via MCP server and can:
+- Create issues and sub-issues
+- Update issue status (open/closed)
+- Add comments to issues
+- Link related issues
+- Apply labels
+- Mark issues as completed with `state_reason: completed`
+
+**Workflow:**
+1. Create issues for new features/tasks
+2. Track progress via issue comments
+3. Close issues when work is complete (with completion comment)
+4. Link related issues (e.g., "Closes #18", "Part of #13")
+
+**Repository:** `rzodkiewiczmichal/investments-tracker`
+
 ## Output Guidelines
 
 Claude must use one of three output types based on the nature of the response:

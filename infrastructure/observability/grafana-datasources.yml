@@ -1,0 +1,17 @@
+# Grafana Datasources Configuration
+# See: docs/adr/ADR-014-docker-compose-configuration.md
+# See: docs/adr/ADR-015-otlp-observability-strategy.md
+
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: 'loki'

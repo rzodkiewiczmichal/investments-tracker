@@ -45,3 +45,6 @@ Thumbs.db
 # Test reports
 test-output/
 reports/
+
+# Environment variables
+.env
