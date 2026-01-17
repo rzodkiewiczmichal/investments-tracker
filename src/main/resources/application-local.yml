@@ -1,0 +1,42 @@
+# Local Development Profile
+# Use with: ./gradlew bootRun --args='--spring.profiles.active=local'
+# Requires: docker-compose up -d postgres tempo grafana
+
+# Database credentials matching docker-compose.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/investments_tracker
+    username: tracker_user
+    password: tracker_password
+
+  # More verbose SQL logging for local dev
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# OTLP Tracing Configuration (Grafana Tempo)
+# See: docs/adr/ADR-015-otlp-observability-strategy.md
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0  # 100% sampling for local development
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+      compression: gzip
+      timeout: 10s
+  endpoint:
+    health:
+      show-details: always
+
+# Verbose logging for local development
+logging:
+  level:
+    root: INFO
+    com.investments.tracker: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

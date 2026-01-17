@@ -1,8 +1,6 @@
 # Investment Tracker - Local Development Environment
 # See: docs/adr/ADR-014-docker-compose-configuration.md
 
-version: '3.8'
-
 services:
   # PostgreSQL 16 - Primary Database
   postgres:

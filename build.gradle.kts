@@ -34,10 +34,10 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
 
-    // Observability
+    // Observability (OTLP Tracing via Micrometer)
+    // See: docs/adr/ADR-015-otlp-observability-strategy.md
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("io.opentelemetry:opentelemetry-api")
-    implementation("io.opentelemetry:opentelemetry-sdk")
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
 
     // Development Tools
