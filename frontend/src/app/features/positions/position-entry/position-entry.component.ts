@@ -1,14 +1,33 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { MessageModule } from 'primeng/message';
+import { SkeletonModule } from 'primeng/skeleton';
+import { FloatLabelModule } from 'primeng/floatlabel';
 import { PositionService, AccountService } from '../../../core/services';
 import { Account, InstrumentType, ApiError, ValidationError } from '../../../core/models';
 
 @Component({
   selector: 'app-position-entry',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    CardModule,
+    ButtonModule,
+    InputTextModule,
+    SelectModule,
+    InputNumberModule,
+    MessageModule,
+    SkeletonModule,
+    FloatLabelModule
+  ],
   templateUrl: './position-entry.component.html',
   styleUrl: './position-entry.component.scss'
 })
@@ -40,7 +59,7 @@ export class PositionEntryComponent implements OnInit {
       instrumentName: ['', [Validators.required, Validators.maxLength(255)]],
       instrumentSymbol: ['', [Validators.required, Validators.maxLength(50)]],
       instrumentType: ['STOCK', [Validators.required]],
-      accountId: ['', [Validators.required]],
+      accountId: [null, [Validators.required]],
       quantity: [null, [Validators.required, Validators.min(0.00000001)]],
       averageCost: [null, [Validators.required, Validators.min(0.0001)]]
     });
@@ -60,6 +79,10 @@ export class PositionEntryComponent implements OnInit {
         this.loadingAccounts.set(false);
       }
     });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/portfolio']);
   }
 
   onSubmit(): void {
