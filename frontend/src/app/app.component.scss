@@ -4,39 +4,32 @@
   flex-direction: column;
 }
 
-.app-nav {
+.app-logo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 2rem;
-  background: #1a1a1a;
-  color: #fff;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-decoration: none;
+  margin-right: 2rem;
 
-  .app-logo {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #fff;
-    text-decoration: none;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 1.5rem;
-
-    a {
-      color: #ccc;
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.15s ease;
-
-      &:hover {
-        color: #fff;
-      }
-    }
+  i {
+    font-size: 1.5rem;
   }
 }
 
 .app-main {
   flex: 1;
-  background: #f5f5f5;
+  padding: 2rem;
+  background: var(--surface-ground);
+}
+
+:host ::ng-deep {
+  .p-menubar {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
 }

@@ -1,139 +1,176 @@
 <div class="position-entry">
-  <header class="page-header">
-    <a routerLink="/portfolio" class="back-link">&larr; Back to Portfolio</a>
+  <div class="page-header">
+    <p-button label="Back to Portfolio" icon="pi pi-arrow-left" [text]="true" (onClick)="goBack()" />
     <h1>Add Position</h1>
-  </header>
+  </div>
 
   @if (error()) {
-    <div class="error-message">
-      <p>{{ error() }}</p>
-    </div>
+    <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
   }
 
   @if (loadingAccounts()) {
-    <div class="loading">Loading accounts...</div>
-  } @else if (accounts().length === 0) {
-    <div class="error-message">
-      <p>No accounts available. Please create an account first.</p>
-      <a routerLink="/portfolio" class="btn btn-secondary">Back to Portfolio</a>
-    </div>
-  } @else {
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="position-form">
-      <section class="form-section">
-        <h2>Instrument Information</h2>
-
-        <div class="form-group">
-          <label for="instrumentName">Instrument Name *</label>
-          <input
-            type="text"
-            id="instrumentName"
-            formControlName="instrumentName"
-            placeholder="e.g., Apple Inc."
-            [class.error]="hasFieldError('instrumentName')"
-          />
-          @if (hasFieldError('instrumentName')) {
-            <span class="field-error">{{ getFieldError('instrumentName') }}</span>
-          }
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="instrumentSymbol">Symbol / Ticker *</label>
-            <input
-              type="text"
-              id="instrumentSymbol"
-              formControlName="instrumentSymbol"
-              placeholder="e.g., AAPL"
-              [class.error]="hasFieldError('instrumentSymbol')"
-            />
-            @if (hasFieldError('instrumentSymbol')) {
-              <span class="field-error">{{ getFieldError('instrumentSymbol') }}</span>
-            }
+    <p-card>
+      <div class="loading-form">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="skeleton-field">
+            <p-skeleton width="30%" height="1rem" styleClass="mb-2" />
+            <p-skeleton width="100%" height="2.5rem" />
           </div>
-
-          <div class="form-group">
-            <label for="instrumentType">Type *</label>
-            <select
-              id="instrumentType"
-              formControlName="instrumentType"
-              [class.error]="hasFieldError('instrumentType')"
-            >
-              @for (type of instrumentTypes; track type.value) {
-                <option [value]="type.value">{{ type.label }}</option>
-              }
-            </select>
-            @if (hasFieldError('instrumentType')) {
-              <span class="field-error">{{ getFieldError('instrumentType') }}</span>
-            }
-          </div>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <h2>Position Details</h2>
-
-        <div class="form-group">
-          <label for="accountId">Account *</label>
-          <select
-            id="accountId"
-            formControlName="accountId"
-            [class.error]="hasFieldError('accountId')"
-          >
-            <option value="">Select an account</option>
-            @for (account of accounts(); track account.id) {
-              <option [value]="account.id">{{ account.name }} ({{ account.broker }})</option>
-            }
-          </select>
-          @if (hasFieldError('accountId')) {
-            <span class="field-error">{{ getFieldError('accountId') }}</span>
-          }
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="quantity">Quantity *</label>
-            <input
-              type="number"
-              id="quantity"
-              formControlName="quantity"
-              placeholder="e.g., 100"
-              step="0.00000001"
-              min="0"
-              [class.error]="hasFieldError('quantity')"
-            />
-            @if (hasFieldError('quantity')) {
-              <span class="field-error">{{ getFieldError('quantity') }}</span>
-            }
-          </div>
-
-          <div class="form-group">
-            <label for="averageCost">Average Cost (PLN) *</label>
-            <input
-              type="number"
-              id="averageCost"
-              formControlName="averageCost"
-              placeholder="e.g., 600.00"
-              step="0.0001"
-              min="0"
-              [class.error]="hasFieldError('averageCost')"
-            />
-            @if (hasFieldError('averageCost')) {
-              <span class="field-error">{{ getFieldError('averageCost') }}</span>
-            }
-          </div>
-        </div>
-      </section>
-
-      <div class="form-actions">
-        <a routerLink="/portfolio" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary" [disabled]="loading()">
-          @if (loading()) {
-            <span>Creating...</span>
-          } @else {
-            <span>Create Position</span>
-          }
-        </button>
+        }
       </div>
-    </form>
+    </p-card>
+  } @else if (accounts().length === 0) {
+    <p-card>
+      <div class="empty-state">
+        <i class="pi pi-exclamation-circle empty-icon"></i>
+        <p>No accounts available. Please create an account first.</p>
+        <p-button label="Back to Portfolio" icon="pi pi-arrow-left" severity="secondary" (onClick)="goBack()" />
+      </div>
+    </p-card>
+  } @else {
+    <p-card>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <section class="form-section">
+          <h2>Instrument Information</h2>
+
+          <div class="field">
+            <label for="instrumentName">Instrument Name *</label>
+            <input
+              pInputText
+              id="instrumentName"
+              formControlName="instrumentName"
+              placeholder="e.g., Apple Inc."
+              [class.ng-invalid]="hasFieldError('instrumentName')"
+              [class.ng-dirty]="form.get('instrumentName')?.touched"
+              class="w-full"
+            />
+            @if (hasFieldError('instrumentName')) {
+              <small class="p-error">{{ getFieldError('instrumentName') }}</small>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="instrumentSymbol">Symbol / Ticker *</label>
+              <input
+                pInputText
+                id="instrumentSymbol"
+                formControlName="instrumentSymbol"
+                placeholder="e.g., AAPL"
+                [class.ng-invalid]="hasFieldError('instrumentSymbol')"
+                [class.ng-dirty]="form.get('instrumentSymbol')?.touched"
+                class="w-full"
+              />
+              @if (hasFieldError('instrumentSymbol')) {
+                <small class="p-error">{{ getFieldError('instrumentSymbol') }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="instrumentType">Type *</label>
+              <p-select
+                id="instrumentType"
+                formControlName="instrumentType"
+                [options]="instrumentTypes"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select type"
+                styleClass="w-full"
+                [class.ng-invalid]="hasFieldError('instrumentType')"
+                [class.ng-dirty]="form.get('instrumentType')?.touched"
+              />
+              @if (hasFieldError('instrumentType')) {
+                <small class="p-error">{{ getFieldError('instrumentType') }}</small>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Position Details</h2>
+
+          <div class="field">
+            <label for="accountId">Account *</label>
+            <p-select
+              id="accountId"
+              formControlName="accountId"
+              [options]="accounts()"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Select an account"
+              styleClass="w-full"
+              [class.ng-invalid]="hasFieldError('accountId')"
+              [class.ng-dirty]="form.get('accountId')?.touched"
+            >
+              <ng-template pTemplate="selectedItem" let-account>
+                @if (account) {
+                  {{ account.name }} ({{ account.broker }})
+                }
+              </ng-template>
+              <ng-template pTemplate="item" let-account>
+                {{ account.name }} ({{ account.broker }})
+              </ng-template>
+            </p-select>
+            @if (hasFieldError('accountId')) {
+              <small class="p-error">{{ getFieldError('accountId') }}</small>
+            }
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="quantity">Quantity *</label>
+              <p-inputNumber
+                id="quantity"
+                formControlName="quantity"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="8"
+                [min]="0"
+                placeholder="e.g., 100"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                [class.ng-invalid]="hasFieldError('quantity')"
+                [class.ng-dirty]="form.get('quantity')?.touched"
+              />
+              @if (hasFieldError('quantity')) {
+                <small class="p-error">{{ getFieldError('quantity') }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="averageCost">Average Cost (PLN) *</label>
+              <p-inputNumber
+                id="averageCost"
+                formControlName="averageCost"
+                mode="currency"
+                currency="PLN"
+                locale="pl-PL"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="4"
+                [min]="0"
+                placeholder="e.g., 600.00"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+                [class.ng-invalid]="hasFieldError('averageCost')"
+                [class.ng-dirty]="form.get('averageCost')?.touched"
+              />
+              @if (hasFieldError('averageCost')) {
+                <small class="p-error">{{ getFieldError('averageCost') }}</small>
+              }
+            </div>
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="goBack()" />
+          <p-button
+            type="submit"
+            label="Create Position"
+            icon="pi pi-plus"
+            [loading]="loading()"
+            [disabled]="loading()"
+          />
+        </div>
+      </form>
+    </p-card>
   }
 </div>

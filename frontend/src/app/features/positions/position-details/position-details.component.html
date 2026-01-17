@@ -1,89 +1,121 @@
 <div class="position-details">
-  <header class="page-header">
-    <a routerLink="/portfolio" class="back-link">&larr; Back to Portfolio</a>
-  </header>
-
-  @if (loading()) {
-    <div class="loading">Loading position details...</div>
-  }
+  <div class="page-header">
+    <p-button label="Back to Portfolio" icon="pi pi-arrow-left" [text]="true" (onClick)="goBack()" />
+  </div>
 
   @if (error()) {
-    <div class="error-message">
-      <p>{{ error() }}</p>
-      <a routerLink="/portfolio" class="btn btn-secondary">Back to Portfolio</a>
-    </div>
+    <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
+    <p-button label="Back to Portfolio" icon="pi pi-arrow-left" severity="secondary" (onClick)="goBack()" />
+  }
+
+  @if (loading()) {
+    <p-card>
+      <div class="position-header-skeleton">
+        <p-skeleton width="40%" height="2rem" styleClass="mb-2" />
+        <p-skeleton width="20%" height="1.5rem" />
+      </div>
+      <p-divider />
+      <div class="metrics-grid">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="metric-skeleton">
+            <p-skeleton width="60%" height="1rem" styleClass="mb-2" />
+            <p-skeleton width="80%" height="2rem" />
+          </div>
+        }
+      </div>
+    </p-card>
   }
 
   @if (!loading() && !error() && position()) {
-    <div class="position-header">
-      <div class="instrument-info">
-        <h1>{{ position()!.instrumentName }}</h1>
-        <div class="meta">
-          <span class="symbol">{{ position()!.instrumentSymbol }}</span>
-          <span class="instrument-type" [class]="position()!.instrumentType.toLowerCase()">
-            {{ position()!.instrumentType }}
-          </span>
+    <p-card>
+      <div class="position-header">
+        <div class="instrument-info">
+          <h1>{{ position()!.instrumentName }}</h1>
+          <div class="meta">
+            <span class="symbol">{{ position()!.instrumentSymbol }}</span>
+            <p-tag [value]="position()!.instrumentType" [severity]="getInstrumentTypeSeverity(position()!.instrumentType)" />
+          </div>
+        </div>
+        <div class="account-info">
+          <span class="label">Account</span>
+          <span class="value">{{ position()!.accountName }}</span>
         </div>
       </div>
-      <div class="account-info">
-        <span class="label">Account</span>
-        <span class="value">{{ position()!.accountName }}</span>
-      </div>
-    </div>
 
-    <section class="metrics-section">
-      <h2>Performance</h2>
-      <div class="metrics-grid">
-        <div class="metric-card highlight">
-          <span class="label">Current Value</span>
-          <span class="value">{{ formatMoney(position()!.currentValue.amount) }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="label">Invested Amount</span>
-          <span class="value">{{ formatMoney(position()!.investedAmount.amount) }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="label">Profit/Loss</span>
-          <span class="value" [class]="getProfitLossClass(position()!.profitLoss.amount)">
-            {{ formatMoney(position()!.profitLoss.amount) }}
-          </span>
-        </div>
-        <div class="metric-card">
-          <span class="label">Return</span>
-          <span class="value" [class]="getProfitLossClass(position()!.returnPercentage)">
-            {{ formatPercentage(position()!.returnPercentage) }}
-          </span>
-        </div>
-      </div>
-    </section>
+      <p-divider />
 
-    <section class="metrics-section">
-      <h2>Position Details</h2>
-      <div class="metrics-grid">
-        <div class="metric-card">
-          <span class="label">Quantity</span>
-          <span class="value">{{ formatQuantity(position()!.quantity) }}</span>
+      <section class="metrics-section">
+        <h2>Performance</h2>
+        <div class="metrics-grid">
+          <p-card styleClass="metric-card highlight">
+            <div class="metric-content">
+              <span class="label">Current Value</span>
+              <span class="value">{{ formatMoney(position()!.currentValue.amount) }}</span>
+            </div>
+          </p-card>
+          <p-card styleClass="metric-card">
+            <div class="metric-content">
+              <span class="label">Invested Amount</span>
+              <span class="value">{{ formatMoney(position()!.investedAmount.amount) }}</span>
+            </div>
+          </p-card>
+          <p-card styleClass="metric-card">
+            <div class="metric-content">
+              <span class="label">Profit/Loss</span>
+              <span class="value" [class]="getProfitLossClass(position()!.profitLoss.amount)">
+                {{ formatMoney(position()!.profitLoss.amount) }}
+              </span>
+            </div>
+          </p-card>
+          <p-card styleClass="metric-card">
+            <div class="metric-content">
+              <span class="label">Return</span>
+              <span class="value" [class]="getProfitLossClass(position()!.returnPercentage)">
+                {{ formatPercentage(position()!.returnPercentage) }}
+              </span>
+            </div>
+          </p-card>
         </div>
-        <div class="metric-card">
-          <span class="label">Average Cost</span>
-          <span class="value">{{ formatMoney(position()!.averageCost.amount) }}</span>
-        </div>
-        <div class="metric-card">
-          <span class="label">Current Price</span>
-          <span class="value">{{ formatMoney(position()!.currentPrice.amount) }}</span>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="metadata-section">
-      <div class="metadata-item">
-        <span class="label">Created</span>
-        <span class="value">{{ formatDate(position()!.createdAt) }}</span>
+      <section class="metrics-section">
+        <h2>Position Details</h2>
+        <div class="metrics-grid three-cols">
+          <p-card styleClass="metric-card">
+            <div class="metric-content">
+              <span class="label">Quantity</span>
+              <span class="value">{{ formatQuantity(position()!.quantity) }}</span>
+            </div>
+          </p-card>
+          <p-card styleClass="metric-card">
+            <div class="metric-content">
+              <span class="label">Average Cost</span>
+              <span class="value">{{ formatMoney(position()!.averageCost.amount) }}</span>
+            </div>
+          </p-card>
+          <p-card styleClass="metric-card">
+            <div class="metric-content">
+              <span class="label">Current Price</span>
+              <span class="value">{{ formatMoney(position()!.currentPrice.amount) }}</span>
+            </div>
+          </p-card>
+        </div>
+      </section>
+
+      <p-divider />
+
+      <div class="metadata-section">
+        <div class="metadata-item">
+          <i class="pi pi-calendar"></i>
+          <span class="label">Created:</span>
+          <span class="value">{{ formatDate(position()!.createdAt) }}</span>
+        </div>
+        <div class="metadata-item">
+          <i class="pi pi-refresh"></i>
+          <span class="label">Updated:</span>
+          <span class="value">{{ formatDate(position()!.updatedAt) }}</span>
+        </div>
       </div>
-      <div class="metadata-item">
-        <span class="label">Last Updated</span>
-        <span class="value">{{ formatDate(position()!.updatedAt) }}</span>
-      </div>
-    </section>
+    </p-card>
   }
 </div>

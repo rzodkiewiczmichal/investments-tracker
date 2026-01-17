@@ -1,99 +1,113 @@
 <div class="portfolio-view">
-  <header class="page-header">
+  <div class="page-header">
     <h1>Portfolio</h1>
-    <a routerLink="/positions/new" class="btn btn-primary">Add Position</a>
-  </header>
-
-  @if (loading()) {
-    <div class="loading">Loading portfolio data...</div>
-  }
+    <p-button label="Add Position" icon="pi pi-plus" (onClick)="navigateToAdd()" />
+  </div>
 
   @if (error()) {
-    <div class="error-message">
-      <p>{{ error() }}</p>
-      <button (click)="loadData()" class="btn btn-secondary">Retry</button>
-    </div>
+    <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
+    <p-button label="Retry" icon="pi pi-refresh" severity="secondary" (onClick)="loadData()" />
   }
 
-  @if (!loading() && !error() && portfolio()) {
-    <section class="portfolio-summary">
-      <h2>Summary</h2>
-      <div class="summary-cards">
-        <div class="summary-card">
+  @if (loading()) {
+    <div class="summary-cards">
+      @for (i of [1,2,3,4,5]; track i) {
+        <p-card>
+          <p-skeleton width="60%" height="1rem" styleClass="mb-2" />
+          <p-skeleton width="80%" height="2rem" />
+        </p-card>
+      }
+    </div>
+  } @else if (!error() && portfolio()) {
+    <div class="summary-cards">
+      <p-card>
+        <div class="summary-card-content">
           <span class="label">Total Value</span>
           <span class="value">{{ formatMoney(portfolio()!.totalCurrentValue.amount) }}</span>
         </div>
-        <div class="summary-card">
+      </p-card>
+      <p-card>
+        <div class="summary-card-content">
           <span class="label">Invested</span>
           <span class="value">{{ formatMoney(portfolio()!.totalInvestedAmount.amount) }}</span>
         </div>
-        <div class="summary-card">
+      </p-card>
+      <p-card>
+        <div class="summary-card-content">
           <span class="label">Profit/Loss</span>
           <span class="value" [class]="getProfitLossClass(portfolio()!.totalProfitLoss.amount)">
             {{ formatMoney(portfolio()!.totalProfitLoss.amount) }}
           </span>
         </div>
-        <div class="summary-card">
+      </p-card>
+      <p-card>
+        <div class="summary-card-content">
           <span class="label">Return</span>
           <span class="value" [class]="getProfitLossClass(portfolio()!.totalReturnPercentage)">
             {{ formatPercentage(portfolio()!.totalReturnPercentage) }}
           </span>
         </div>
-        <div class="summary-card">
+      </p-card>
+      <p-card>
+        <div class="summary-card-content">
           <span class="label">Positions</span>
           <span class="value">{{ portfolio()!.positionsCount }}</span>
         </div>
-      </div>
-    </section>
+      </p-card>
+    </div>
 
-    <section class="positions-list">
-      <h2>Positions</h2>
+    <p-card header="Positions" styleClass="mt-4">
       @if (positions().length === 0) {
         <div class="empty-state">
+          <i class="pi pi-inbox empty-icon"></i>
           <p>No positions yet. Add your first position to get started.</p>
-          <a routerLink="/positions/new" class="btn btn-primary">Add Position</a>
+          <p-button label="Add Position" icon="pi pi-plus" (onClick)="navigateToAdd()" />
         </div>
       } @else {
-        <table class="positions-table">
-          <thead>
+        <p-table
+          [value]="positions()"
+          [rowHover]="true"
+          [paginator]="positions().length > 10"
+          [rows]="10"
+          selectionMode="single"
+          (onRowSelect)="onRowSelect($event)"
+          styleClass="p-datatable-striped"
+        >
+          <ng-template pTemplate="header">
             <tr>
               <th>Instrument</th>
               <th>Type</th>
-              <th class="numeric">Quantity</th>
-              <th class="numeric">Avg Cost</th>
-              <th class="numeric">Current Value</th>
-              <th class="numeric">P&L</th>
-              <th class="numeric">Return</th>
+              <th class="text-right">Quantity</th>
+              <th class="text-right">Avg Cost</th>
+              <th class="text-right">Current Value</th>
+              <th class="text-right">P&L</th>
+              <th class="text-right">Return</th>
             </tr>
-          </thead>
-          <tbody>
-            @for (position of positions(); track position.id) {
-              <tr [routerLink]="['/positions', position.id]" class="clickable">
-                <td>
-                  <div class="instrument-info">
-                    <span class="name">{{ position.instrumentName }}</span>
-                    <span class="symbol">{{ position.instrumentSymbol }}</span>
-                  </div>
-                </td>
-                <td>
-                  <span class="instrument-type" [class]="position.instrumentType.toLowerCase()">
-                    {{ position.instrumentType }}
-                  </span>
-                </td>
-                <td class="numeric">{{ formatQuantity(position.quantity) }}</td>
-                <td class="numeric">{{ formatMoney(position.averageCost.amount) }}</td>
-                <td class="numeric">{{ formatMoney(position.currentValue.amount) }}</td>
-                <td class="numeric" [class]="getProfitLossClass(position.profitLoss.amount)">
-                  {{ formatMoney(position.profitLoss.amount) }}
-                </td>
-                <td class="numeric" [class]="getProfitLossClass(position.returnPercentage)">
-                  {{ formatPercentage(position.returnPercentage) }}
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+          </ng-template>
+          <ng-template pTemplate="body" let-position>
+            <tr [pSelectableRow]="position" class="cursor-pointer">
+              <td>
+                <div class="instrument-cell">
+                  <span class="instrument-name">{{ position.instrumentName }}</span>
+                  <span class="instrument-symbol">{{ position.instrumentSymbol }}</span>
+                </div>
+              </td>
+              <td>
+                <p-tag [value]="position.instrumentType" [severity]="getInstrumentTypeSeverity(position.instrumentType)" />
+              </td>
+              <td class="text-right">{{ formatQuantity(position.quantity) }}</td>
+              <td class="text-right">{{ formatMoney(position.averageCost.amount) }}</td>
+              <td class="text-right font-semibold">{{ formatMoney(position.currentValue.amount) }}</td>
+              <td class="text-right" [class]="getProfitLossClass(position.profitLoss.amount)">
+                {{ formatMoney(position.profitLoss.amount) }}
+              </td>
+              <td class="text-right" [class]="getProfitLossClass(position.returnPercentage)">
+                {{ formatPercentage(position.returnPercentage) }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       }
-    </section>
+    </p-card>
   }
 </div>

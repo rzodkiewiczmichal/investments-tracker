@@ -1,18 +1,25 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageModule } from 'primeng/message';
+import { DividerModule } from 'primeng/divider';
 import { PositionService } from '../../../core/services';
 import { PositionDetail, ApiError } from '../../../core/models';
 
 @Component({
   selector: 'app-position-details',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, CardModule, ButtonModule, TagModule, SkeletonModule, MessageModule, DividerModule],
   templateUrl: './position-details.component.html',
   styleUrl: './position-details.component.scss'
 })
 export class PositionDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly positionService = inject(PositionService);
 
   position = signal<PositionDetail | null>(null);
@@ -43,6 +50,10 @@ export class PositionDetailsComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  goBack(): void {
+    this.router.navigate(['/portfolio']);
   }
 
   formatMoney(amount: number): string {
@@ -77,5 +88,15 @@ export class PositionDetailsComponent implements OnInit {
     if (value > 0) return 'positive';
     if (value < 0) return 'negative';
     return 'neutral';
+  }
+
+  getInstrumentTypeSeverity(type: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (type) {
+      case 'STOCK': return 'info';
+      case 'ETF': return 'success';
+      case 'BOND_ETF': return 'warn';
+      case 'POLISH_GOV_BOND': return 'secondary';
+      default: return 'secondary';
+    }
   }
 }
