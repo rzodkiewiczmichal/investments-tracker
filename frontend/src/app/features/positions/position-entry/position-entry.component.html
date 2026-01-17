@@ -1,0 +1,139 @@
+<div class="position-entry">
+  <header class="page-header">
+    <a routerLink="/portfolio" class="back-link">&larr; Back to Portfolio</a>
+    <h1>Add Position</h1>
+  </header>
+
+  @if (error()) {
+    <div class="error-message">
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  @if (loadingAccounts()) {
+    <div class="loading">Loading accounts...</div>
+  } @else if (accounts().length === 0) {
+    <div class="error-message">
+      <p>No accounts available. Please create an account first.</p>
+      <a routerLink="/portfolio" class="btn btn-secondary">Back to Portfolio</a>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="position-form">
+      <section class="form-section">
+        <h2>Instrument Information</h2>
+
+        <div class="form-group">
+          <label for="instrumentName">Instrument Name *</label>
+          <input
+            type="text"
+            id="instrumentName"
+            formControlName="instrumentName"
+            placeholder="e.g., Apple Inc."
+            [class.error]="hasFieldError('instrumentName')"
+          />
+          @if (hasFieldError('instrumentName')) {
+            <span class="field-error">{{ getFieldError('instrumentName') }}</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="instrumentSymbol">Symbol / Ticker *</label>
+            <input
+              type="text"
+              id="instrumentSymbol"
+              formControlName="instrumentSymbol"
+              placeholder="e.g., AAPL"
+              [class.error]="hasFieldError('instrumentSymbol')"
+            />
+            @if (hasFieldError('instrumentSymbol')) {
+              <span class="field-error">{{ getFieldError('instrumentSymbol') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="instrumentType">Type *</label>
+            <select
+              id="instrumentType"
+              formControlName="instrumentType"
+              [class.error]="hasFieldError('instrumentType')"
+            >
+              @for (type of instrumentTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+            @if (hasFieldError('instrumentType')) {
+              <span class="field-error">{{ getFieldError('instrumentType') }}</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2>Position Details</h2>
+
+        <div class="form-group">
+          <label for="accountId">Account *</label>
+          <select
+            id="accountId"
+            formControlName="accountId"
+            [class.error]="hasFieldError('accountId')"
+          >
+            <option value="">Select an account</option>
+            @for (account of accounts(); track account.id) {
+              <option [value]="account.id">{{ account.name }} ({{ account.broker }})</option>
+            }
+          </select>
+          @if (hasFieldError('accountId')) {
+            <span class="field-error">{{ getFieldError('accountId') }}</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity">Quantity *</label>
+            <input
+              type="number"
+              id="quantity"
+              formControlName="quantity"
+              placeholder="e.g., 100"
+              step="0.00000001"
+              min="0"
+              [class.error]="hasFieldError('quantity')"
+            />
+            @if (hasFieldError('quantity')) {
+              <span class="field-error">{{ getFieldError('quantity') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="averageCost">Average Cost (PLN) *</label>
+            <input
+              type="number"
+              id="averageCost"
+              formControlName="averageCost"
+              placeholder="e.g., 600.00"
+              step="0.0001"
+              min="0"
+              [class.error]="hasFieldError('averageCost')"
+            />
+            @if (hasFieldError('averageCost')) {
+              <span class="field-error">{{ getFieldError('averageCost') }}</span>
+            }
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <a routerLink="/portfolio" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" [disabled]="loading()">
+          @if (loading()) {
+            <span>Creating...</span>
+          } @else {
+            <span>Create Position</span>
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>
