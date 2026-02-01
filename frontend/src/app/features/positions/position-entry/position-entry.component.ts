@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -36,6 +37,7 @@ export class PositionEntryComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly positionService = inject(PositionService);
   private readonly accountService = inject(AccountService);
+  private readonly destroyRef = inject(DestroyRef);
 
   form!: FormGroup;
   accounts = signal<Account[]>([]);
@@ -66,19 +68,21 @@ export class PositionEntryComponent implements OnInit {
   }
 
   private loadAccounts(): void {
-    this.accountService.listAccounts().subscribe({
-      next: (response) => {
-        this.accounts.set(response.accounts);
-        if (response.accounts.length === 1) {
-          this.form.patchValue({ accountId: response.accounts[0].id });
+    this.accountService.listAccounts()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.accounts.set(response.accounts);
+          if (response.accounts.length === 1) {
+            this.form.patchValue({ accountId: response.accounts[0].id });
+          }
+          this.loadingAccounts.set(false);
+        },
+        error: (err: ApiError) => {
+          this.error.set(`Failed to load accounts: ${err.message}`);
+          this.loadingAccounts.set(false);
         }
-        this.loadingAccounts.set(false);
-      },
-      error: (err: ApiError) => {
-        this.error.set(`Failed to load accounts: ${err.message}`);
-        this.loadingAccounts.set(false);
-      }
-    });
+      });
   }
 
   goBack(): void {
@@ -97,25 +101,27 @@ export class PositionEntryComponent implements OnInit {
 
     const command = this.form.value;
 
-    this.positionService.createPosition(command).subscribe({
-      next: (position) => {
-        this.router.navigate(['/positions', position.id]);
-      },
-      error: (err: ApiError) => {
-        this.loading.set(false);
+    this.positionService.createPosition(command)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (position) => {
+          this.router.navigate(['/positions', position.id]);
+        },
+        error: (err: ApiError) => {
+          this.loading.set(false);
 
-        if (err.details && err.details.length > 0) {
-          const errors = new Map<string, string>();
-          err.details.forEach((detail: ValidationError) => {
-            errors.set(detail.field, detail.message);
-          });
-          this.fieldErrors.set(errors);
-          this.error.set('Please fix the validation errors below.');
-        } else {
-          this.error.set(err.message);
+          if (err.details && err.details.length > 0) {
+            const errors = new Map<string, string>();
+            err.details.forEach((detail: ValidationError) => {
+              errors.set(detail.field, detail.message);
+            });
+            this.fieldErrors.set(errors);
+            this.error.set('Please fix the validation errors below.');
+          } else {
+            this.error.set(err.message);
+          }
         }
-      }
-    });
+      });
   }
 
   getFieldError(fieldName: string): string | null {

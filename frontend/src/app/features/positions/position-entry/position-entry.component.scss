@@ -102,18 +102,6 @@
   border-top: 1px solid var(--surface-200);
 }
 
-.w-full {
-  width: 100%;
-}
-
-.mb-2 {
-  margin-bottom: 0.5rem;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
 :host ::ng-deep {
   .p-inputtext.ng-invalid.ng-dirty,
   .p-select.ng-invalid.ng-dirty,

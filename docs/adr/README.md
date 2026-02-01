@@ -17,6 +17,8 @@ We use the Michael Nygard format with the following structure:
 
 ## ADR List
 
+### Domain & Architecture
+
 | ID | Title | Status | Date |
 |----|-------|--------|------|
 | [ADR-001](ADR-001-aggregate-boundaries.md) | Aggregate Boundaries | Accepted | 2026-01-04 |
@@ -25,6 +27,40 @@ We use the Michael Nygard format with the following structure:
 | [ADR-004](ADR-004-package-structure.md) | Package Structure | Accepted | 2026-01-04 |
 | [ADR-005](ADR-005-database-schema.md) | Database Schema Design | Accepted | 2026-01-04 |
 | [ADR-006](ADR-006-money-representation.md) | Money Representation | Accepted | 2026-01-04 |
+
+### Infrastructure & Dependencies
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| [ADR-008](ADR-008-dependency-management.md) | Dependency Management | Accepted | 2026-01-05 |
+| [ADR-014](ADR-014-docker-compose-configuration.md) | Docker Compose Configuration | Accepted | 2026-01-10 |
+| [ADR-015](ADR-015-otlp-observability-strategy.md) | OTLP Observability Strategy | Accepted | 2026-01-10 |
+| [ADR-016](ADR-016-database-migration-strategy.md) | Database Migration Strategy | Accepted | 2026-01-10 |
+| [ADR-017](ADR-017-transaction-boundaries.md) | Transaction Boundaries | Accepted | 2026-01-10 |
+
+### REST API
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| [ADR-009](ADR-009-rest-api-structure.md) | REST API Structure | Accepted | 2026-01-08 |
+| [ADR-010](ADR-010-error-handling-strategy.md) | Error Handling Strategy | Accepted | 2026-01-08 |
+| [ADR-011](ADR-011-data-validation-strategy.md) | Data Validation Strategy | Accepted | 2026-01-08 |
+
+### Testing
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| [ADR-012](ADR-012-test-architecture.md) | Test Architecture | Accepted | 2026-01-09 |
+| [ADR-013](ADR-013-mock-vs-real-dependencies.md) | Mock vs Real Dependencies | Accepted | 2026-01-09 |
+
+### Frontend
+
+| ID | Title | Status | Date |
+|----|-------|--------|------|
+| [ADR-018](ADR-018-angular-19-frontend-framework.md) | Angular 19 Frontend Framework | Accepted | 2026-01-31 |
+| [ADR-019](ADR-019-frontend-project-structure.md) | Frontend Project Structure | Accepted | 2026-01-31 |
+| [ADR-020](ADR-020-primeng-ui-framework.md) | PrimeNG UI Framework | Accepted | 2026-01-31 |
+| [ADR-021](ADR-021-frontend-state-management.md) | Frontend State Management | Accepted | 2026-01-31 |
 
 ## Process
 

@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -9,6 +10,7 @@ import { MessageModule } from 'primeng/message';
 import { DividerModule } from 'primeng/divider';
 import { PositionService } from '../../../core/services';
 import { PositionDetail, ApiError } from '../../../core/models';
+import { Formatters, TagSeverity } from '../../../core/utils';
 
 @Component({
   selector: 'app-position-details',
@@ -21,6 +23,7 @@ export class PositionDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly positionService = inject(PositionService);
+  private readonly destroyRef = inject(DestroyRef);
 
   position = signal<PositionDetail | null>(null);
   loading = signal(true);
@@ -40,16 +43,18 @@ export class PositionDetailsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.positionService.getPosition(id).subscribe({
-      next: (position) => {
-        this.position.set(position);
-        this.loading.set(false);
-      },
-      error: (err: ApiError) => {
-        this.error.set(err.message);
-        this.loading.set(false);
-      }
-    });
+    this.positionService.getPosition(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (position) => {
+          this.position.set(position);
+          this.loading.set(false);
+        },
+        error: (err: ApiError) => {
+          this.error.set(err.message);
+          this.loading.set(false);
+        }
+      });
   }
 
   goBack(): void {
@@ -57,46 +62,26 @@ export class PositionDetailsComponent implements OnInit {
   }
 
   formatMoney(amount: number): string {
-    return new Intl.NumberFormat('pl-PL', {
-      style: 'currency',
-      currency: 'PLN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+    return Formatters.formatMoney(amount);
   }
 
   formatPercentage(value: number): string {
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(2)}%`;
+    return Formatters.formatPercentage(value);
   }
 
   formatQuantity(quantity: number): string {
-    return new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 8
-    }).format(quantity);
+    return Formatters.formatQuantity(quantity);
   }
 
   formatDate(dateString: string): string {
-    return new Intl.DateTimeFormat('pl-PL', {
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    }).format(new Date(dateString));
+    return Formatters.formatDate(dateString);
   }
 
   getProfitLossClass(value: number): string {
-    if (value > 0) return 'positive';
-    if (value < 0) return 'negative';
-    return 'neutral';
+    return Formatters.getProfitLossClass(value);
   }
 
-  getInstrumentTypeSeverity(type: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    switch (type) {
-      case 'STOCK': return 'info';
-      case 'ETF': return 'success';
-      case 'BOND_ETF': return 'warn';
-      case 'POLISH_GOV_BOND': return 'secondary';
-      default: return 'secondary';
-    }
+  getInstrumentTypeSeverity(type: string): TagSeverity {
+    return Formatters.getInstrumentTypeSeverity(type);
   }
 }

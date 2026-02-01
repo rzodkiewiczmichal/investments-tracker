@@ -1,6 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { TableModule, TableRowSelectEvent } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -9,6 +11,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageModule } from 'primeng/message';
 import { PortfolioService, PositionService } from '../../../core/services';
 import { PortfolioSummary, PositionSummary, ApiError } from '../../../core/models';
+import { Formatters, TagSeverity } from '../../../core/utils';
 
 @Component({
   selector: 'app-portfolio-view',
@@ -21,6 +24,7 @@ export class PortfolioViewComponent implements OnInit {
   private readonly portfolioService = inject(PortfolioService);
   private readonly positionService = inject(PositionService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   portfolio = signal<PortfolioSummary | null>(null);
   positions = signal<PositionSummary[]>([]);
@@ -35,26 +39,22 @@ export class PortfolioViewComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.portfolioService.getPortfolioSummary().subscribe({
-      next: (portfolio) => {
-        this.portfolio.set(portfolio);
-      },
-      error: (err: ApiError) => {
-        this.error.set(err.message);
-        this.loading.set(false);
-      }
-    });
-
-    this.positionService.listPositions().subscribe({
-      next: (response) => {
-        this.positions.set(response.positions);
-        this.loading.set(false);
-      },
-      error: (err: ApiError) => {
-        this.error.set(err.message);
-        this.loading.set(false);
-      }
-    });
+    forkJoin({
+      portfolio: this.portfolioService.getPortfolioSummary(),
+      positions: this.positionService.listPositions()
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ portfolio, positions }) => {
+          this.portfolio.set(portfolio);
+          this.positions.set(positions.positions);
+          this.loading.set(false);
+        },
+        error: (err: ApiError) => {
+          this.error.set(err.message);
+          this.loading.set(false);
+        }
+      });
   }
 
   onRowSelect(event: TableRowSelectEvent<PositionSummary>): void {
@@ -68,39 +68,22 @@ export class PortfolioViewComponent implements OnInit {
   }
 
   formatMoney(amount: number): string {
-    return new Intl.NumberFormat('pl-PL', {
-      style: 'currency',
-      currency: 'PLN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount);
+    return Formatters.formatMoney(amount);
   }
 
   formatPercentage(value: number): string {
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(2)}%`;
+    return Formatters.formatPercentage(value);
   }
 
   formatQuantity(quantity: number): string {
-    return new Intl.NumberFormat('pl-PL', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 8
-    }).format(quantity);
+    return Formatters.formatQuantity(quantity);
   }
 
   getProfitLossClass(value: number): string {
-    if (value > 0) return 'positive';
-    if (value < 0) return 'negative';
-    return 'neutral';
+    return Formatters.getProfitLossClass(value);
   }
 
-  getInstrumentTypeSeverity(type: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    switch (type) {
-      case 'STOCK': return 'info';
-      case 'ETF': return 'success';
-      case 'BOND_ETF': return 'warn';
-      case 'POLISH_GOV_BOND': return 'secondary';
-      default: return 'secondary';
-    }
+  getInstrumentTypeSeverity(type: string): TagSeverity {
+    return Formatters.getInstrumentTypeSeverity(type);
   }
 }
