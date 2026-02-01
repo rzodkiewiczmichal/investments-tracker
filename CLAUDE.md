@@ -153,6 +153,281 @@ Claude should judge which type to use based on:
 ❌ **Bad redundancy:**
 - Both documents contain identical lists of requirement IDs for each version
 
+## Domain Model Coding Rules
+
+**Reference:** See ADR-018 for full rationale.
+
+### Core Principles
+1. **All domain types are Java records** - both value objects AND entities
+2. **No primitives** - use value types (AccountName, not String)
+3. **No infrastructure references** - no mention of database, JPA, persistence
+4. **Immutable only** - no update/set methods, state changes create new instances
+
+### Implementation Rules
+
+| Rule | Wrong | Correct |
+|------|-------|---------|
+| Use records | `public class Account { }` | `public record Account(...) { }` |
+| Value types | `String name` | `AccountName name` |
+| No DB refs | "database-generated ID" | "account identifier" |
+| No factory methods | `Account.create()`, `Account.reconstitute()` | Use canonical constructor |
+| No setters | `setId()`, `updateName()` | `withName()` returning new instance |
+
+### State Changes Pattern
+```java
+// Wrong: mutation
+account.updateName(newName);
+
+// Correct: return new instance
+Account updated = new Account(account.id(), newName, account.brokerName());
+```
+
+### Validation Pattern
+```java
+public record AccountName(String value) {
+    public AccountName {
+        Objects.requireNonNull(value, "value cannot be null");
+        if (value.isBlank()) {
+            throw new DomainException("Account name cannot be blank");
+        }
+        value = value.trim();  // Normalize in constructor
+    }
+}
+```
+
+## Java Coding Style Rules
+
+### Nullability Annotations
+Use `@NonNull` and `@Nullable` annotations in record constructors to document intent:
+```java
+// Correct: explicit nullability
+public record Instrument(
+        @NonNull InstrumentSymbol symbol,
+        @NonNull InstrumentName name,
+        @NonNull InstrumentType type,
+        @Nullable Price currentPrice) { }
+```
+
+### No Redundant Comments
+Do not add comments that state the obvious about nullability or other things visible from annotations:
+```java
+// Wrong
+public Instrument {
+    // currentPrice can be null (price not yet available)
+}
+
+// Correct: @Nullable annotation speaks for itself
+```
+
+### Method Naming
+Use simple, direct method names. Avoid redundant suffixes:
+```java
+// Wrong
+public Optional<Price> getCurrentPriceOptional() { }
+
+// Correct
+public Optional<Price> getCurrentPrice() { }
+```
+
+### No Version References in Code
+Do not reference version numbers (v0.1, v0.2) in code comments. Version information is tracked elsewhere:
+```java
+// Wrong
+/**
+ * Portfolio is a singleton in v0.1 (single user).
+ */
+
+// Correct
+/**
+ * Portfolio represents the user's complete investment view.
+ */
+```
+
+### One Record Per File
+Nested records should be moved to separate files:
+```java
+// Wrong: nested record
+public record Portfolio(...) {
+    public record PortfolioMetrics(...) { }
+}
+
+// Correct: separate file
+// File: Portfolio.java
+public record Portfolio(...) { }
+
+// File: PortfolioMetrics.java
+public record PortfolioMetrics(...) { }
+```
+
+### Separate Types for Distinct Concepts
+Do not create one type that serves multiple distinct concepts. Create separate types:
+```java
+// Wrong: one type for two concepts
+public record InstrumentSymbol(String value) {
+    // Handles both ISIN and Ticker
+}
+
+// Correct: separate types
+public record Ticker(String value) { }
+public record Isin(String value) { }
+```
+
+### No Convenience Constructors
+Records should have only the canonical constructor. Do not add secondary constructors for convenience:
+```java
+// Wrong: secondary constructor for convenience
+public record Instrument(..., @Nullable Price currentPrice) {
+    public Instrument(InstrumentSymbol symbol, InstrumentName name, InstrumentType type) {
+        this(symbol, name, type, null);
+    }
+}
+
+// Correct: only canonical constructor, caller passes null explicitly
+new Instrument(symbol, name, type, null)
+```
+
+### No with* Methods
+Do not add `with*` methods for state changes. Use constructor directly:
+```java
+// Wrong: with* method
+public Account withName(AccountName newName) {
+    return new Account(this.id, newName, this.brokerName);
+}
+
+// Correct: caller uses constructor
+Account updated = new Account(existing.id(), newName, existing.brokerName());
+```
+
+### Identity-Based Equality for Entities
+Entities (Account, Position, Instrument) must override `equals()` and `hashCode()` based on identity field only:
+```java
+// Correct: identity-based equality for Position entity
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Position other)) return false;
+    return symbol.equals(other.symbol);  // Only compare identity
+}
+
+@Override
+public int hashCode() {
+    return symbol.hashCode();
+}
+```
+
+### Domain Exceptions
+Use `DomainException` (or its subclasses) for domain rule violations, not `IllegalArgumentException` or `IllegalStateException`:
+```java
+// Wrong
+if (holdings.isEmpty()) {
+    throw new IllegalArgumentException("Position must have at least one holding");
+}
+
+// Correct
+if (holdings.isEmpty()) {
+    throw new DomainException("Position must have at least one holding");
+}
+```
+
+### Exception Factory Methods
+Use factory methods on domain exception classes for common validation scenarios:
+```java
+// Correct: factory methods for common cases
+public class InvalidQuantityException extends DomainException {
+    public static InvalidQuantityException negative(String value) {
+        return new InvalidQuantityException("Quantity cannot be negative: " + value);
+    }
+
+    public static InvalidQuantityException zero() {
+        return new InvalidQuantityException("Quantity cannot be zero");
+    }
+
+    public static InvalidQuantityException exceedsScale(int actualScale, int maxScale) {
+        return new InvalidQuantityException(
+                "Quantity cannot exceed " + maxScale + " decimal places, got: " + actualScale);
+    }
+}
+```
+
+### Null Check Messages
+Include the parameter name in null check messages for debugging clarity:
+```java
+// Wrong: generic message
+Objects.requireNonNull(symbol, "Symbol cannot be null");
+
+// Correct: includes parameter name
+Objects.requireNonNull(symbol, "symbol cannot be null");
+```
+
+### Return Optional Instead of Null
+Never return null from methods. Use `Optional` for values that may be absent:
+```java
+// Wrong
+public InvestedAmount getTotalInvestedAmount() {
+    return metrics.totalInvestedAmount();  // may return null
+}
+
+// Correct
+public Optional<InvestedAmount> getTotalInvestedAmount() {
+    return Optional.ofNullable(metrics.totalInvestedAmount());
+}
+```
+
+### No Redundant Record Accessor Overrides
+Do not override record accessors if they just return the same value:
+```java
+// Wrong: redundant override
+public record Portfolio(List<Position> positions, PortfolioMetrics metrics) {
+    public List<Position> getPositions() {
+        return positions;
+    }
+}
+
+// Correct: use built-in accessor
+portfolio.positions()  // not portfolio.getPositions()
+```
+
+### Services Should Not Duplicate Entity Methods
+Domain services should only contain methods that add value. Do not create service methods that simply delegate to entity methods:
+```java
+// Wrong: service just delegates to entity
+public class PositionCalculationService {
+    public InvestedAmount calculateInvestedAmount(Position position) {
+        return position.calculateInvestedAmount();  // Just delegates!
+    }
+}
+
+// Correct: service adds value (uses different price)
+public class PositionCalculationService {
+    public CurrentValue calculateCurrentValue(Position position, Price currentPrice) {
+        Quantity totalQuantity = position.calculateTotalQuantity();
+        return CurrentValue.calculate(totalQuantity, currentPrice);
+    }
+}
+```
+
+### Avoid Duplicate Calculations
+When multiple methods need the same computed value, use private helper methods with pre-computed parameters:
+```java
+// Wrong: calculateTotalQuantity() called multiple times
+public InvestedAmount calculateInvestedAmount() {
+    Quantity totalQuantity = calculateTotalQuantity();
+    CostBasis avgCostBasis = calculateWeightedAverageCostBasis(); // calls calculateTotalQuantity() again!
+    return InvestedAmount.calculate(totalQuantity, avgCostBasis);
+}
+
+// Correct: pass pre-computed value
+public InvestedAmount calculateInvestedAmount() {
+    Quantity totalQuantity = calculateTotalQuantity();
+    CostBasis avgCostBasis = calculateWeightedAverageCostBasis(totalQuantity);
+    return InvestedAmount.calculate(totalQuantity, avgCostBasis);
+}
+
+private CostBasis calculateWeightedAverageCostBasis(Quantity totalQuantity) {
+    // Use pre-computed totalQuantity
+}
+```
+
 ## Code Quality and Build Verification
 
 ### Mandatory Build Verification
@@ -203,4 +478,4 @@ Claude should judge which type to use based on:
 - Slows development velocity
 
 ---
-*Last updated: 2026-01-11*
+*Last updated: 2026-02-01*
