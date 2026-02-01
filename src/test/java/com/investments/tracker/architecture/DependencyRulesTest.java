@@ -68,11 +68,57 @@ class DependencyRulesTest {
     }
 
     @Test
-    @DisplayName("Application layer should not depend on Spring Framework")
-    void applicationShouldNotDependOnSpring() {
+    @DisplayName("Application DTOs should not depend on Spring Framework")
+    void applicationDtosShouldNotDependOnSpring() {
+        // DTOs must be framework-free (excludes mappers which need @Component)
         noClasses()
-                .that().resideInAPackage("..application..")
+                .that().resideInAPackage("..application.dto..")
+                .and().resideOutsideOfPackage("..application.dto.mapper..")
                 .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
+                .allowEmptyShould(true)
+                .check(allClasses);
+    }
+
+    @Test
+    @DisplayName("Application mappers may use Spring stereotype annotations only")
+    void applicationMappersMayUseSpringAnnotationsOnly() {
+        // Mappers can use @Component but should not depend on other Spring packages
+        noClasses()
+                .that().resideInAPackage("..application.dto.mapper..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework.web..",
+                        "org.springframework.data..",
+                        "org.springframework.http..",
+                        "org.springframework.security..",
+                        "org.springframework.transaction.."
+                )
+                .allowEmptyShould(true)
+                .check(allClasses);
+    }
+
+    @Test
+    @DisplayName("Application exceptions should not depend on Spring Framework")
+    void applicationExceptionsShouldNotDependOnSpring() {
+        noClasses()
+                .that().resideInAPackage("..application.exception..")
+                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
+                .allowEmptyShould(true)
+                .check(allClasses);
+    }
+
+    @Test
+    @DisplayName("Application use cases may use Spring stereotype and transaction annotations only")
+    void applicationUseCasesMayUseSpringAnnotationsOnly() {
+        // Use cases can use @Service and @Transactional per ADR-003
+        // But should not depend on other Spring packages like web, data, etc.
+        noClasses()
+                .that().resideInAPackage("..application.usecase..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "org.springframework.web..",
+                        "org.springframework.data..",
+                        "org.springframework.http..",
+                        "org.springframework.security.."
+                )
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -121,6 +167,29 @@ class DependencyRulesTest {
                         "org.apache.logging..",
                         "java.util.logging.."
                 )
+                .allowEmptyShould(true)
+                .check(allClasses);
+    }
+
+    @Test
+    @DisplayName("Use cases should not depend on DTOs (ADR-022)")
+    void useCasesShouldNotDependOnDtos() {
+        // Use cases operate on domain model only
+        noClasses()
+                .that().resideInAPackage("..application.usecase..")
+                .should().dependOnClassesThat().resideInAPackage("..dto..")
+                .allowEmptyShould(true)
+                .check(allClasses);
+    }
+
+    @Test
+    @DisplayName("Output ports should not depend on DTOs (ADR-022)")
+    void outputPortsShouldNotDependOnDtos() {
+        // Output ports (repositories, domain ports) operate on domain model only
+        noClasses()
+                .that().resideInAPackage("..domain.repository..")
+                .or().resideInAPackage("..domain.port..")
+                .should().dependOnClassesThat().resideInAPackage("..dto..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }

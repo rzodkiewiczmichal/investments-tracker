@@ -81,15 +81,28 @@ class NamingConventionTest {
     }
 
     @Test
-    @DisplayName("DTOs should be named *DTO, *Request, or *Command")
+    @DisplayName("DTOs should be named *DTO, *Request, *Response, or *Command")
     void dtosShouldBeNamedCorrectly() {
         classes()
                 .that().resideInAPackage("..application.dto..")
+                .and().resideOutsideOfPackage("..application.dto.mapper..")
                 .and().areNotInterfaces()
                 .should().haveSimpleNameEndingWith("DTO")
                 .orShould().haveSimpleNameEndingWith("Request")
                 .orShould().haveSimpleNameEndingWith("Command")
                 .orShould().haveSimpleNameEndingWith("Response")
+                .allowEmptyShould(true)
+                .check(allClasses);
+    }
+
+    @Test
+    @DisplayName("Mappers should be named *Mapper")
+    void mappersShouldBeNamedCorrectly() {
+        classes()
+                .that().resideInAPackage("..application.dto.mapper..")
+                .and().areNotInterfaces()
+                .and().areTopLevelClasses()
+                .should().haveSimpleNameEndingWith("Mapper")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }

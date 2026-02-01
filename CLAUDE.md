@@ -32,6 +32,41 @@ Claude Code will not be just agentic code help - will use all handy MCP servers 
 ## Project Location
 GitHub repository cloned in this directory
 
+## Documentation Locations
+
+### Requirements
+- **Functional Requirements:** `requirements/functional/functional-requirements.md` (57 FRs)
+- **Non-Functional Requirements:** `requirements/non-functional/non-functional-requirements.md` (48 NFRs)
+- **Ubiquitous Language:** `requirements/functional/ubiquitous-language.md`
+- **User Personas:** `requirements/functional/user-personas.md`
+
+### Planning
+- **Version Roadmap:** `planning/versions-roadmap.md`
+- **Requirements by Version:** `planning/requirements-by-version.md` (traceability matrix)
+- **Scenarios to Requirements:** `planning/scenarios-to-requirements.md`
+
+### Architecture Decision Records (ADRs)
+Located in `docs/adr/`:
+- **ADR-001:** Aggregate Boundaries
+- **ADR-002:** Value Objects and Entities
+- **ADR-003:** Domain vs Application Services (key for use case design)
+- **ADR-004:** Package Structure (hexagonal architecture)
+- **ADR-005:** Database Schema
+- **ADR-006:** Money Representation
+- **ADR-009:** REST API Structure (endpoints, DTOs)
+- **ADR-010:** Error Handling Strategy (GlobalExceptionHandler)
+- **ADR-011:** Data Validation Strategy (three-layer validation)
+- **ADR-012:** Test Architecture
+- **ADR-017:** Transaction Boundaries
+
+### Diagrams
+- **Domain Model:** `docs/diagrams/domain-model.md`
+- **Database Schema:** `docs/diagrams/database-schema.md`
+
+### v0.1 MVP Requirements Scope
+**Functional (20):** FR-001 to FR-004, FR-011, FR-012, FR-014, FR-041, FR-042, FR-044 to FR-046, FR-081 to FR-084, FR-089, FR-091 to FR-096
+**Non-Functional (37):** See `planning/requirements-by-version.md` for complete list
+
 ## Project Tracking
 
 ### GitHub Issues
@@ -425,6 +460,26 @@ public InvestedAmount calculateInvestedAmount() {
 
 private CostBasis calculateWeightedAverageCostBasis(Quantity totalQuantity) {
     // Use pre-computed totalQuantity
+}
+```
+
+## Application Layer Naming Conventions
+
+### Use Case Naming
+Application layer services follow the UseCase naming pattern:
+- **Interface:** `*UseCase` (e.g., `PortfolioQueryUseCase`)
+- **Implementation:** `*UseCaseService` (e.g., `PortfolioQueryUseCaseService`)
+
+```java
+// Correct: interface returns domain model (ADR-022)
+public interface PortfolioQueryUseCase {
+    Portfolio getPortfolio();
+}
+
+// Correct: implementation
+@Service
+public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
+    // ...
 }
 ```
 
