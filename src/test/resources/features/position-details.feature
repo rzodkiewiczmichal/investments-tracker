@@ -21,8 +21,8 @@ Feature: Position Details
     And I should see average cost basis of 1200 PLN
     And I should see invested amount of 120000 PLN
     And I should see current value of 140000 PLN
-    And I should see P&L of +20000 PLN
-    And I should see P&L percentage of +16.67%
+    And I should see position P&L of +20000 PLN
+    And I should see position P&L percentage of +16.67%
     And I should see the position XIRR if available
 
   @FR-012 @FR-081 @FR-082 @FR-083 @FR-084 @FR-089 @FR-091
@@ -35,8 +35,8 @@ Feature: Position Details
     And I should see average cost basis of 1800 PLN
     And I should see invested amount of 90000 PLN
     And I should see current value of 85000 PLN
-    And I should see P&L of -5000 PLN
-    And I should see P&L percentage of -5.56%
+    And I should see position P&L of -5000 PLN
+    And I should see position P&L percentage of -5.56%
 
   @FR-013 @FR-081 @FR-082 @FR-083 @FR-084 @FR-089 @FR-091
   @v0.6 @position @bonds
@@ -46,8 +46,8 @@ Feature: Position Details
     When I view the position details for Polish government bonds
     Then I should see invested amount of 50000 PLN
     And I should see current value of 52500 PLN
-    And I should see P&L of +2500 PLN
-    And I should see P&L percentage of +5.0%
+    And I should see position P&L of +2500 PLN
+    And I should see position P&L percentage of +5.0%
 
   @FR-014 @FR-081 @FR-083 @FR-084 @FR-089
   @v0.1 @position
