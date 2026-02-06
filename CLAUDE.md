@@ -1,7 +1,5 @@
 # Investment Tracker - Project Context for Claude
 
-**PRIORITY 0:** Include in claude.md only the information I explicitly share, do not include anything else, do not guess, do not try to anticipate.
-
 ## Project Overview
 **Name:** Investment Tracker
 **Purpose:** Application for private usage to track investments done in multiple different broker accounts
@@ -46,18 +44,7 @@ GitHub repository cloned in this directory
 - **Scenarios to Requirements:** `planning/scenarios-to-requirements.md`
 
 ### Architecture Decision Records (ADRs)
-Located in `docs/adr/`:
-- **ADR-001:** Aggregate Boundaries
-- **ADR-002:** Value Objects and Entities
-- **ADR-003:** Domain vs Application Services (key for use case design)
-- **ADR-004:** Package Structure (hexagonal architecture)
-- **ADR-005:** Database Schema
-- **ADR-006:** Money Representation
-- **ADR-009:** REST API Structure (endpoints, DTOs)
-- **ADR-010:** Error Handling Strategy (GlobalExceptionHandler)
-- **ADR-011:** Data Validation Strategy (three-layer validation)
-- **ADR-012:** Test Architecture
-- **ADR-017:** Transaction Boundaries
+Located in `docs/adr/`. Read the ADR README (`docs/adr/README.md`) for an index, or read individual ADRs as needed when working on related areas.
 
 ### Diagrams
 - **Domain Model:** `docs/diagrams/domain-model.md`
@@ -483,6 +470,51 @@ public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
 }
 ```
 
+## Infrastructure Layer Rules
+
+### Domain Services Need Spring Configuration
+Domain services (e.g., `PositionCalculationService`, `PortfolioCalculationService`) are pure domain objects without `@Service` annotation. A `@Configuration` class in the infrastructure layer must register them as Spring beans:
+```java
+@Configuration
+public class DomainServiceConfig {
+    @Bean
+    public PortfolioCalculationService portfolioCalculationService() {
+        return new PortfolioCalculationService();
+    }
+}
+```
+
+### JPA `@CollectionTable` Names Must Match Flyway Migrations
+JPA default table naming will not match Flyway-created tables. Always specify the table name explicitly in `@CollectionTable` to match the migration:
+```java
+// Wrong: defaults to "position_holdings"
+@ElementCollection
+@CollectionTable(joinColumns = @JoinColumn(name = "instrument_symbol"))
+
+// Correct: matches Flyway migration table name
+@ElementCollection
+@CollectionTable(name = "account_holdings", joinColumns = @JoinColumn(name = "instrument_symbol"))
+```
+
+## Cucumber Testing Rules
+
+### Step Definitions Are Globally Unique
+Cucumber uses a global step registry. Two step classes cannot define the same `@Then`/`@Given`/`@When` pattern. Use prefixes to disambiguate:
+```java
+// Wrong: same pattern in PositionSteps and PortfolioSteps
+@Then("I should see P&L of +{int} PLN")
+
+// Correct: prefix to make unique
+@Then("I should see position P&L of +{int} PLN")  // PositionSteps
+@Then("I should see P&L of +{int} PLN")            // PortfolioSteps (portfolio context)
+```
+
+### Integration Tests Require Docker
+Testcontainers is used for the database. `./gradlew test` runs unit tests without Docker. `./gradlew build` includes integration tests that need Docker running.
+
+### Cucumber Tests Should Set Up Data via JDBC
+Don't rely on the REST API for test data setup in Given steps. Use `JdbcTemplate` directly to insert accounts, instruments, and positions. This avoids circular dependencies on the API being correct and keeps test setup fast and reliable.
+
 ## Code Quality and Build Verification
 
 ### Mandatory Build Verification
@@ -533,4 +565,4 @@ public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
 - Slows development velocity
 
 ---
-*Last updated: 2026-02-01*
+*Last updated: 2026-02-06*

@@ -44,6 +44,16 @@ public record Quantity(BigDecimal value) {
     }
 
     /**
+     * Creates a Quantity from a BigDecimal value.
+     *
+     * @param value the quantity as a BigDecimal
+     * @return new Quantity
+     */
+    public static Quantity of(BigDecimal value) {
+        return new Quantity(value);
+    }
+
+    /**
      * Creates a Quantity from a string value.
      *
      * @param value the quantity as a string

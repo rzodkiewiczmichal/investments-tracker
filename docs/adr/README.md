@@ -27,6 +27,13 @@ We use the Michael Nygard format with the following structure:
 | [ADR-004](ADR-004-package-structure.md) | Package Structure | Accepted | 2026-01-04 |
 | [ADR-005](ADR-005-database-schema.md) | Database Schema Design | Accepted | 2026-01-04 |
 | [ADR-006](ADR-006-money-representation.md) | Money Representation | Accepted | 2026-01-04 |
+| [ADR-018](ADR-018-domain-model-implementation-rules.md) | Domain Model Implementation Rules | Accepted | 2026-02-01 |
+| [ADR-019](ADR-019-factory-and-with-methods.md) | Factory and With Methods | Accepted | 2026-02-01 |
+| [ADR-022](ADR-022-use-case-dependencies.md) | Application Core Operates on Domain Model Only | Accepted | 2026-02-01 |
+| [ADR-023](ADR-023-cross-aggregate-data-access.md) | Cross-Aggregate Data Access Patterns | Accepted | 2026-02-02 |
+| [ADR-024](ADR-024-domain-services-cross-aggregate-calculations.md) | Domain Services for Cross-Aggregate Calculations | Accepted | 2026-02-02 |
+| [ADR-025](ADR-025-repository-adapter-single-aggregate.md) | Repository Adapters Handle Single Aggregate Only | Accepted | 2026-02-02 |
+| [ADR-026](ADR-026-application-layer-orchestration.md) | Application Layer Orchestrates Cross-Aggregate Operations | Accepted | 2026-02-02 |
 
 ### Infrastructure & Dependencies
 

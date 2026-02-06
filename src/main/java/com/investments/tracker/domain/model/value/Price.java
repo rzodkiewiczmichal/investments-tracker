@@ -27,6 +27,16 @@ public record Price(Money money) {
     }
 
     /**
+     * Creates a Price from a Money value.
+     *
+     * @param money the money value
+     * @return new Price
+     */
+    public static Price of(Money money) {
+        return new Price(money);
+    }
+
+    /**
      * Creates a Price in PLN from a string amount.
      *
      * @param amount the price amount as string
