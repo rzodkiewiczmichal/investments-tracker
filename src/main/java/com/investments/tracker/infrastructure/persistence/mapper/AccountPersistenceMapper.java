@@ -47,4 +47,21 @@ public class AccountPersistenceMapper {
         entity.setAccountType(AccountType.NORMAL);
         return entity;
     }
+
+    /**
+     * Creates a new JPA entity without an ID (for database-generated IDs).
+     *
+     * @param name the account name
+     * @param brokerName the broker name
+     * @return the JPA entity without ID set
+     */
+    public AccountJpaEntity toNewEntity(AccountName name, BrokerName brokerName) {
+        Objects.requireNonNull(name, "name cannot be null");
+        Objects.requireNonNull(brokerName, "brokerName cannot be null");
+        AccountJpaEntity entity = new AccountJpaEntity();
+        entity.setName(name.value());
+        entity.setBrokerName(brokerName.value());
+        entity.setAccountType(AccountType.NORMAL);
+        return entity;
+    }
 }

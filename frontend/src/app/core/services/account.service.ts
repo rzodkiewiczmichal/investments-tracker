@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AccountsResponse } from '../models';
+import { Account, AccountsResponse, CreateAccountRequest } from '../models';
 import { API_BASE_URL } from './api.config';
 
 @Injectable({
@@ -13,5 +13,9 @@ export class AccountService {
 
   listAccounts(): Observable<AccountsResponse> {
     return this.http.get<AccountsResponse>(`${this.apiUrl}/accounts`);
+  }
+
+  createAccount(request: CreateAccountRequest): Observable<Account> {
+    return this.http.post<Account>(`${this.apiUrl}/accounts`, request);
   }
 }

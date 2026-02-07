@@ -2,6 +2,8 @@ package com.investments.tracker.infrastructure.persistence.adapter;
 
 import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
+import com.investments.tracker.domain.model.value.AccountName;
+import com.investments.tracker.domain.model.value.BrokerName;
 import com.investments.tracker.domain.repository.AccountRepository;
 import com.investments.tracker.infrastructure.persistence.entity.AccountJpaEntity;
 import com.investments.tracker.infrastructure.persistence.mapper.AccountPersistenceMapper;
@@ -58,5 +60,18 @@ public class AccountRepositoryAdapter implements AccountRepository {
     @Override
     public long count() {
         return jpaRepository.count();
+    }
+
+    @Override
+    public Optional<Account> findByName(AccountName name) {
+        return jpaRepository.findByName(name.value())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Account create(AccountName name, BrokerName brokerName) {
+        AccountJpaEntity entity = mapper.toNewEntity(name, brokerName);
+        AccountJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
     }
 }

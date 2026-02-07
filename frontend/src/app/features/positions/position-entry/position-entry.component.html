@@ -19,14 +19,6 @@
         }
       </div>
     </p-card>
-  } @else if (accounts().length === 0) {
-    <p-card>
-      <div class="empty-state">
-        <i class="pi pi-exclamation-circle empty-icon"></i>
-        <p>No accounts available. Please create an account first.</p>
-        <p-button label="Back to Portfolio" icon="pi pi-arrow-left" severity="secondary" (onClick)="goBack()" />
-      </div>
-    </p-card>
   } @else {
     <p-card>
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -91,26 +83,36 @@
 
           <div class="field">
             <label for="accountId">Account *</label>
-            <p-select
-              id="accountId"
-              formControlName="accountId"
-              [options]="accounts()"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Select an account"
-              styleClass="w-full"
-              [class.ng-invalid]="hasFieldError('accountId')"
-              [class.ng-dirty]="form.get('accountId')?.touched"
-            >
-              <ng-template pTemplate="selectedItem" let-account>
-                @if (account) {
+            <div class="account-select-row">
+              <p-select
+                id="accountId"
+                formControlName="accountId"
+                [options]="accounts()"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Select an account"
+                styleClass="w-full"
+                [class.ng-invalid]="hasFieldError('accountId')"
+                [class.ng-dirty]="form.get('accountId')?.touched"
+              >
+                <ng-template pTemplate="selectedItem" let-account>
+                  @if (account) {
+                    {{ account.name }} ({{ account.broker }})
+                  }
+                </ng-template>
+                <ng-template pTemplate="item" let-account>
                   {{ account.name }} ({{ account.broker }})
-                }
-              </ng-template>
-              <ng-template pTemplate="item" let-account>
-                {{ account.name }} ({{ account.broker }})
-              </ng-template>
-            </p-select>
+                </ng-template>
+              </p-select>
+              <p-button
+                icon="pi pi-plus"
+                [rounded]="true"
+                [outlined]="true"
+                severity="secondary"
+                (onClick)="openAccountDialog()"
+                pTooltip="Create new account"
+              />
+            </div>
             @if (hasFieldError('accountId')) {
               <small class="p-error">{{ getFieldError('accountId') }}</small>
             }
@@ -174,3 +176,29 @@
     </p-card>
   }
 </div>
+
+<p-dialog
+  header="Create Account"
+  [(visible)]="showAccountDialog"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="true"
+>
+  @if (accountDialogError()) {
+    <p-message severity="error" [text]="accountDialogError()!" styleClass="mb-3 w-full" />
+  }
+  <form [formGroup]="accountForm">
+    <div class="field">
+      <label for="accountName">Account Name *</label>
+      <input pInputText id="accountName" formControlName="name" placeholder="e.g., XTB IKE" class="w-full" />
+    </div>
+    <div class="field">
+      <label for="accountBroker">Broker *</label>
+      <input pInputText id="accountBroker" formControlName="broker" placeholder="e.g., XTB" class="w-full" />
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="showAccountDialog.set(false)" />
+    <p-button label="Create" icon="pi pi-check" (onClick)="submitAccountDialog()" [loading]="accountDialogLoading()" />
+  </ng-template>
+</p-dialog>
