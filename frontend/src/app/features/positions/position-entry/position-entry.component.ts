@@ -11,8 +11,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { MessageModule } from 'primeng/message';
 import { SkeletonModule } from 'primeng/skeleton';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { PositionService, AccountService } from '../../../core/services';
-import { Account, InstrumentType, ApiError, ValidationError } from '../../../core/models';
+import { Account, CreateAccountRequest, InstrumentType, ApiError, ValidationError } from '../../../core/models';
 
 @Component({
   selector: 'app-position-entry',
@@ -27,7 +29,9 @@ import { Account, InstrumentType, ApiError, ValidationError } from '../../../cor
     InputNumberModule,
     MessageModule,
     SkeletonModule,
-    FloatLabelModule
+    FloatLabelModule,
+    DialogModule,
+    TooltipModule
   ],
   templateUrl: './position-entry.component.html',
   styleUrl: './position-entry.component.scss'
@@ -40,11 +44,16 @@ export class PositionEntryComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   form!: FormGroup;
+  accountForm!: FormGroup;
   accounts = signal<Account[]>([]);
   loading = signal(false);
   loadingAccounts = signal(true);
   error = signal<string | null>(null);
   fieldErrors = signal<Map<string, string>>(new Map());
+
+  showAccountDialog = signal(false);
+  accountDialogLoading = signal(false);
+  accountDialogError = signal<string | null>(null);
 
   instrumentTypes: { value: InstrumentType; label: string }[] = [
     { value: 'STOCK', label: 'Stock' },
@@ -53,6 +62,7 @@ export class PositionEntryComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    this.initAccountForm();
     this.loadAccounts();
   }
 
@@ -64,6 +74,13 @@ export class PositionEntryComponent implements OnInit {
       accountId: [null, [Validators.required]],
       quantity: [null, [Validators.required, Validators.min(0.00000001)]],
       averageCost: [null, [Validators.required, Validators.min(0.0001)]]
+    });
+  }
+
+  private initAccountForm(): void {
+    this.accountForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(255)]],
+      broker: ['', [Validators.required, Validators.maxLength(255)]]
     });
   }
 
@@ -87,6 +104,39 @@ export class PositionEntryComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/portfolio']);
+  }
+
+  openAccountDialog(): void {
+    this.accountForm.reset();
+    this.accountDialogError.set(null);
+    this.showAccountDialog.set(true);
+  }
+
+  submitAccountDialog(): void {
+    if (this.accountForm.invalid) {
+      this.accountForm.markAllAsTouched();
+      return;
+    }
+
+    this.accountDialogLoading.set(true);
+    this.accountDialogError.set(null);
+
+    const request: CreateAccountRequest = this.accountForm.value;
+
+    this.accountService.createAccount(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (newAccount) => {
+          this.accounts.update(current => [...current, newAccount]);
+          this.form.patchValue({ accountId: newAccount.id });
+          this.accountDialogLoading.set(false);
+          this.showAccountDialog.set(false);
+        },
+        error: (err: ApiError) => {
+          this.accountDialogLoading.set(false);
+          this.accountDialogError.set(err.message);
+        }
+      });
   }
 
   onSubmit(): void {

@@ -2,6 +2,8 @@ package com.investments.tracker.domain.repository;
 
 import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
+import com.investments.tracker.domain.model.value.AccountName;
+import com.investments.tracker.domain.model.value.BrokerName;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -58,4 +60,21 @@ public interface AccountRepository {
      * @return the count
      */
     long count();
+
+    /**
+     * Finds an account by its name.
+     *
+     * @param name the account name
+     * @return optional account
+     */
+    Optional<Account> findByName(AccountName name);
+
+    /**
+     * Creates a new account with a database-generated ID.
+     *
+     * @param name the account name
+     * @param brokerName the broker name
+     * @return the created account with generated ID
+     */
+    Account create(AccountName name, BrokerName brokerName);
 }

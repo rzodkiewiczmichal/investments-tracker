@@ -24,23 +24,13 @@
   gap: 0.5rem;
 }
 
-.empty-state {
+.account-select-row {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem;
-  text-align: center;
-  color: var(--text-color-secondary);
+  gap: 0.5rem;
+  align-items: flex-start;
 
-  .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    color: var(--orange-500);
-  }
-
-  p {
-    margin-bottom: 1rem;
+  p-select {
+    flex: 1;
   }
 }
 
