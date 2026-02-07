@@ -480,6 +480,60 @@
 
 ---
 
+## account-management.feature
+
+### Scenario: "Create new account"
+**File:** `requirements/functional/features/account-management.feature:11`
+**Requirements Covered:**
+- FR-073: Create Account
+
+**Version:** v0.1
+**Categories:** Account Management
+
+---
+
+### Scenario: "Create account validation - missing required fields"
+**File:** `requirements/functional/features/account-management.feature:21`
+**Requirements Covered:**
+- FR-074: Create Account Validation - Missing Required Fields
+
+**Version:** v0.1
+**Categories:** Account Management, Validation
+
+---
+
+### Scenario: "Create account validation - missing broker name"
+**File:** `requirements/functional/features/account-management.feature:29`
+**Requirements Covered:**
+- FR-074: Create Account Validation - Missing Required Fields
+
+**Version:** v0.1
+**Categories:** Account Management, Validation
+
+---
+
+### Scenario: "Create account validation - duplicate name"
+**File:** `requirements/functional/features/account-management.feature:37`
+**Requirements Covered:**
+- FR-075: Create Account Validation - Duplicate Account Name
+
+**Version:** v0.1
+**Categories:** Account Management, Validation
+
+---
+
+### Scenario: "Inline account creation during position entry"
+**File:** `requirements/functional/features/account-management.feature:44`
+**Requirements Covered:**
+- FR-076: Inline Account Creation During Position Entry
+- FR-073: Create Account
+- FR-041: Manual Entry of Stock Position
+
+**Version:** v0.1
+**Categories:** Account Management, Manual Entry
+
+---
+
 ## Summary Statistics
 
 ### Scenarios by Feature File
@@ -489,14 +543,15 @@
 - **manual-entry.feature:** 6 scenarios
 - **price-updates.feature:** 7 scenarios
 - **reconciliation.feature:** 6 scenarios
+- **account-management.feature:** 5 scenarios
 
-**Total Scenarios:** 39
+**Total Scenarios:** 44
 
 ---
 
 ### Scenarios by Version
 
-**v0.1:** 13 scenarios
+**v0.1:** 18 scenarios
 - View portfolio with positive returns
 - View portfolio with negative returns
 - View empty portfolio
@@ -509,6 +564,11 @@
 - Manual entry validation - invalid quantity
 - Manual entry validation - invalid average cost
 - View total portfolio value (partial)
+- Create new account
+- Create account validation - missing required fields
+- Create account validation - missing broker name
+- Create account validation - duplicate name
+- Inline account creation during position entry
 
 **v0.2:** 11 scenarios
 - View aggregated positions across accounts
@@ -558,9 +618,9 @@
 
 ### Requirements Coverage Analysis
 
-**Total Functional Requirements:** 57
+**Total Functional Requirements:** 61
 
-**Requirements with Scenario Coverage:** 46 (81%)
+**Requirements with Scenario Coverage:** 50 (82%)
 
 **Requirements without Direct Scenario Coverage:** 11
 - FR-072: Account-Level Position View (implied by FR-071)

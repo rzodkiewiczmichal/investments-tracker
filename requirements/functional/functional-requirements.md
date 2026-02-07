@@ -442,6 +442,42 @@ Requirements are organized into the following categories:
 **Dependencies:** FR-071
 **Target Version:** v0.2
 
+### FR-073: Create Account
+**Category:** Account Management
+**Priority:** Must Have
+**Description:** User can create a new brokerage account by providing account name and broker name. The account is persisted and immediately available for assigning positions.
+**Related Scenarios:** Create new account
+**Cucumber Tags:** @FR-073
+**Dependencies:** None
+**Target Version:** v0.1
+
+### FR-074: Create Account Validation - Missing Required Fields
+**Category:** Account Management
+**Priority:** Must Have
+**Description:** System validates that required fields (account name, broker name) are provided when creating an account and returns clear error messages if missing.
+**Related Scenarios:** Create account validation - missing required fields
+**Cucumber Tags:** @FR-074
+**Dependencies:** FR-073
+**Target Version:** v0.1
+
+### FR-075: Create Account Validation - Duplicate Account Name
+**Category:** Account Management
+**Priority:** Must Have
+**Description:** System prevents creation of accounts with duplicate names and returns clear error message indicating the name is already taken.
+**Related Scenarios:** Create account validation - duplicate name
+**Cucumber Tags:** @FR-075
+**Dependencies:** FR-073
+**Target Version:** v0.1
+
+### FR-076: Inline Account Creation During Position Entry
+**Category:** Account Management
+**Priority:** Must Have
+**Description:** When adding a position, if no accounts exist or the user needs a new one, the UI allows creating an account inline without navigating away from the position entry flow. The newly created account is immediately selectable in the account dropdown.
+**Related Scenarios:** Inline account creation during position entry
+**Cucumber Tags:** @FR-076
+**Dependencies:** FR-073, FR-041
+**Target Version:** v0.1
+
 ---
 
 ## 8. Metrics & Calculations
@@ -646,10 +682,10 @@ Requirements are organized into the following categories:
 - **Data Import:** FR-021 to FR-028, FR-030 (9 requirements)
 - **Manual Entry:** FR-041, FR-042, FR-044 to FR-046 (5 requirements)
 - **Price Management:** FR-051 to FR-055 (5 requirements)
-- **Account Management:** FR-071 (1 requirement)
+- **Account Management:** FR-071, FR-073 to FR-076 (5 requirements)
 - **Metrics & Calculations:** FR-081 to FR-087, FR-089, FR-091 to FR-096 (13 requirements)
 
-**Total Must Have:** 43 requirements
+**Total Must Have:** 47 requirements
 
 ### Should Have (Important but can be deferred)
 - **Position Management:** FR-013 (1 requirement)
@@ -667,15 +703,15 @@ Requirements are organized into the following categories:
 
 **Total Could Have:** 2 requirements
 
-**Grand Total:** 57 functional requirements
+**Grand Total:** 61 functional requirements
 
 ---
 
 ## Requirements Coverage by Version
 
 ### v0.1 (MVP - Domain Foundation)
-**Requirements:** FR-001 to FR-004, FR-011, FR-012, FR-014, FR-041, FR-042, FR-044 to FR-046, FR-081 to FR-084, FR-089, FR-091 to FR-096
-**Count:** 20 requirements (partial implementation for some)
+**Requirements:** FR-001 to FR-004, FR-011, FR-012, FR-014, FR-041, FR-042, FR-044 to FR-046, FR-073 to FR-076, FR-081 to FR-084, FR-089, FR-091 to FR-096
+**Count:** 24 requirements (partial implementation for some)
 
 ### v0.2 (Multi-Account Aggregation)
 **Requirements:** FR-005, FR-021 to FR-030, FR-071, FR-072, FR-085
@@ -745,6 +781,10 @@ Requirements are organized into the following categories:
 | FR-044 | manual-entry.feature | Manual entry validation - missing required fields |
 | FR-045 | manual-entry.feature | Manual entry validation - invalid quantity |
 | FR-046 | manual-entry.feature | Manual entry validation - invalid average cost |
+| FR-073 | account-management.feature | Create new account |
+| FR-074 | account-management.feature | Create account validation - missing required fields |
+| FR-075 | account-management.feature | Create account validation - duplicate name |
+| FR-076 | account-management.feature | Inline account creation during position entry |
 | FR-051 | price-updates.feature | Manual price update for single instrument |
 | FR-052 | price-updates.feature | Bulk price update from file |
 | FR-053 | price-updates.feature | Price update affects portfolio metrics |

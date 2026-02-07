@@ -60,6 +60,10 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 | **FR-066** | Reconciliation History | Reconciliation | Could Have | v1.0 | FR-061 |
 | **FR-071** | Multiple Account Support | Account Management | Must Have | v0.2 | None |
 | **FR-072** | Account-Level Position View | Account Management | Should Have | v0.2 | FR-071 |
+| **FR-073** | Create Account | Account Management | Must Have | v0.1 | None |
+| **FR-074** | Create Account Validation - Missing Fields | Account Management | Must Have | v0.1 | FR-073 |
+| **FR-075** | Create Account Validation - Duplicate Name | Account Management | Must Have | v0.1 | FR-073 |
+| **FR-076** | Inline Account Creation During Position Entry | Account Management | Must Have | v0.1 | FR-073, FR-041 |
 | **FR-081** | Current Value Calculation | Metrics & Calculations | Must Have | v0.1 | None |
 | **FR-082** | Invested Amount Calculation | Metrics & Calculations | Must Have | v0.1 | None |
 | **FR-083** | P&L Calculation (Amount) | Metrics & Calculations | Must Have | v0.1 | FR-081, FR-082 |
@@ -76,7 +80,7 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 | **FR-095** | No Transaction Fees (exclusion) | System-Level | Must Have | v0.1 | None |
 | **FR-096** | No Corporate Actions (exclusion) | System-Level | Must Have | v0.1 | None |
 
-**Total Functional Requirements:** 57
+**Total Functional Requirements:** 61
 
 ---
 
@@ -184,10 +188,11 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 
 ### v0.1 - MVP (Domain Foundation)
 
-**Functional Requirements (20):**
+**Functional Requirements (24):**
 - FR-001 (partial), FR-002, FR-003, FR-004
 - FR-011 (partial), FR-012, FR-014
 - FR-041, FR-042, FR-044, FR-045, FR-046
+- FR-073, FR-074, FR-075, FR-076
 - FR-081, FR-082, FR-083, FR-084, FR-089
 - FR-091 (partial), FR-092, FR-094, FR-095, FR-096
 
@@ -288,13 +293,13 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 
 ### Must Have (Critical Path)
 
-**Functional Requirements (43):**
+**Functional Requirements (47):**
 - Portfolio: FR-001 to FR-006
 - Position: FR-011, FR-012, FR-014, FR-015
 - Import: FR-021 to FR-028, FR-030
 - Manual Entry: FR-041, FR-042, FR-044 to FR-046
 - Price: FR-051 to FR-055
-- Account: FR-071
+- Account: FR-071, FR-073 to FR-076
 - Metrics: FR-081 to FR-087, FR-089, FR-091 to FR-096
 
 **Non-Functional Requirements (37):**
@@ -347,10 +352,10 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 | Manual Entry | 6 | 5 | 1 | 0 |
 | Price Management | 7 | 5 | 2 | 0 |
 | Reconciliation | 6 | 0 | 5 | 1 |
-| Account Management | 2 | 1 | 1 | 0 |
+| Account Management | 6 | 5 | 1 | 0 |
 | Metrics & Calculations | 13 | 12 | 0 | 1 |
 | System-Level | 6 | 6 | 0 | 0 |
-| **Total** | **57** | **43** | **12** | **2** |
+| **Total** | **61** | **47** | **12** | **2** |
 
 ### Non-Functional Requirements by Category
 
@@ -386,10 +391,11 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 | FR-041 to FR-046 | manual-entry.feature | Various manual entry scenarios |
 | FR-051 to FR-057 | price-updates.feature | Various price update scenarios |
 | FR-061 to FR-066 | reconciliation.feature | Various reconciliation scenarios |
+| FR-073 to FR-076 | account-management.feature | Various account creation scenarios |
 
-**Cucumber Coverage:** 41 of 57 functional requirements (72%)
+**Cucumber Coverage:** 45 of 61 functional requirements (74%)
 
-**Note:** Remaining 16 FRs are calculation/system requirements tested via unit tests
+**Note:** Remaining 16 FRs are calculation/system requirements tested via unit tests or UI-only requirements
 
 ---
 
@@ -398,7 +404,7 @@ This Requirements Traceability Matrix (RTM) provides complete mapping of all fun
 ### Critical Path Requirements (no dependencies)
 
 **Functional:**
-- FR-004, FR-041, FR-042, FR-081, FR-082, FR-089, FR-091, FR-092, FR-094, FR-095, FR-096
+- FR-004, FR-041, FR-042, FR-073, FR-081, FR-082, FR-089, FR-091, FR-092, FR-094, FR-095, FR-096
 
 **Non-Functional:**
 - All NFRs for v0.1 can be implemented in parallel
