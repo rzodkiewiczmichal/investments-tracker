@@ -121,7 +121,7 @@ class PortfolioTest {
 
             String summary = portfolio.metrics().formatSummary();
 
-            assertThat(summary).isEqualTo("No positions found");
+            assertThat(summary).isEqualTo("No positions yet");
         }
 
         @Test

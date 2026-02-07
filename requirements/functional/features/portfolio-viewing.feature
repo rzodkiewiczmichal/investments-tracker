@@ -62,4 +62,4 @@ Feature: Portfolio Viewing
     When I view my portfolio
     Then I should see total current value of 0 PLN
     And I should see total invested amount of 0 PLN
-    And I should see a message "No positions found"
+    And I should see a message "No positions yet"

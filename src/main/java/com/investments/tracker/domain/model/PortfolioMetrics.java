@@ -29,7 +29,7 @@ public record PortfolioMetrics(
      */
     public String formatSummary() {
         if (totalPositions == 0) {
-            return "No positions found";
+            return "No positions yet";
         }
 
         StringBuilder sb = new StringBuilder();

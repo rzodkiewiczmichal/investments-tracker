@@ -42,7 +42,7 @@ public class PortfolioMapper {
                 ? metrics.profitAndLoss().percentage().value()
                 : BigDecimal.ZERO;
 
-        String message = metrics.totalPositions() == 0 ? "No positions found" : null;
+        String message = metrics.totalPositions() == 0 ? "No positions yet" : null;
 
         return new PortfolioSummaryResponse(
                 totalCurrentValue,

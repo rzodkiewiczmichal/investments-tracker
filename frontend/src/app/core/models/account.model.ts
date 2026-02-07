@@ -2,7 +2,7 @@ export interface Account {
   id: number;
   name: string;
   broker: string;
-  createdAt?: string;
+
 }
 
 export interface AccountsResponse {
