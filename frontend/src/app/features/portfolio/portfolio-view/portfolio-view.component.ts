@@ -59,7 +59,7 @@ export class PortfolioViewComponent implements OnInit {
 
   onRowSelect(event: TableRowSelectEvent<PositionSummary>): void {
     if (event.data && !Array.isArray(event.data)) {
-      this.router.navigate(['/positions', event.data.id]);
+      this.router.navigate(['/positions', event.data.instrumentSymbol]);
     }
   }
 

@@ -30,11 +30,11 @@ export class PositionDetailsComponent implements OnInit {
   error = signal<string | null>(null);
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadPosition(id);
+    const symbol = this.route.snapshot.paramMap.get('symbol');
+    if (symbol) {
+      this.loadPosition(symbol);
     } else {
-      this.error.set('Position ID is required');
+      this.error.set('Position symbol is required');
       this.loading.set(false);
     }
   }
@@ -71,10 +71,6 @@ export class PositionDetailsComponent implements OnInit {
 
   formatQuantity(quantity: number): string {
     return Formatters.formatQuantity(quantity);
-  }
-
-  formatDate(dateString: string): string {
-    return Formatters.formatDate(dateString);
   }
 
   getProfitLossClass(value: number): string {

@@ -5,6 +5,7 @@ import com.investments.tracker.application.dto.response.MoneyDTO;
 import com.investments.tracker.application.dto.response.PositionDetailResponse;
 import com.investments.tracker.application.dto.response.PositionSummaryDTO;
 import com.investments.tracker.domain.model.AccountHolding;
+import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
@@ -25,19 +26,21 @@ import java.util.Map;
 public class PositionMapper {
 
     /**
-     * Maps a Position to PositionSummaryDTO.
+     * Maps a Position to PositionSummaryDTO, enriched with Instrument data.
      *
      * @param position the position domain object
+     * @param instrument the instrument providing name and type
      * @return the position summary DTO
      */
-    public PositionSummaryDTO toSummaryDTO(Position position) {
+    public PositionSummaryDTO toSummaryDTO(Position position, Instrument instrument) {
         PositionCalculations calc = calculateMetrics(position);
 
         return new PositionSummaryDTO(
                 position.symbol().value(),
+                instrument.name().value(),
+                instrument.type().name(),
                 calc.totalQuantity.toBigDecimal(),
                 toMoneyDTO(calc.avgCostBasis.money()),
-                toMoneyDTO(position.currentPrice().money()),
                 toMoneyDTO(calc.currentValue.money()),
                 toMoneyDTO(calc.investedAmount.money()),
                 toMoneyDTO(calc.profitAndLoss.amount()),
@@ -45,13 +48,15 @@ public class PositionMapper {
     }
 
     /**
-     * Maps a Position to PositionDetailResponse.
+     * Maps a Position to PositionDetailResponse, enriched with Instrument data.
      *
      * @param position the position domain object
+     * @param instrument the instrument providing name and type
      * @param accountNames map of account IDs to names for display
      * @return the position detail response
      */
-    public PositionDetailResponse toDetailResponse(Position position, Map<AccountId, String> accountNames) {
+    public PositionDetailResponse toDetailResponse(Position position, Instrument instrument,
+                                                   Map<AccountId, String> accountNames) {
         PositionCalculations calc = calculateMetrics(position);
 
         List<AccountHoldingDTO> holdingDTOs = position.holdings().stream()
@@ -60,6 +65,8 @@ public class PositionMapper {
 
         return new PositionDetailResponse(
                 position.symbol().value(),
+                instrument.name().value(),
+                instrument.type().name(),
                 calc.totalQuantity.toBigDecimal(),
                 toMoneyDTO(calc.avgCostBasis.money()),
                 toMoneyDTO(position.currentPrice().money()),

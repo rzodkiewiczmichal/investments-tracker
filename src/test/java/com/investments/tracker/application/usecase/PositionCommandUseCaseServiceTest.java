@@ -2,14 +2,18 @@ package com.investments.tracker.application.usecase;
 
 import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.domain.model.AccountHolding;
+import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.AccountRepository;
+import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,12 +44,15 @@ class PositionCommandUseCaseServiceTest {
     @Mock
     private AccountRepository accountRepository;
 
+    @Mock
+    private InstrumentRepository instrumentRepository;
+
     private PositionCommandUseCaseService positionCommandUseCaseService;
 
     @BeforeEach
     void setUp() {
         positionCommandUseCaseService = new PositionCommandUseCaseService(
-                positionRepository, accountRepository);
+                positionRepository, accountRepository, instrumentRepository);
     }
 
     @Nested
@@ -52,22 +60,25 @@ class PositionCommandUseCaseServiceTest {
     class AddPosition {
 
         @Test
-        @DisplayName("should create new position when none exists")
-        void shouldCreateNewPositionWhenNoneExists() {
+        @DisplayName("should create new position and instrument when none exists")
+        void shouldCreateNewPositionAndInstrumentWhenNoneExists() {
             // Given
             AccountId accountId = new AccountId(1L);
             when(accountRepository.existsById(accountId)).thenReturn(true);
+            when(instrumentRepository.existsBySymbol(any())).thenReturn(false);
             when(positionRepository.findBySymbol(any())).thenReturn(Optional.empty());
             when(positionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             InstrumentSymbol symbol = InstrumentSymbol.of("AAPL");
+            InstrumentName instrumentName = new InstrumentName("Apple Inc.");
+            InstrumentType instrumentType = InstrumentType.STOCK;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
             Price currentPrice = new Price(Money.pln("175.00"));
 
             // When
             Position result = positionCommandUseCaseService.addPosition(
-                    symbol, accountId, quantity, costBasis, currentPrice);
+                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis, currentPrice);
 
             // Then
             assertThat(result.symbol().value()).isEqualTo("AAPL");
@@ -77,31 +88,45 @@ class PositionCommandUseCaseServiceTest {
             verify(positionRepository).save(captor.capture());
             Position savedPosition = captor.getValue();
             assertThat(savedPosition.symbol().value()).isEqualTo("AAPL");
+
+            // Verify instrument was created
+            ArgumentCaptor<Instrument> instrumentCaptor = ArgumentCaptor.forClass(Instrument.class);
+            verify(instrumentRepository).save(instrumentCaptor.capture());
+            Instrument savedInstrument = instrumentCaptor.getValue();
+            assertThat(savedInstrument.symbol().value()).isEqualTo("AAPL");
+            assertThat(savedInstrument.name().value()).isEqualTo("Apple Inc.");
+            assertThat(savedInstrument.type()).isEqualTo(InstrumentType.STOCK);
         }
 
         @Test
-        @DisplayName("should add to existing position")
-        void shouldAddToExistingPosition() {
+        @DisplayName("should add to existing position without creating instrument")
+        void shouldAddToExistingPositionWithoutCreatingInstrument() {
             // Given
             Position existingPosition = createPosition("AAPL", 50, "140.00", "175.00");
             AccountId accountId = new AccountId(1L);
             when(accountRepository.existsById(accountId)).thenReturn(true);
+            when(instrumentRepository.existsBySymbol(any())).thenReturn(true);
             when(positionRepository.findBySymbol(any())).thenReturn(Optional.of(existingPosition));
             when(positionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             InstrumentSymbol symbol = InstrumentSymbol.of("AAPL");
+            InstrumentName instrumentName = new InstrumentName("Apple Inc.");
+            InstrumentType instrumentType = InstrumentType.STOCK;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
             Price currentPrice = new Price(Money.pln("175.00"));
 
             // When
             Position result = positionCommandUseCaseService.addPosition(
-                    symbol, accountId, quantity, costBasis, currentPrice);
+                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis, currentPrice);
 
             // Then
             assertThat(result.symbol().value()).isEqualTo("AAPL");
             // 50 + 100 = 150 shares
             assertThat(result.calculateTotalQuantity().value()).isEqualByComparingTo("150");
+
+            // Verify instrument was NOT created
+            verify(instrumentRepository, never()).save(any());
         }
 
         @Test
@@ -112,13 +137,15 @@ class PositionCommandUseCaseServiceTest {
             when(accountRepository.existsById(accountId)).thenReturn(false);
 
             InstrumentSymbol symbol = InstrumentSymbol.of("AAPL");
+            InstrumentName instrumentName = new InstrumentName("Apple Inc.");
+            InstrumentType instrumentType = InstrumentType.STOCK;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
             Price currentPrice = new Price(Money.pln("175.00"));
 
             // When/Then
             assertThatThrownBy(() -> positionCommandUseCaseService.addPosition(
-                    symbol, accountId, quantity, costBasis, currentPrice))
+                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis, currentPrice))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("Account")
                     .hasMessageContaining("999");

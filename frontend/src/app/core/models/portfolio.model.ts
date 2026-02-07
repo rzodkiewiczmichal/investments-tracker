@@ -6,5 +6,5 @@ export interface PortfolioSummary {
   totalProfitLoss: Money;
   totalReturnPercentage: number;
   positionsCount: number;
-  lastUpdatedAt: string;
+  message?: string;
 }

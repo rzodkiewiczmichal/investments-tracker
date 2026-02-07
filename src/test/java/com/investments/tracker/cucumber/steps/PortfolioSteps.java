@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.math.RoundingMode;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,34 +47,36 @@ public class PortfolioSteps {
     @Given("my total invested amount is {int} PLN")
     public void myTotalInvestedAmountIsPLN(Integer amount) {
         this.totalInvestedAmount = new BigDecimal(amount);
-        // The actual positions will be created by subsequent Given steps
     }
 
     @Given("my total current value is {int} PLN")
     public void myTotalCurrentValueIsPLN(Integer amount) {
         this.totalCurrentValue = new BigDecimal(amount);
-        // The actual positions will be created by subsequent Given steps
+
+        // Create a position that matches the expected invested/current values
+        BigDecimal quantity = new BigDecimal("100");
+        BigDecimal costPerShare = totalInvestedAmount.divide(quantity, 4, RoundingMode.HALF_EVEN);
+        BigDecimal pricePerShare = totalCurrentValue.divide(quantity, 4, RoundingMode.HALF_EVEN);
+
+        Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Portfolio Test Account");
+        String symbol = "PTEST";
+        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, "Portfolio Test Stock", pricePerShare);
+        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, quantity, costPerShare);
     }
 
     @Given("I own {int} shares of {string} in account {string} bought at {int} PLN")
     public void iOwnSharesOfInAccountBoughtAtPLN(Integer quantity, String instrument, String account, Integer price) {
-        // Ensure account exists
-        Long accountId = ensureAccountExists(account);
-
-        // Generate symbol from instrument name
-        String symbol = instrument.toUpperCase().replace(" ", "_");
+        Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, account);
+        String symbol = CucumberTestHelper.generateValidSymbol(instrument);
 
         // Ensure instrument exists (price will be set by theCurrentPriceOfIsPLN step)
-        ensureInstrumentExists(symbol, instrument, new BigDecimal(price));
-
-        // Create position
-        createPosition(symbol, accountId, new BigDecimal(quantity), new BigDecimal(price), new BigDecimal(price));
+        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, instrument, new BigDecimal(price));
+        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, new BigDecimal(quantity), new BigDecimal(price));
     }
 
     @Given("the current price of {string} is {int} PLN")
     public void theCurrentPriceOfIsPLN(String instrument, Integer price) {
-        String symbol = instrument.toUpperCase().replace(" ", "_");
-        // Update instrument price
+        String symbol = CucumberTestHelper.generateValidSymbol(instrument);
         jdbcTemplate.update(
                 "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
                 new BigDecimal(price), symbol
@@ -117,33 +119,32 @@ public class PortfolioSteps {
     @Then("I should see the portfolio XIRR percentage")
     public void iShouldSeeThePortfolioXIRRPercentage() {
         // XIRR is optional for v0.1, may not be present
-        // assertThat(portfolioResponse.getBody()).containsKey("xirr");
     }
 
     @Then("I should see total current value of {int} PLN")
     public void iShouldSeeTotalCurrentValueOfPLN(Integer expectedValue) {
-        Object actualValue = getNestedValue(portfolioResponse.getBody(), "totalCurrentValue", "amount");
+        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalCurrentValue", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedValue));
     }
 
     @Then("I should see total invested amount of {int} PLN")
     public void iShouldSeeTotalInvestedAmountOfPLN(Integer expectedAmount) {
-        Object actualValue = getNestedValue(portfolioResponse.getBody(), "totalInvestedAmount", "amount");
+        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalInvestedAmount", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedAmount));
     }
 
     @Then("I should see P&L of +{int} PLN")
     public void iShouldSeePLOfPlusXPLN(Integer expectedPL) {
-        Object actualValue = getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
+        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedPL));
     }
 
     @Then("I should see P&L of -{int} PLN")
     public void iShouldSeePLOfMinusXPLN(Integer expectedPL) {
-        Object actualValue = getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
+        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(-expectedPL));
     }
@@ -151,15 +152,15 @@ public class PortfolioSteps {
     @Then("I should see P&L percentage of +{double}%")
     public void iShouldSeePLPercentageOfPlusX(Double expectedPercentage) {
         Object actualValue = portfolioResponse.getBody().get("totalReturnPercentage");
-        assertThat(new BigDecimal(actualValue.toString()))
-                .isEqualByComparingTo(new BigDecimal(expectedPercentage));
+        assertThat(new BigDecimal(actualValue.toString()).setScale(2, RoundingMode.HALF_EVEN))
+                .isEqualByComparingTo(BigDecimal.valueOf(expectedPercentage));
     }
 
     @Then("I should see P&L percentage of -{double}%")
     public void iShouldSeePLPercentageOfMinusX(Double expectedPercentage) {
         Object actualValue = portfolioResponse.getBody().get("totalReturnPercentage");
-        assertThat(new BigDecimal(actualValue.toString()))
-                .isEqualByComparingTo(new BigDecimal(-expectedPercentage));
+        assertThat(new BigDecimal(actualValue.toString()).setScale(2, RoundingMode.HALF_EVEN))
+                .isEqualByComparingTo(BigDecimal.valueOf(-expectedPercentage));
     }
 
     @Then("I should see a message {string}")
@@ -189,108 +190,5 @@ public class PortfolioSteps {
     @Then("the P&L should be +{int} PLN")
     public void thePLShouldBePlusPLN(Integer expectedPL) {
         // Implementation for P&L assertion
-    }
-
-    // --- Helper Methods ---
-
-    private Long ensureAccountExists(String accountName) {
-        List<Long> existingIds = jdbcTemplate.queryForList(
-                "SELECT id FROM accounts WHERE name = ?",
-                Long.class,
-                accountName
-        );
-
-        if (!existingIds.isEmpty()) {
-            return existingIds.get(0);
-        }
-
-        jdbcTemplate.update(
-                "INSERT INTO accounts (name, broker_name, account_type, version) VALUES (?, ?, ?, ?)",
-                accountName, "Test Broker", "NORMAL", 0
-        );
-
-        return jdbcTemplate.queryForObject(
-                "SELECT id FROM accounts WHERE name = ?",
-                Long.class,
-                accountName
-        );
-    }
-
-    private void ensureInstrumentExists(String symbol, String name, BigDecimal currentPrice) {
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM instruments WHERE symbol = ?",
-                Integer.class,
-                symbol
-        );
-
-        if (count != null && count > 0) {
-            jdbcTemplate.update(
-                    "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
-                    currentPrice, symbol
-            );
-        } else {
-            jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, ?, 'PLN', CURRENT_TIMESTAMP, 0)",
-                    symbol, name != null ? name : symbol, "STOCK", currentPrice
-            );
-        }
-    }
-
-    private void createPosition(String symbol, Long accountId, BigDecimal quantity, BigDecimal costBasis, BigDecimal currentPrice) {
-        // Check if position exists
-        Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM positions WHERE instrument_symbol = ?",
-                Integer.class,
-                symbol
-        );
-
-        if (count != null && count > 0) {
-            // Update position
-            jdbcTemplate.update(
-                    "UPDATE positions SET total_quantity = ?, avg_cost_basis_amount = ?, updated_at = CURRENT_TIMESTAMP WHERE instrument_symbol = ?",
-                    quantity, costBasis, symbol
-            );
-            // Update or insert holding
-            Integer holdingCount = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM account_holdings WHERE instrument_symbol = ? AND account_id = ?",
-                    Integer.class,
-                    symbol, accountId
-            );
-            if (holdingCount != null && holdingCount > 0) {
-                jdbcTemplate.update(
-                        "UPDATE account_holdings SET quantity = ?, cost_basis_amount = ?, updated_at = CURRENT_TIMESTAMP WHERE instrument_symbol = ? AND account_id = ?",
-                        quantity, costBasis, symbol, accountId
-                );
-            } else {
-                jdbcTemplate.update(
-                        "INSERT INTO account_holdings (instrument_symbol, account_id, quantity, cost_basis_amount, cost_basis_currency) VALUES (?, ?, ?, ?, 'PLN')",
-                        symbol, accountId, quantity, costBasis
-                );
-            }
-        } else {
-            // Create position
-            jdbcTemplate.update(
-                    "INSERT INTO positions (instrument_symbol, total_quantity, avg_cost_basis_amount, avg_cost_basis_currency, version) VALUES (?, ?, ?, 'PLN', 0)",
-                    symbol, quantity, costBasis
-            );
-            // Create holding
-            jdbcTemplate.update(
-                    "INSERT INTO account_holdings (instrument_symbol, account_id, quantity, cost_basis_amount, cost_basis_currency) VALUES (?, ?, ?, ?, 'PLN')",
-                    symbol, accountId, quantity, costBasis
-            );
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Object getNestedValue(Map<String, Object> map, String... keys) {
-        Object current = map;
-        for (String key : keys) {
-            if (current instanceof Map) {
-                current = ((Map<String, Object>) current).get(key);
-            } else {
-                return null;
-            }
-        }
-        return current;
     }
 }

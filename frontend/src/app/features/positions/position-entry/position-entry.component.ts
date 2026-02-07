@@ -105,7 +105,7 @@ export class PositionEntryComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (position) => {
-          this.router.navigate(['/positions', position.id]);
+          this.router.navigate(['/positions', position.instrumentSymbol]);
         },
         error: (err: ApiError) => {
           this.loading.set(false);

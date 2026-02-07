@@ -10,5 +10,6 @@ public record PortfolioSummaryResponse(
         MoneyDTO totalInvestedAmount,
         MoneyDTO totalProfitLoss,
         BigDecimal totalReturnPercentage,
-        int positionsCount) {
+        int positionsCount,
+        String message) {
 }

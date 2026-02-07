@@ -7,9 +7,11 @@ import java.util.List;
  * Detailed response for a single position.
  */
 public record PositionDetailResponse(
-        String symbol,
-        BigDecimal totalQuantity,
-        MoneyDTO weightedAverageCost,
+        String instrumentSymbol,
+        String instrumentName,
+        String instrumentType,
+        BigDecimal quantity,
+        MoneyDTO averageCost,
         MoneyDTO currentPrice,
         MoneyDTO currentValue,
         MoneyDTO investedAmount,

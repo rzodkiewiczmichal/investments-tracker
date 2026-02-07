@@ -61,8 +61,7 @@ export const Formatters = {
     switch (type) {
       case 'STOCK': return 'info';
       case 'ETF': return 'success';
-      case 'BOND_ETF': return 'warn';
-      case 'POLISH_GOV_BOND': return 'secondary';
+      case 'BOND': return 'warn';
       default: return 'secondary';
     }
   }

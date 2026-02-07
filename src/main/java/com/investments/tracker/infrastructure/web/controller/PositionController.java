@@ -8,13 +8,17 @@ import com.investments.tracker.application.dto.response.PositionListResponse;
 import com.investments.tracker.application.dto.response.PositionSummaryDTO;
 import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.application.usecase.AccountQueryUseCase;
+import com.investments.tracker.application.usecase.InstrumentQueryUseCase;
 import com.investments.tracker.application.usecase.PositionCommandUseCase;
 import com.investments.tracker.application.usecase.PositionQueryUseCase;
 import com.investments.tracker.domain.model.AccountHolding;
+import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
@@ -30,9 +34,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for position operations.
@@ -44,30 +51,48 @@ public class PositionController {
     private final PositionQueryUseCase positionQueryUseCase;
     private final PositionCommandUseCase positionCommandUseCase;
     private final AccountQueryUseCase accountQueryUseCase;
+    private final InstrumentQueryUseCase instrumentQueryUseCase;
     private final PositionMapper positionMapper;
 
     public PositionController(
             PositionQueryUseCase positionQueryUseCase,
             PositionCommandUseCase positionCommandUseCase,
             AccountQueryUseCase accountQueryUseCase,
+            InstrumentQueryUseCase instrumentQueryUseCase,
             PositionMapper positionMapper) {
         this.positionQueryUseCase = positionQueryUseCase;
         this.positionCommandUseCase = positionCommandUseCase;
         this.accountQueryUseCase = accountQueryUseCase;
+        this.instrumentQueryUseCase = instrumentQueryUseCase;
         this.positionMapper = positionMapper;
     }
 
     /**
-     * Lists all positions.
+     * Lists all positions sorted by current value descending (FR-014).
      *
      * @return position list response
      */
     @GetMapping
     public PositionListResponse listPositions() {
         Collection<Position> positions = positionQueryUseCase.listPositions();
+        Map<InstrumentSymbol, Instrument> instrumentMap = instrumentQueryUseCase.listInstruments()
+                .stream()
+                .collect(Collectors.toMap(Instrument::symbol, Function.identity()));
+
         List<PositionSummaryDTO> summaries = positions.stream()
-                .map(positionMapper::toSummaryDTO)
+                .map(position -> {
+                    Instrument instrument = instrumentMap.get(position.symbol());
+                    if (instrument == null) {
+                        throw new ResourceNotFoundException(
+                                "Instrument", "symbol", position.symbol().value());
+                    }
+                    return positionMapper.toSummaryDTO(position, instrument);
+                })
+                .sorted(Comparator.comparing(
+                        (PositionSummaryDTO dto) -> dto.currentValue().amount(),
+                        Comparator.reverseOrder()))
                 .toList();
+
         return new PositionListResponse(summaries, summaries.size());
     }
 
@@ -79,9 +104,11 @@ public class PositionController {
      */
     @GetMapping("/{symbol}")
     public PositionDetailResponse getPosition(@PathVariable String symbol) {
-        Position position = positionQueryUseCase.getPosition(new InstrumentSymbol(symbol));
+        InstrumentSymbol instrumentSymbol = new InstrumentSymbol(symbol);
+        Position position = positionQueryUseCase.getPosition(instrumentSymbol);
+        Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Map<AccountId, String> accountNames = getAccountNames(position);
-        return positionMapper.toDetailResponse(position, accountNames);
+        return positionMapper.toDetailResponse(position, instrument, accountNames);
     }
 
     /**
@@ -93,14 +120,19 @@ public class PositionController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PositionDetailResponse addPosition(@Valid @RequestBody AddPositionRequest request) {
+        InstrumentSymbol instrumentSymbol = new InstrumentSymbol(request.instrumentSymbol());
         Position position = positionCommandUseCase.addPosition(
-                new InstrumentSymbol(request.instrumentSymbol()),
+                instrumentSymbol,
+                new InstrumentName(request.instrumentName()),
+                InstrumentType.valueOf(request.instrumentType()),
                 new AccountId(request.accountId()),
                 new Quantity(request.quantity()),
-                CostBasis.of(Money.pln(request.costBasis())),
-                new Price(Money.pln(request.currentPrice())));
+                CostBasis.of(Money.pln(request.averageCost())),
+                // MVP: use averageCost as initial currentPrice until price fetching is implemented
+                new Price(Money.pln(request.averageCost())));
+        Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Map<AccountId, String> accountNames = getAccountNames(position);
-        return positionMapper.toDetailResponse(position, accountNames);
+        return positionMapper.toDetailResponse(position, instrument, accountNames);
     }
 
     /**
@@ -114,13 +146,15 @@ public class PositionController {
     public PositionDetailResponse updatePosition(
             @PathVariable String symbol,
             @Valid @RequestBody UpdatePositionRequest request) {
+        InstrumentSymbol instrumentSymbol = new InstrumentSymbol(symbol);
         Position position = positionCommandUseCase.updatePosition(
-                new InstrumentSymbol(symbol),
+                instrumentSymbol,
                 new AccountId(request.accountId()),
                 new Quantity(request.quantity()),
-                CostBasis.of(Money.pln(request.costBasis())));
+                CostBasis.of(Money.pln(request.averageCost())));
+        Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Map<AccountId, String> accountNames = getAccountNames(position);
-        return positionMapper.toDetailResponse(position, accountNames);
+        return positionMapper.toDetailResponse(position, instrument, accountNames);
     }
 
     /**

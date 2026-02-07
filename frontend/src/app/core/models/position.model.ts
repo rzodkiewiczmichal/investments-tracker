@@ -1,11 +1,17 @@
 import { Money } from './money.model';
 
-export type InstrumentType = 'STOCK' | 'ETF' | 'BOND_ETF' | 'POLISH_GOV_BOND';
+export type InstrumentType = 'STOCK' | 'ETF' | 'BOND';
+
+export interface AccountHoldingDTO {
+  accountId: number;
+  accountName: string;
+  quantity: number;
+  costBasis: Money;
+}
 
 export interface PositionSummary {
-  id: string;
-  instrumentName: string;
   instrumentSymbol: string;
+  instrumentName: string;
   instrumentType: InstrumentType;
   quantity: number;
   averageCost: Money;
@@ -16,11 +22,8 @@ export interface PositionSummary {
 }
 
 export interface PositionDetail extends PositionSummary {
-  accountId: string;
-  accountName: string;
   currentPrice: Money;
-  createdAt: string;
-  updatedAt: string;
+  holdings: AccountHoldingDTO[];
 }
 
 export interface PositionsResponse {
@@ -32,7 +35,7 @@ export interface AddPositionCommand {
   instrumentName: string;
   instrumentSymbol: string;
   instrumentType: InstrumentType;
-  accountId: string;
+  accountId: number;
   quantity: number;
   averageCost: number;
 }

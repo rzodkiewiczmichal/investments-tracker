@@ -13,18 +13,20 @@ public record AddPositionRequest(
         @NotBlank(message = "Instrument symbol is required")
         String instrumentSymbol,
 
+        @NotBlank(message = "Instrument name is required")
+        String instrumentName,
+
+        @NotBlank(message = "Instrument type is required")
+        String instrumentType,
+
         @NotNull(message = "Account ID is required")
         Long accountId,
 
         @NotNull(message = "Quantity is required")
-        @Positive(message = "Quantity must be greater than zero")
+        @Positive(message = "Quantity must be positive")
         BigDecimal quantity,
 
-        @NotNull(message = "Cost basis is required")
+        @NotNull(message = "Average cost is required")
         @Positive(message = "Average cost must be greater than zero")
-        BigDecimal costBasis,
-
-        @NotNull(message = "Current price is required")
-        @Positive(message = "Current price must be greater than zero")
-        BigDecimal currentPrice) {
+        BigDecimal averageCost) {
 }

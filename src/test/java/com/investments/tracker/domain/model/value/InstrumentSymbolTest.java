@@ -1,5 +1,6 @@
 package com.investments.tracker.domain.model.value;
 
+import com.investments.tracker.domain.exception.InvalidSymbolException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -70,7 +71,7 @@ class InstrumentSymbolTest {
         @DisplayName("throws exception for blank value")
         void throwsForBlankValue() {
             assertThatThrownBy(() -> InstrumentSymbol.of("   "))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidSymbolException.class)
                     .hasMessageContaining("cannot be blank");
         }
 
@@ -78,7 +79,7 @@ class InstrumentSymbolTest {
         @DisplayName("throws exception for invalid format")
         void throwsForInvalidFormat() {
             assertThatThrownBy(() -> InstrumentSymbol.of("invalid-symbol!"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidSymbolException.class)
                     .hasMessageContaining("Invalid instrument symbol format");
         }
 
@@ -86,7 +87,7 @@ class InstrumentSymbolTest {
         @DisplayName("throws exception for too long ticker")
         void throwsForTooLongTicker() {
             assertThatThrownBy(() -> InstrumentSymbol.of("VERYLONGTICKER"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidSymbolException.class)
                     .hasMessageContaining("Invalid instrument symbol format");
         }
     }

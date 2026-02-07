@@ -1,5 +1,7 @@
 package com.investments.tracker.domain.model.value;
 
+import com.investments.tracker.domain.exception.InvalidSymbolException;
+
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -29,13 +31,13 @@ public record InstrumentSymbol(String value) {
      * Canonical constructor with validation.
      */
     public InstrumentSymbol {
-        Objects.requireNonNull(value, "Instrument symbol cannot be null");
+        Objects.requireNonNull(value, "value cannot be null");
         if (value.isBlank()) {
-            throw new IllegalArgumentException("Instrument symbol cannot be blank");
+            throw InvalidSymbolException.blank();
         }
         value = value.trim().toUpperCase();
         if (!isValidSymbol(value)) {
-            throw new IllegalArgumentException("Invalid instrument symbol format: " + value);
+            throw InvalidSymbolException.invalidFormat(value);
         }
     }
 

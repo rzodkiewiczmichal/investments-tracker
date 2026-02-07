@@ -6,10 +6,11 @@ import java.math.BigDecimal;
  * Summary DTO for a position (used in list view).
  */
 public record PositionSummaryDTO(
-        String symbol,
-        BigDecimal totalQuantity,
+        String instrumentSymbol,
+        String instrumentName,
+        String instrumentType,
+        BigDecimal quantity,
         MoneyDTO averageCost,
-        MoneyDTO currentPrice,
         MoneyDTO currentValue,
         MoneyDTO investedAmount,
         MoneyDTO profitLoss,

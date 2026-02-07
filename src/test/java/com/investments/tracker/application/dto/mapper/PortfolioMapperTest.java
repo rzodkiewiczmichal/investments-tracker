@@ -43,6 +43,7 @@ class PortfolioMapperTest {
             assertThat(response.totalInvestedAmount().amount()).isEqualByComparingTo(BigDecimal.ZERO);
             assertThat(response.totalProfitLoss().amount()).isEqualByComparingTo(BigDecimal.ZERO);
             assertThat(response.totalReturnPercentage()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(response.message()).isEqualTo("No positions found");
         }
 
         @Test
@@ -61,6 +62,7 @@ class PortfolioMapperTest {
             assertThat(response.totalCurrentValue().currency()).isEqualTo("PLN");
             assertThat(response.totalInvestedAmount().amount()).isPositive();
             assertThat(response.totalProfitLoss().amount()).isPositive();
+            assertThat(response.message()).isNull();
         }
     }
 

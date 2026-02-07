@@ -16,7 +16,7 @@ public record UpdatePositionRequest(
         @Positive(message = "Quantity must be greater than zero")
         BigDecimal quantity,
 
-        @NotNull(message = "Cost basis is required")
+        @NotNull(message = "Average cost is required")
         @Positive(message = "Average cost must be greater than zero")
-        BigDecimal costBasis) {
+        BigDecimal averageCost) {
 }

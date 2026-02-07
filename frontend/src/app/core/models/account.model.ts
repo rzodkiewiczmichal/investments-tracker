@@ -1,11 +1,8 @@
-export type AccountType = 'NORMAL' | 'IKE' | 'IKZE';
-
 export interface Account {
-  id: string;
+  id: number;
   name: string;
   broker: string;
-  accountType: AccountType;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface AccountsResponse {

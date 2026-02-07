@@ -25,10 +25,10 @@ public record Instrument(
         Price currentPrice) {
 
     public Instrument {
-        Objects.requireNonNull(symbol, "Symbol cannot be null");
-        Objects.requireNonNull(name, "Name cannot be null");
-        Objects.requireNonNull(type, "Type cannot be null");
-        Objects.requireNonNull(currentPrice, "Current price cannot be null");
+        Objects.requireNonNull(symbol, "symbol cannot be null");
+        Objects.requireNonNull(name, "name cannot be null");
+        Objects.requireNonNull(type, "type cannot be null");
+        Objects.requireNonNull(currentPrice, "currentPrice cannot be null");
     }
 
     /**

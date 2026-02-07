@@ -17,7 +17,7 @@ export const routes: Routes = [
       .then(m => m.PositionEntryComponent)
   },
   {
-    path: 'positions/:id',
+    path: 'positions/:symbol',
     loadComponent: () => import('./features/positions/position-details/position-details.component')
       .then(m => m.PositionDetailsComponent)
   },

@@ -38,7 +38,7 @@
         </div>
         <div class="account-info">
           <span class="label">Account</span>
-          <span class="value">{{ position()!.accountName }}</span>
+          <span class="value">{{ position()!.holdings[0]?.accountName ?? 'Unknown' }}</span>
         </div>
       </div>
 
@@ -102,20 +102,6 @@
         </div>
       </section>
 
-      <p-divider />
-
-      <div class="metadata-section">
-        <div class="metadata-item">
-          <i class="pi pi-calendar"></i>
-          <span class="label">Created:</span>
-          <span class="value">{{ formatDate(position()!.createdAt) }}</span>
-        </div>
-        <div class="metadata-item">
-          <i class="pi pi-refresh"></i>
-          <span class="label">Updated:</span>
-          <span class="value">{{ formatDate(position()!.updatedAt) }}</span>
-        </div>
-      </div>
     </p-card>
   }
 </div>

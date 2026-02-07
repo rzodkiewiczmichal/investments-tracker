@@ -5,6 +5,7 @@ import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.exception.InvalidPriceException;
 import com.investments.tracker.domain.exception.InvalidQuantityException;
+import com.investments.tracker.domain.exception.InvalidSymbolException;
 import com.investments.tracker.infrastructure.web.dto.ErrorResponse;
 import com.investments.tracker.infrastructure.web.dto.ValidationError;
 import io.micrometer.tracing.Span;
@@ -40,7 +41,7 @@ public class GlobalExceptionHandler {
         return ErrorResponse.badRequest("Validation failed", errors, request.getRequestURI(), getTraceId());
     }
 
-    @ExceptionHandler({InvalidQuantityException.class, InvalidPriceException.class})
+    @ExceptionHandler({InvalidQuantityException.class, InvalidPriceException.class, InvalidSymbolException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleDomainValidation(DomainException ex, HttpServletRequest request) {
         return ErrorResponse.badRequest(ex.getMessage(), null, request.getRequestURI(), getTraceId());

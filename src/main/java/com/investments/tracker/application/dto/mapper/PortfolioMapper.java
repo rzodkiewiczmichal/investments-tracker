@@ -42,12 +42,15 @@ public class PortfolioMapper {
                 ? metrics.profitAndLoss().percentage().value()
                 : BigDecimal.ZERO;
 
+        String message = metrics.totalPositions() == 0 ? "No positions found" : null;
+
         return new PortfolioSummaryResponse(
                 totalCurrentValue,
                 totalInvestedAmount,
                 totalProfitLoss,
                 returnPercentage,
-                metrics.totalPositions());
+                metrics.totalPositions(),
+                message);
     }
 
     /** Converts Money to MoneyDTO. */
