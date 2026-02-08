@@ -1,6 +1,10 @@
 # MCP configuration (contains sensitive tokens)
 .mcp.json
 
+# dev.sh PID files
+.backend.pid
+.frontend.pid
+
 # IDE files
 .idea/
 *.iml

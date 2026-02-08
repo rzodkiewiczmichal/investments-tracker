@@ -27,26 +27,22 @@ Investment Tracker is a personal finance application built with:
 - **Java 25** (JDK 25 or later)
 - **Gradle** (uses Gradle Wrapper - no installation required)
 
-### 1. Start Infrastructure Services
+### 1. Start Everything
 
 ```bash
-# Start PostgreSQL, Grafana Tempo, and Grafana
-docker-compose up -d
+# Start infrastructure + application with one command
+./dev.sh
 ```
 
-This starts:
-- **PostgreSQL 16** on `localhost:5432`
-- **Grafana Tempo** (OTLP collector) on `localhost:3200` (UI), `4317` (gRPC), `4318` (HTTP)
-- **Grafana** (visualization) on `localhost:3000`
+This starts PostgreSQL, Grafana Tempo, Grafana, and the Spring Boot application.
 
-### 2. Run Application Locally
+**Other commands:**
 
 ```bash
-# Run Spring Boot application
-./gradlew bootRun --args='--spring.profiles.active=local'
+./dev.sh stop      # Stop Docker containers
+./dev.sh restart   # Restart everything
+./dev.sh infra     # Start only infrastructure (no app)
 ```
-
-Application starts on `http://localhost:8080`
 
 ### 3. Access Services
 
