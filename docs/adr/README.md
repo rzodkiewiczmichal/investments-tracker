@@ -44,6 +44,8 @@ We use the Michael Nygard format with the following structure:
 | [ADR-015](ADR-015-otlp-observability-strategy.md) | OTLP Observability Strategy | Accepted | 2026-01-10 |
 | [ADR-016](ADR-016-database-migration-strategy.md) | Database Migration Strategy | Accepted | 2026-01-10 |
 | [ADR-017](ADR-017-transaction-boundaries.md) | Transaction Boundaries | Accepted | 2026-01-10 |
+| [ADR-027](ADR-027-immutable-domain-vs-hibernate-entity-tracking.md) | Immutable Domain vs Hibernate Entity Tracking | Accepted | 2026-02-08 |
+| [ADR-028](ADR-028-spring-data-jdbc-persistence.md) | Spring Data JDBC as Persistence Mechanism | Accepted | 2026-02-08 |
 
 ### REST API
 
