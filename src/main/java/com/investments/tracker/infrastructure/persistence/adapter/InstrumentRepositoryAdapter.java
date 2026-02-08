@@ -3,60 +3,62 @@ package com.investments.tracker.infrastructure.persistence.adapter;
 import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.repository.InstrumentRepository;
-import com.investments.tracker.infrastructure.persistence.entity.InstrumentJpaEntity;
+import com.investments.tracker.infrastructure.persistence.entity.InstrumentJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.mapper.InstrumentPersistenceMapper;
-import com.investments.tracker.infrastructure.persistence.repository.InstrumentJpaRepository;
+import com.investments.tracker.infrastructure.persistence.repository.InstrumentJdbcRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.Optional;
 
 /**
- * JPA-based implementation of the InstrumentRepository domain port.
+ * Spring Data JDBC implementation of the InstrumentRepository domain port.
  */
 @Repository
 public class InstrumentRepositoryAdapter implements InstrumentRepository {
 
-    private final InstrumentJpaRepository jpaRepository;
+    private final InstrumentJdbcRepository jdbcRepository;
     private final InstrumentPersistenceMapper mapper;
 
-    public InstrumentRepositoryAdapter(InstrumentJpaRepository jpaRepository, InstrumentPersistenceMapper mapper) {
-        this.jpaRepository = jpaRepository;
+    public InstrumentRepositoryAdapter(InstrumentJdbcRepository jdbcRepository, InstrumentPersistenceMapper mapper) {
+        this.jdbcRepository = jdbcRepository;
         this.mapper = mapper;
     }
 
     @Override
     public Optional<Instrument> findBySymbol(InstrumentSymbol symbol) {
-        return jpaRepository.findById(symbol.value())
+        return jdbcRepository.findById(symbol.value())
                 .map(mapper::toDomain);
     }
 
     @Override
     public Collection<Instrument> findAll() {
-        return jpaRepository.findAll().stream()
+        return jdbcRepository.findAll().stream()
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public Instrument save(Instrument instrument) {
-        InstrumentJpaEntity entity = mapper.toEntity(instrument);
-        InstrumentJpaEntity saved = jpaRepository.save(entity);
+        Long version = jdbcRepository.findById(instrument.symbol().value())
+                .map(InstrumentJdbcEntity::version).orElse(null);
+        InstrumentJdbcEntity entity = mapper.toEntity(instrument, version);
+        InstrumentJdbcEntity saved = jdbcRepository.save(entity);
         return mapper.toDomain(saved);
     }
 
     @Override
     public void deleteBySymbol(InstrumentSymbol symbol) {
-        jpaRepository.deleteById(symbol.value());
+        jdbcRepository.deleteById(symbol.value());
     }
 
     @Override
     public boolean existsBySymbol(InstrumentSymbol symbol) {
-        return jpaRepository.existsById(symbol.value());
+        return jdbcRepository.existsById(symbol.value());
     }
 
     @Override
     public long count() {
-        return jpaRepository.count();
+        return jdbcRepository.count();
     }
 }

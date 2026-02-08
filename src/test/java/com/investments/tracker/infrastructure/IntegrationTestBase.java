@@ -75,7 +75,6 @@ public abstract class IntegrationTestBase {
      * - spring.datasource.url (from Testcontainers)
      * - spring.datasource.username
      * - spring.datasource.password
-     * - spring.jpa.hibernate.ddl-auto=validate (use Flyway, not Hibernate)
      * - spring.flyway.enabled=true (run migrations)
      * </p>
      */
@@ -84,7 +83,6 @@ public abstract class IntegrationTestBase {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.flyway.enabled", () -> "true");
     }
 

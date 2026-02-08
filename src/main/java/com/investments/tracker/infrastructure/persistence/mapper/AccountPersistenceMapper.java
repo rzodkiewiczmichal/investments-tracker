@@ -4,64 +4,67 @@ import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.AccountName;
 import com.investments.tracker.domain.model.value.BrokerName;
-import com.investments.tracker.infrastructure.persistence.entity.AccountJpaEntity;
+import com.investments.tracker.infrastructure.persistence.entity.AccountJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.entity.AccountType;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
 /**
- * Mapper for converting between Account domain model and AccountJpaEntity.
+ * Mapper for converting between Account domain model and AccountJdbcEntity.
  */
 @Component
 public class AccountPersistenceMapper {
 
     /**
-     * Converts a JPA entity to a domain model.
+     * Converts a JDBC entity to a domain model.
      *
-     * @param entity the JPA entity to convert
+     * @param entity the JDBC entity to convert
      * @return the domain Account
      */
-    public Account toDomain(AccountJpaEntity entity) {
+    public Account toDomain(AccountJdbcEntity entity) {
         Objects.requireNonNull(entity, "entity cannot be null");
         return new Account(
-                new AccountId(entity.getId()),
-                new AccountName(entity.getName()),
-                new BrokerName(entity.getBrokerName())
+                new AccountId(entity.id()),
+                new AccountName(entity.name()),
+                new BrokerName(entity.brokerName())
         );
     }
 
     /**
-     * Converts a domain model to a JPA entity.
-     * Uses AccountType.NORMAL as the default account type.
+     * Converts a domain model to a JDBC entity for saving.
      *
      * @param account the domain Account to convert
-     * @return the JPA entity
+     * @param version the current version for optimistic locking (null for new entities)
+     * @return the JDBC entity
      */
-    public AccountJpaEntity toEntity(Account account) {
+    public AccountJdbcEntity toEntity(Account account, Long version) {
         Objects.requireNonNull(account, "account cannot be null");
-        AccountJpaEntity entity = new AccountJpaEntity();
-        entity.setId(account.id().value());
-        entity.setName(account.name().value());
-        entity.setBrokerName(account.brokerName().value());
-        entity.setAccountType(AccountType.NORMAL);
-        return entity;
+        return new AccountJdbcEntity(
+                account.id().value(),
+                account.name().value(),
+                account.brokerName().value(),
+                AccountType.NORMAL.name(),
+                version
+        );
     }
 
     /**
-     * Creates a new JPA entity without an ID (for database-generated IDs).
+     * Creates a new JDBC entity without an ID (for database-generated IDs).
      *
      * @param name the account name
      * @param brokerName the broker name
-     * @return the JPA entity without ID set
+     * @return the JDBC entity with null ID and version
      */
-    public AccountJpaEntity toNewEntity(AccountName name, BrokerName brokerName) {
+    public AccountJdbcEntity toNewEntity(AccountName name, BrokerName brokerName) {
         Objects.requireNonNull(name, "name cannot be null");
         Objects.requireNonNull(brokerName, "brokerName cannot be null");
-        AccountJpaEntity entity = new AccountJpaEntity();
-        entity.setName(name.value());
-        entity.setBrokerName(brokerName.value());
-        entity.setAccountType(AccountType.NORMAL);
-        return entity;
+        return new AccountJdbcEntity(
+                null,
+                name.value(),
+                brokerName.value(),
+                AccountType.NORMAL.name(),
+                null
+        );
     }
 }
