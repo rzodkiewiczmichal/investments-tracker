@@ -9,13 +9,14 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Portfolio aggregate root representing the complete view of all positions.
+ * Portfolio representing the complete view of all positions.
  * <p>
- * Portfolio aggregates metrics from all positions to provide a unified portfolio view.
+ * Portfolio doesn't own positions - it aggregates their metrics.
+ * This is essentially a read model / projection pattern.
  * </p>
  * <p>
- * Portfolio doesn't own positions - it aggregates their metrics dynamically.
- * This is essentially a read model / projection pattern.
+ * Metrics are calculated externally by PortfolioCalculationService
+ * (which needs price data from Instrument aggregate).
  * </p>
  */
 public record Portfolio(List<Position> positions, PortfolioMetrics metrics) {
@@ -27,53 +28,6 @@ public record Portfolio(List<Position> positions, PortfolioMetrics metrics) {
         Objects.requireNonNull(positions, "Positions cannot be null");
         Objects.requireNonNull(metrics, "Metrics cannot be null");
         positions = List.copyOf(positions);
-    }
-
-    /**
-     * Creates a Portfolio from a list of positions.
-     * Calculates aggregated metrics from all positions.
-     *
-     * @param positions the list of positions
-     * @return new Portfolio instance
-     */
-    public static Portfolio fromPositions(List<Position> positions) {
-        Objects.requireNonNull(positions, "Positions cannot be null");
-
-        if (positions.isEmpty()) {
-            return new Portfolio(List.of(), PortfolioMetrics.empty());
-        }
-
-        PortfolioMetrics metrics = calculateMetrics(positions);
-        return new Portfolio(positions, metrics);
-    }
-
-    /**
-     * Calculates aggregated metrics from positions.
-     */
-    private static PortfolioMetrics calculateMetrics(List<Position> positions) {
-        // Calculate total invested amount
-        InvestedAmount totalInvested = positions.stream()
-                .map(Position::calculateInvestedAmount)
-                .reduce(InvestedAmount::add)
-                .orElse(null);
-
-        // Calculate total current value (all positions have prices now)
-        CurrentValue totalCurrentValue = positions.stream()
-                .map(Position::calculateCurrentValue)
-                .reduce(CurrentValue::add)
-                .orElse(CurrentValue.zero());
-
-        // Calculate P&L if we have invested amount
-        ProfitAndLoss profitAndLoss = null;
-        if (totalInvested != null && !totalCurrentValue.isZero()) {
-            profitAndLoss = ProfitAndLoss.calculate(totalCurrentValue, totalInvested);
-        }
-
-        return new PortfolioMetrics(
-                totalInvested,
-                totalCurrentValue,
-                profitAndLoss,
-                positions.size());
     }
 
     /**
@@ -106,10 +60,10 @@ public record Portfolio(List<Position> positions, PortfolioMetrics metrics) {
     /**
      * Gets total current value.
      *
-     * @return current value
+     * @return current value, empty if prices are unknown
      */
-    public CurrentValue getTotalCurrentValue() {
-        return metrics.totalCurrentValue();
+    public Optional<CurrentValue> getTotalCurrentValue() {
+        return Optional.ofNullable(metrics.totalCurrentValue());
     }
 
     /**

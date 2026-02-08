@@ -6,7 +6,13 @@ import com.investments.tracker.domain.model.value.ProfitAndLoss;
 
 /**
  * Immutable record holding calculated portfolio metrics.
- * Note: totalInvestedAmount and profitAndLoss may be null when portfolio is empty.
+ * <p>
+ * Nullable fields:
+ * <ul>
+ *   <li>totalInvestedAmount - null when portfolio is empty</li>
+ *   <li>totalCurrentValue - null when prices are unknown for any position</li>
+ *   <li>profitAndLoss - null when portfolio is empty or prices are unknown</li>
+ * </ul>
  */
 public record PortfolioMetrics(
         InvestedAmount totalInvestedAmount,
@@ -17,7 +23,7 @@ public record PortfolioMetrics(
     public static PortfolioMetrics empty() {
         return new PortfolioMetrics(
                 null,
-                CurrentValue.zero(),
+                null,
                 null,
                 0);
     }
@@ -33,7 +39,10 @@ public record PortfolioMetrics(
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("Total Value: ").append(totalCurrentValue.formatForDisplay());
+
+        if (totalCurrentValue != null) {
+            sb.append("Total Value: ").append(totalCurrentValue.formatForDisplay());
+        }
 
         if (totalInvestedAmount != null) {
             sb.append("\nInvested: ").append(totalInvestedAmount.formatForDisplay());

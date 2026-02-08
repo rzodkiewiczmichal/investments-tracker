@@ -7,7 +7,6 @@ import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.infrastructure.persistence.entity.AccountHoldingJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.entity.PositionJdbcEntity;
@@ -28,12 +27,10 @@ public class PositionPersistenceMapper {
      * Converts a JDBC entity to a domain model.
      *
      * @param entity the JDBC entity to convert
-     * @param currentPrice the current price of the instrument (must not be null)
      * @return the domain Position
      */
-    public Position toDomain(PositionJdbcEntity entity, Price currentPrice) {
+    public Position toDomain(PositionJdbcEntity entity) {
         Objects.requireNonNull(entity, "entity cannot be null");
-        Objects.requireNonNull(currentPrice, "currentPrice cannot be null");
 
         List<AccountHolding> holdings = entity.holdings().stream()
                 .map(this::mapToAccountHolding)
@@ -41,8 +38,7 @@ public class PositionPersistenceMapper {
 
         return new Position(
                 new InstrumentSymbol(entity.instrumentSymbol()),
-                holdings,
-                currentPrice
+                holdings
         );
     }
 

@@ -3,12 +3,9 @@ package com.investments.tracker.domain.model;
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
-import com.investments.tracker.domain.model.value.CurrentValue;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InvestedAmount;
 import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.domain.model.value.ProfitAndLoss;
 import com.investments.tracker.domain.model.value.Quantity;
 
 import java.math.BigDecimal;
@@ -24,6 +21,11 @@ import java.util.Optional;
  * AccountHoldings for each broker account where the instrument is held.
  * </p>
  * <p>
+ * Position does NOT contain currentPrice - that belongs to the Instrument
+ * aggregate. Cross-aggregate calculations (CurrentValue, P&L) are performed
+ * by PositionCalculationService (see ADR-024).
+ * </p>
+ * <p>
  * Key invariants:
  * <ul>
  *   <li>Total quantity equals sum of all AccountHolding quantities</li>
@@ -35,13 +37,11 @@ import java.util.Optional;
  */
 public record Position(
         InstrumentSymbol symbol,
-        List<AccountHolding> holdings,
-        Price currentPrice) {
+        List<AccountHolding> holdings) {
 
     public Position {
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(holdings, "holdings cannot be null");
-        Objects.requireNonNull(currentPrice, "currentPrice cannot be null");
         if (holdings.isEmpty()) {
             throw new DomainException("Position must have at least one holding");
         }
@@ -81,7 +81,7 @@ public record Position(
             newHoldings.add(new AccountHolding(accountId, quantity, costBasis));
         }
 
-        return new Position(this.symbol, newHoldings, this.currentPrice);
+        return new Position(this.symbol, newHoldings);
     }
 
     /**
@@ -106,7 +106,7 @@ public record Position(
             throw new DomainException("Holding not found for account: " + accountId);
         }
 
-        return new Position(this.symbol, newHoldings, this.currentPrice);
+        return new Position(this.symbol, newHoldings);
     }
 
     /**
@@ -171,28 +171,6 @@ public record Position(
         Quantity totalQuantity = calculateTotalQuantity();
         CostBasis avgCostBasis = calculateWeightedAverageCostBasis(totalQuantity);
         return InvestedAmount.calculate(totalQuantity, avgCostBasis);
-    }
-
-    /**
-     * Calculates the current value.
-     *
-     * @return current value
-     */
-    public CurrentValue calculateCurrentValue() {
-        return CurrentValue.calculate(calculateTotalQuantity(), currentPrice);
-    }
-
-    /**
-     * Calculates profit and loss.
-     *
-     * @return P&L
-     */
-    public ProfitAndLoss calculateProfitAndLoss() {
-        Quantity totalQuantity = calculateTotalQuantity();
-        CurrentValue currentValue = CurrentValue.calculate(totalQuantity, currentPrice);
-        CostBasis avgCostBasis = calculateWeightedAverageCostBasis(totalQuantity);
-        InvestedAmount investedAmount = InvestedAmount.calculate(totalQuantity, avgCostBasis);
-        return ProfitAndLoss.calculate(currentValue, investedAmount);
     }
 
     /**

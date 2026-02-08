@@ -67,11 +67,11 @@ export class PortfolioViewComponent implements OnInit {
     this.router.navigate(['/positions/new']);
   }
 
-  formatMoney(amount: number): string {
+  formatMoney(amount: number | null | undefined): string {
     return Formatters.formatMoney(amount);
   }
 
-  formatPercentage(value: number): string {
+  formatPercentage(value: number | null | undefined): string {
     return Formatters.formatPercentage(value);
   }
 
@@ -79,7 +79,7 @@ export class PortfolioViewComponent implements OnInit {
     return Formatters.formatQuantity(quantity);
   }
 
-  getProfitLossClass(value: number): string {
+  getProfitLossClass(value: number | null | undefined): string {
     return Formatters.getProfitLossClass(value);
   }
 

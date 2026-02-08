@@ -276,6 +276,22 @@ public class ManualEntrySteps {
                 .isEqualByComparingTo(new BigDecimal(expectedValue));
     }
 
+    @Then("the position should not show current value")
+    public void thePositionShouldNotShowCurrentValue() {
+        assertThat(positionResponse.getBody()).isNotNull();
+        Object currentValue = positionResponse.getBody().get("currentValue");
+        assertThat(currentValue).isNull();
+    }
+
+    @Then("the position should not show P&L")
+    public void thePositionShouldNotShowPL() {
+        assertThat(positionResponse.getBody()).isNotNull();
+        Object profitLoss = positionResponse.getBody().get("profitLoss");
+        assertThat(profitLoss).isNull();
+        Object returnPercentage = positionResponse.getBody().get("returnPercentage");
+        assertThat(returnPercentage).isNull();
+    }
+
     @Then("I should see an error {string}")
     public void iShouldSeeAnError(String expectedError) {
         assertThat(errorResponse).isNotNull();

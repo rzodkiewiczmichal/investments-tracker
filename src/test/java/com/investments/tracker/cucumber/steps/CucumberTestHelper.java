@@ -100,6 +100,30 @@ final class CucumberTestHelper {
     }
 
     /**
+     * Ensures an instrument exists without a current price.
+     * Creates the instrument directly in the database with NULL price fields.
+     */
+    static void ensureInstrumentExistsWithoutPrice(JdbcTemplate jdbcTemplate, String symbol, String name) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM instruments WHERE symbol = ?",
+                Integer.class,
+                symbol
+        );
+
+        if (count != null && count > 0) {
+            jdbcTemplate.update(
+                    "UPDATE instruments SET current_price_amount = NULL, current_price_currency = NULL, price_updated_at = NULL WHERE symbol = ?",
+                    symbol
+            );
+        } else {
+            jdbcTemplate.update(
+                    "INSERT INTO instruments (symbol, name, instrument_type, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, NULL, NULL, NULL, 0)",
+                    symbol, name != null ? name : symbol, "STOCK"
+            );
+        }
+    }
+
+    /**
      * Generates a valid ticker symbol from an instrument name.
      * Ticker symbols must be 1-10 uppercase alphanumeric characters.
      */

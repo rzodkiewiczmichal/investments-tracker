@@ -44,6 +44,14 @@ public class PortfolioSteps {
 
     // --- Given Steps ---
 
+    @Given("I have positions without current prices")
+    public void iHavePositionsWithoutCurrentPrices() {
+        Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "No Price Account");
+        String symbol = "NOPRICE";
+        CucumberTestHelper.ensureInstrumentExistsWithoutPrice(jdbcTemplate, symbol, "No Price Stock");
+        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, new BigDecimal("50"), new BigDecimal("100"));
+    }
+
     @Given("my total invested amount is {int} PLN")
     public void myTotalInvestedAmountIsPLN(Integer amount) {
         this.totalInvestedAmount = new BigDecimal(amount);
@@ -161,6 +169,22 @@ public class PortfolioSteps {
         Object actualValue = portfolioResponse.getBody().get("totalReturnPercentage");
         assertThat(new BigDecimal(actualValue.toString()).setScale(2, RoundingMode.HALF_EVEN))
                 .isEqualByComparingTo(BigDecimal.valueOf(-expectedPercentage));
+    }
+
+    @Then("I should not see total current value")
+    public void iShouldNotSeeTotalCurrentValue() {
+        assertThat(portfolioResponse.getStatusCode().is2xxSuccessful()).isTrue();
+        Object totalCurrentValue = portfolioResponse.getBody().get("totalCurrentValue");
+        assertThat(totalCurrentValue).isNull();
+    }
+
+    @Then("I should not see total P&L")
+    public void iShouldNotSeeTotalPL() {
+        assertThat(portfolioResponse.getStatusCode().is2xxSuccessful()).isTrue();
+        Object totalProfitLoss = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
+        // When prices are unknown, totalProfitLoss should be zero (default) and totalReturnPercentage should be zero
+        assertThat(new BigDecimal(totalProfitLoss.toString()))
+                .isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Then("I should see a message {string}")

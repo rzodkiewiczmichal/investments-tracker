@@ -8,7 +8,8 @@ export const Formatters = {
   /**
    * Format monetary amounts in Polish locale with PLN currency.
    */
-  formatMoney(amount: number): string {
+  formatMoney(amount: number | null | undefined): string {
+    if (amount == null) return '-';
     return new Intl.NumberFormat('pl-PL', {
       style: 'currency',
       currency: 'PLN',
@@ -20,7 +21,8 @@ export const Formatters = {
   /**
    * Format percentage values with sign indicator.
    */
-  formatPercentage(value: number): string {
+  formatPercentage(value: number | null | undefined): string {
+    if (value == null) return '-';
     const sign = value >= 0 ? '+' : '';
     return `${sign}${value.toFixed(2)}%`;
   },
@@ -48,7 +50,8 @@ export const Formatters = {
   /**
    * Get CSS class for profit/loss styling.
    */
-  getProfitLossClass(value: number): string {
+  getProfitLossClass(value: number | null | undefined): string {
+    if (value == null) return 'neutral';
     if (value > 0) return 'positive';
     if (value < 0) return 'negative';
     return 'neutral';

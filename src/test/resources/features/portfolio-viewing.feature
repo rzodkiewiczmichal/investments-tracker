@@ -55,11 +55,20 @@ Feature: Portfolio Viewing
     And the current value should be 44000 PLN
     And the P&L should be +3400 PLN
 
+  @FR-001 @FR-081 @FR-083
+  @v0.1 @portfolio @metrics
+  Scenario: Portfolio shows no P&L when prices are unknown
+    Given I have positions without current prices
+    When I view my portfolio
+    Then I should see the total invested amount in PLN
+    But I should not see total current value
+    And I should not see total P&L
+
   @FR-004 @FR-089
   @v0.1 @portfolio
   Scenario: View empty portfolio
     Given I have no positions in any account
     When I view my portfolio
-    Then I should see total current value of 0 PLN
+    Then I should not see total current value
     And I should see total invested amount of 0 PLN
     And I should see a message "No positions yet"

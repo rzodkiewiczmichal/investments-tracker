@@ -13,6 +13,7 @@ import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
+import com.investments.tracker.domain.service.PositionCalculationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +32,7 @@ class PositionMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new PositionMapper();
+        mapper = new PositionMapper(new PositionCalculationService());
     }
 
     @Nested
@@ -39,10 +40,10 @@ class PositionMapperTest {
     class ToSummaryDTO {
 
         @Test
-        @DisplayName("should map position to summary DTO")
-        void shouldMapPositionToSummaryDTO() {
+        @DisplayName("should map position to summary DTO with price")
+        void shouldMapPositionToSummaryDTOWithPrice() {
             // Given
-            Position position = createPosition("AAPL", 100, "150.00", "175.00");
+            Position position = createPosition("AAPL", 100, "150.00");
             Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
 
             // When
@@ -60,6 +61,25 @@ class PositionMapperTest {
             assertThat(dto.profitLoss().amount()).isPositive();
             assertThat(dto.returnPercentage()).isPositive();
         }
+
+        @Test
+        @DisplayName("should map position to summary DTO with null price-dependent fields when no price")
+        void shouldMapPositionToSummaryDTOWithNullFieldsWhenNoPrice() {
+            // Given
+            Position position = createPosition("AAPL", 100, "150.00");
+            Instrument instrument = createInstrumentWithoutPrice("AAPL", "Apple Inc.", InstrumentType.STOCK);
+
+            // When
+            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument);
+
+            // Then
+            assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
+            assertThat(dto.quantity()).isEqualByComparingTo(BigDecimal.valueOf(100));
+            assertThat(dto.investedAmount().amount()).isPositive();
+            assertThat(dto.currentValue()).isNull();
+            assertThat(dto.profitLoss()).isNull();
+            assertThat(dto.returnPercentage()).isNull();
+        }
     }
 
     @Nested
@@ -70,7 +90,7 @@ class PositionMapperTest {
         @DisplayName("should map position to detail response with holdings")
         void shouldMapPositionToDetailResponseWithHoldings() {
             // Given
-            Position position = createPosition("AAPL", 100, "150.00", "175.00");
+            Position position = createPosition("AAPL", 100, "150.00");
             Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
@@ -91,7 +111,7 @@ class PositionMapperTest {
         @DisplayName("should use 'Unknown Account' when account not in map")
         void shouldUseUnknownAccountWhenAccountNotInMap() {
             // Given
-            Position position = createPosition("AAPL", 100, "150.00", "175.00");
+            Position position = createPosition("AAPL", 100, "150.00");
             Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
             Map<AccountId, String> accountNames = Map.of(); // Empty map
 
@@ -101,16 +121,34 @@ class PositionMapperTest {
             // Then
             assertThat(dto.holdings().getFirst().accountName()).isEqualTo("Unknown Account");
         }
+
+        @Test
+        @DisplayName("should have null price-dependent fields when no price")
+        void shouldHaveNullFieldsWhenNoPrice() {
+            // Given
+            Position position = createPosition("AAPL", 100, "150.00");
+            Instrument instrument = createInstrumentWithoutPrice("AAPL", "Apple Inc.", InstrumentType.STOCK);
+            Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
+
+            // When
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames);
+
+            // Then
+            assertThat(dto.currentPrice()).isNull();
+            assertThat(dto.currentValue()).isNull();
+            assertThat(dto.profitLoss()).isNull();
+            assertThat(dto.returnPercentage()).isNull();
+            assertThat(dto.investedAmount().amount()).isPositive();
+        }
     }
 
-    private Position createPosition(String symbol, int qty, String costBasis, String price) {
+    private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
                 List.of(new AccountHolding(
                         new AccountId(1L),
                         Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))),
-                new Price(Money.pln(price)));
+                        CostBasis.of(Money.pln(costBasis)))));
     }
 
     private Instrument createInstrument(String symbol, String name, InstrumentType type, String price) {
@@ -119,5 +157,13 @@ class PositionMapperTest {
                 new InstrumentName(name),
                 type,
                 new Price(Money.pln(new BigDecimal(price))));
+    }
+
+    private Instrument createInstrumentWithoutPrice(String symbol, String name, InstrumentType type) {
+        return new Instrument(
+                new InstrumentSymbol(symbol),
+                new InstrumentName(name),
+                type,
+                null);
     }
 }

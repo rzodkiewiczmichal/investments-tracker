@@ -48,6 +48,22 @@ Feature: Manual Position Entry
     And the position should show invested amount of 100000 PLN
     And the position should show current value of 103500 PLN
 
+  @FR-041 @FR-081 @FR-083
+  @v0.1 @manual-entry
+  Scenario: Newly added position shows no P&L until price is available
+    Given I want to manually add a position
+    When I enter the following position data:
+      | Field        | Value    |
+      | Instrument   | Tesla    |
+      | Quantity     | 25       |
+      | Average Cost | 800      |
+      | Account      | Broker C |
+    Then a new position for "Tesla" should be created
+    And the position should have 25 shares at 800 PLN average cost
+    And the position should show invested amount of 20000 PLN
+    But the position should not show current value
+    And the position should not show P&L
+
   @FR-044
   @v0.1 @manual-entry @validation
   Scenario: Manual entry validation - missing required fields

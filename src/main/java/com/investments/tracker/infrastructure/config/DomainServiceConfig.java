@@ -17,12 +17,13 @@ import org.springframework.context.annotation.Configuration;
 public class DomainServiceConfig {
 
     @Bean
-    public PortfolioCalculationService portfolioCalculationService() {
-        return new PortfolioCalculationService();
+    public PositionCalculationService positionCalculationService() {
+        return new PositionCalculationService();
     }
 
     @Bean
-    public PositionCalculationService positionCalculationService() {
-        return new PositionCalculationService();
+    public PortfolioCalculationService portfolioCalculationService(
+            PositionCalculationService positionCalculationService) {
+        return new PortfolioCalculationService(positionCalculationService);
     }
 }

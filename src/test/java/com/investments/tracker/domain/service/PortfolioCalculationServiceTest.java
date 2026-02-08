@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +30,7 @@ class PortfolioCalculationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new PortfolioCalculationService();
+        service = new PortfolioCalculationService(new PositionCalculationService());
     }
 
     @Nested
@@ -39,21 +40,55 @@ class PortfolioCalculationServiceTest {
         @Test
         @DisplayName("creates empty portfolio from empty list")
         void createsEmptyPortfolio() {
-            Portfolio portfolio = service.createPortfolio(List.of());
+            Portfolio portfolio = service.createPortfolio(List.of(), Map.of());
 
             assertThat(portfolio.isEmpty()).isTrue();
         }
 
         @Test
-        @DisplayName("creates portfolio from positions")
-        void createsPortfolioFromPositions() {
-            List<Position> positions = List.of(
-                    createPosition("AAPL", 100, "500", "550"),
-                    createPosition("MSFT", 50, "300", "320"));
+        @DisplayName("creates portfolio from positions with prices")
+        void createsPortfolioFromPositionsWithPrices() {
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
+            Map<InstrumentSymbol, Price> prices = Map.of(
+                    InstrumentSymbol.of("AAPL"), Price.pln("550"),
+                    InstrumentSymbol.of("MSFT"), Price.pln("320"));
 
-            Portfolio portfolio = service.createPortfolio(positions);
+            Portfolio portfolio = service.createPortfolio(List.of(aapl, msft), prices);
 
             assertThat(portfolio.getPositionCount()).isEqualTo(2);
+            assertThat(portfolio.getTotalCurrentValue()).isPresent();
+            assertThat(portfolio.getTotalProfitAndLoss()).isPresent();
+        }
+
+        @Test
+        @DisplayName("creates portfolio with null metrics when prices are unknown")
+        void createsPortfolioWithNullMetricsWhenNoPrices() {
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
+
+            Portfolio portfolio = service.createPortfolio(List.of(aapl, msft), Map.of());
+
+            assertThat(portfolio.getPositionCount()).isEqualTo(2);
+            assertThat(portfolio.getTotalInvestedAmount()).isPresent();
+            assertThat(portfolio.getTotalCurrentValue()).isEmpty();
+            assertThat(portfolio.getTotalProfitAndLoss()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("creates portfolio with null metrics when only some prices available")
+        void createsPortfolioWithNullMetricsWhenPartialPrices() {
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
+            Map<InstrumentSymbol, Price> prices = Map.of(
+                    InstrumentSymbol.of("AAPL"), Price.pln("550"));
+
+            Portfolio portfolio = service.createPortfolio(List.of(aapl, msft), prices);
+
+            assertThat(portfolio.getPositionCount()).isEqualTo(2);
+            assertThat(portfolio.getTotalInvestedAmount()).isPresent();
+            assertThat(portfolio.getTotalCurrentValue()).isEmpty();
+            assertThat(portfolio.getTotalProfitAndLoss()).isEmpty();
         }
     }
 
@@ -73,8 +108,8 @@ class PortfolioCalculationServiceTest {
         @DisplayName("calculates total invested amount")
         void calculatesTotalInvestedAmount() {
             List<Position> positions = List.of(
-                    createPosition("AAPL", 100, "500", "550"), // 100 * 500 = 50000
-                    createPosition("MSFT", 50, "300", "320"));  // 50 * 300 = 15000
+                    createPosition("AAPL", 100, "500"), // 100 * 500 = 50000
+                    createPosition("MSFT", 50, "300"));  // 50 * 300 = 15000
 
             Optional<InvestedAmount> result = service.calculateTotalInvestedAmount(positions);
 
@@ -88,23 +123,41 @@ class PortfolioCalculationServiceTest {
     class TotalCurrentValue {
 
         @Test
-        @DisplayName("returns zero for empty positions list")
-        void returnsZeroForEmptyList() {
-            CurrentValue result = service.calculateTotalCurrentValue(List.of());
+        @DisplayName("returns empty for empty positions list")
+        void returnsEmptyForEmptyList() {
+            Optional<CurrentValue> result = service.calculateTotalCurrentValue(List.of(), Map.of());
 
-            assertThat(result.isZero()).isTrue();
+            assertThat(result).isEmpty();
         }
 
         @Test
-        @DisplayName("calculates total current value")
+        @DisplayName("calculates total current value when all prices available")
         void calculatesTotalCurrentValue() {
-            List<Position> positions = List.of(
-                    createPosition("AAPL", 100, "500", "550"), // 100 * 550 = 55000
-                    createPosition("MSFT", 50, "300", "320"));  // 50 * 320 = 16000
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
+            Map<InstrumentSymbol, Price> prices = Map.of(
+                    InstrumentSymbol.of("AAPL"), Price.pln("550"),
+                    InstrumentSymbol.of("MSFT"), Price.pln("320"));
 
-            CurrentValue result = service.calculateTotalCurrentValue(positions);
+            Optional<CurrentValue> result = service.calculateTotalCurrentValue(
+                    List.of(aapl, msft), prices);
 
-            assertThat(result.money().amount()).isEqualByComparingTo("71000");
+            assertThat(result).isPresent();
+            assertThat(result.get().money().amount()).isEqualByComparingTo("71000");
+        }
+
+        @Test
+        @DisplayName("returns empty when any position lacks a price")
+        void returnsEmptyWhenPriceMissing() {
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
+            Map<InstrumentSymbol, Price> prices = Map.of(
+                    InstrumentSymbol.of("AAPL"), Price.pln("550"));
+
+            Optional<CurrentValue> result = service.calculateTotalCurrentValue(
+                    List.of(aapl, msft), prices);
+
+            assertThat(result).isEmpty();
         }
     }
 
@@ -115,7 +168,7 @@ class PortfolioCalculationServiceTest {
         @Test
         @DisplayName("returns empty for empty positions list")
         void returnsEmptyForEmptyList() {
-            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(List.of());
+            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(List.of(), Map.of());
 
             assertThat(result).isEmpty();
         }
@@ -123,12 +176,15 @@ class PortfolioCalculationServiceTest {
         @Test
         @DisplayName("calculates total profit")
         void calculatesTotalProfit() {
-            List<Position> positions = List.of(
-                    createPosition("AAPL", 100, "500", "550"), // invested 50000, current 55000
-                    createPosition("MSFT", 50, "300", "320"));  // invested 15000, current 16000
-            // Total: invested 65000, current 71000, P&L = 6000 (9.23%)
+            Position aapl = createPosition("AAPL", 100, "500"); // invested 50000
+            Position msft = createPosition("MSFT", 50, "300");  // invested 15000
+            Map<InstrumentSymbol, Price> prices = Map.of(
+                    InstrumentSymbol.of("AAPL"), Price.pln("550"), // current 55000
+                    InstrumentSymbol.of("MSFT"), Price.pln("320")); // current 16000
+            // Total: invested 65000, current 71000, P&L = 6000
 
-            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(positions);
+            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(
+                    List.of(aapl, msft), prices);
 
             assertThat(result).isPresent();
             assertThat(result.get().amount().amount()).isEqualByComparingTo("6000");
@@ -138,43 +194,37 @@ class PortfolioCalculationServiceTest {
         @Test
         @DisplayName("calculates total loss")
         void calculatesTotalLoss() {
-            List<Position> positions = List.of(
-                    createPosition("AAPL", 100, "500", "450"), // invested 50000, current 45000
-                    createPosition("MSFT", 50, "300", "280"));  // invested 15000, current 14000
+            Position aapl = createPosition("AAPL", 100, "500"); // invested 50000
+            Position msft = createPosition("MSFT", 50, "300");  // invested 15000
+            Map<InstrumentSymbol, Price> prices = Map.of(
+                    InstrumentSymbol.of("AAPL"), Price.pln("450"), // current 45000
+                    InstrumentSymbol.of("MSFT"), Price.pln("280")); // current 14000
             // Total: invested 65000, current 59000, P&L = -6000
 
-            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(positions);
+            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(
+                    List.of(aapl, msft), prices);
 
             assertThat(result).isPresent();
             assertThat(result.get().amount().amount()).isEqualByComparingTo("-6000");
             assertThat(result.get().isLoss()).isTrue();
         }
-    }
-
-    @Nested
-    @DisplayName("portfolio metrics")
-    class PortfolioMetricsCalculation {
 
         @Test
-        @DisplayName("calculates portfolio metrics")
-        void calculatesMetrics() {
-            List<Position> positions = List.of(
-                    createPosition("AAPL", 100, "500", "550"),
-                    createPosition("MSFT", 50, "300", "320"));
+        @DisplayName("returns empty when prices are unknown")
+        void returnsEmptyWhenNoPrices() {
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
 
-            PortfolioMetrics metrics = service.calculatePortfolioMetrics(positions);
+            Optional<ProfitAndLoss> result = service.calculateTotalProfitAndLoss(
+                    List.of(aapl, msft), Map.of());
 
-            assertThat(metrics.totalPositions()).isEqualTo(2);
-            assertThat(metrics.totalInvestedAmount()).isNotNull();
-            assertThat(metrics.totalCurrentValue()).isNotNull();
-            assertThat(metrics.profitAndLoss()).isNotNull();
+            assertThat(result).isEmpty();
         }
     }
 
-    private Position createPosition(String symbol, int qty, String costBasis, String price) {
+    private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))),
-                Price.pln(price));
+                List.of(new AccountHolding(new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))));
     }
 }

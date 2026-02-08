@@ -10,7 +10,6 @@ import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.AccountRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
@@ -74,11 +73,10 @@ class PositionCommandUseCaseServiceTest {
             InstrumentType instrumentType = InstrumentType.STOCK;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
-            Price currentPrice = new Price(Money.pln("175.00"));
 
             // When
             Position result = positionCommandUseCaseService.addPosition(
-                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis, currentPrice);
+                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis);
 
             // Then
             assertThat(result.symbol().value()).isEqualTo("AAPL");
@@ -89,20 +87,21 @@ class PositionCommandUseCaseServiceTest {
             Position savedPosition = captor.getValue();
             assertThat(savedPosition.symbol().value()).isEqualTo("AAPL");
 
-            // Verify instrument was created
+            // Verify instrument was created with null currentPrice
             ArgumentCaptor<Instrument> instrumentCaptor = ArgumentCaptor.forClass(Instrument.class);
             verify(instrumentRepository).save(instrumentCaptor.capture());
             Instrument savedInstrument = instrumentCaptor.getValue();
             assertThat(savedInstrument.symbol().value()).isEqualTo("AAPL");
             assertThat(savedInstrument.name().value()).isEqualTo("Apple Inc.");
             assertThat(savedInstrument.type()).isEqualTo(InstrumentType.STOCK);
+            assertThat(savedInstrument.currentPrice()).isNull();
         }
 
         @Test
         @DisplayName("should add to existing position without creating instrument")
         void shouldAddToExistingPositionWithoutCreatingInstrument() {
             // Given
-            Position existingPosition = createPosition("AAPL", 50, "140.00", "175.00");
+            Position existingPosition = createPosition("AAPL", 50, "140.00");
             AccountId accountId = new AccountId(1L);
             when(accountRepository.existsById(accountId)).thenReturn(true);
             when(instrumentRepository.existsBySymbol(any())).thenReturn(true);
@@ -114,11 +113,10 @@ class PositionCommandUseCaseServiceTest {
             InstrumentType instrumentType = InstrumentType.STOCK;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
-            Price currentPrice = new Price(Money.pln("175.00"));
 
             // When
             Position result = positionCommandUseCaseService.addPosition(
-                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis, currentPrice);
+                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis);
 
             // Then
             assertThat(result.symbol().value()).isEqualTo("AAPL");
@@ -141,11 +139,10 @@ class PositionCommandUseCaseServiceTest {
             InstrumentType instrumentType = InstrumentType.STOCK;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
-            Price currentPrice = new Price(Money.pln("175.00"));
 
             // When/Then
             assertThatThrownBy(() -> positionCommandUseCaseService.addPosition(
-                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis, currentPrice))
+                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("Account")
                     .hasMessageContaining("999");
@@ -160,7 +157,7 @@ class PositionCommandUseCaseServiceTest {
         @DisplayName("should update existing position")
         void shouldUpdateExistingPosition() {
             // Given
-            Position existingPosition = createPosition("AAPL", 50, "140.00", "175.00");
+            Position existingPosition = createPosition("AAPL", 50, "140.00");
             AccountId accountId = new AccountId(1L);
             when(accountRepository.existsById(accountId)).thenReturn(true);
             when(positionRepository.findBySymbol(any())).thenReturn(Optional.of(existingPosition));
@@ -219,13 +216,12 @@ class PositionCommandUseCaseServiceTest {
         }
     }
 
-    private Position createPosition(String symbol, int qty, String costBasis, String price) {
+    private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
                 List.of(new AccountHolding(
                         new AccountId(1L),
                         Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))),
-                new Price(Money.pln(price)));
+                        CostBasis.of(Money.pln(costBasis)))));
     }
 }

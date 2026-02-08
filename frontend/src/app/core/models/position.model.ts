@@ -15,14 +15,14 @@ export interface PositionSummary {
   instrumentType: InstrumentType;
   quantity: number;
   averageCost: Money;
-  currentValue: Money;
+  currentValue: Money | null;
   investedAmount: Money;
-  profitLoss: Money;
-  returnPercentage: number;
+  profitLoss: Money | null;
+  returnPercentage: number | null;
 }
 
 export interface PositionDetail extends PositionSummary {
-  currentPrice: Money;
+  currentPrice: Money | null;
   holdings: AccountHoldingDTO[];
 }
 
