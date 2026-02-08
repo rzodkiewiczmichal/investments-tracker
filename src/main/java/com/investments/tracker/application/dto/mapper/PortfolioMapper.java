@@ -27,9 +27,11 @@ public class PortfolioMapper {
     public PortfolioSummaryResponse toSummaryResponse(Portfolio portfolio) {
         PortfolioMetrics metrics = portfolio.metrics();
 
-        MoneyDTO totalCurrentValue = toMoneyDTO(metrics.totalCurrentValue().money());
+        MoneyDTO totalCurrentValue = metrics.totalCurrentValue() != null
+                ? toMoneyDTO(metrics.totalCurrentValue().money())
+                : null;
 
-        // PortfolioMetrics allows null for empty portfolios (by design)
+        // PortfolioMetrics allows null for empty portfolios or unknown prices (by design)
         MoneyDTO totalInvestedAmount = metrics.totalInvestedAmount() != null
                 ? toMoneyDTO(metrics.totalInvestedAmount().money())
                 : new MoneyDTO(BigDecimal.ZERO, DEFAULT_CURRENCY);

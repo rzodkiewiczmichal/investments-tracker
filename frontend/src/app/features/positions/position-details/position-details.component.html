@@ -50,7 +50,7 @@
           <p-card styleClass="metric-card highlight">
             <div class="metric-content">
               <span class="label">Current Value</span>
-              <span class="value">{{ formatMoney(position()!.currentValue.amount) }}</span>
+              <span class="value">{{ formatMoney(position()!.currentValue?.amount) }}</span>
             </div>
           </p-card>
           <p-card styleClass="metric-card">
@@ -62,8 +62,8 @@
           <p-card styleClass="metric-card">
             <div class="metric-content">
               <span class="label">Profit/Loss</span>
-              <span class="value" [class]="getProfitLossClass(position()!.profitLoss.amount)">
-                {{ formatMoney(position()!.profitLoss.amount) }}
+              <span class="value" [class]="getProfitLossClass(position()!.profitLoss?.amount)">
+                {{ formatMoney(position()!.profitLoss?.amount) }}
               </span>
             </div>
           </p-card>
@@ -96,7 +96,7 @@
           <p-card styleClass="metric-card">
             <div class="metric-content">
               <span class="label">Current Price</span>
-              <span class="value">{{ formatMoney(position()!.currentPrice.amount) }}</span>
+              <span class="value">{{ formatMoney(position()!.currentPrice?.amount) }}</span>
             </div>
           </p-card>
         </div>

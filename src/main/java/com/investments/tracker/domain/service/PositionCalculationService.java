@@ -11,15 +11,10 @@ import com.investments.tracker.domain.model.value.Quantity;
 import java.util.Objects;
 
 /**
- * Domain service for position-related calculations.
+ * Domain service for cross-aggregate position calculations (ADR-024).
  * <p>
- * Provides calculations that don't naturally belong to a single entity,
- * such as cost basis recalculation scenarios.
- * </p>
- * <p>
- * Note: Most calculations are available directly on Position aggregate.
- * Use this service for operations that span multiple value objects or
- * require parameters not owned by Position.
+ * Handles calculations that require data from both Position and Instrument
+ * aggregates (e.g., CurrentValue and P&L need Position's quantity + Instrument's price).
  * </p>
  * <p>
  * This is a stateless domain service with no dependencies on infrastructure.
@@ -28,11 +23,10 @@ import java.util.Objects;
 public class PositionCalculationService {
 
     /**
-     * Calculates current value for a position given a different price
-     * than the one stored in the position.
+     * Calculates current value for a position.
      *
-     * @param position the position
-     * @param currentPrice the current price to use
+     * @param position the position (provides quantity)
+     * @param currentPrice current market price from Instrument aggregate
      * @return the current value
      */
     public CurrentValue calculateCurrentValue(Position position, Price currentPrice) {
@@ -41,6 +35,19 @@ public class PositionCalculationService {
 
         Quantity totalQuantity = position.calculateTotalQuantity();
         return CurrentValue.calculate(totalQuantity, currentPrice);
+    }
+
+    /**
+     * Calculates profit and loss for a position.
+     *
+     * @param position the position (provides quantity and cost basis)
+     * @param currentPrice current market price from Instrument aggregate
+     * @return the calculated profit and loss with percentage
+     */
+    public ProfitAndLoss calculateProfitAndLoss(Position position, Price currentPrice) {
+        CurrentValue currentValue = calculateCurrentValue(position, currentPrice);
+        InvestedAmount investedAmount = position.calculateInvestedAmount();
+        return ProfitAndLoss.calculate(currentValue, investedAmount);
     }
 
     /**

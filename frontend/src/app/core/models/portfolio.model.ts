@@ -1,10 +1,10 @@
 import { Money } from './money.model';
 
 export interface PortfolioSummary {
-  totalCurrentValue: Money;
+  totalCurrentValue: Money | null;
   totalInvestedAmount: Money;
-  totalProfitLoss: Money;
-  totalReturnPercentage: number;
+  totalProfitLoss: Money | null;
+  totalReturnPercentage: number | null;
   positionsCount: number;
   message?: string;
 }

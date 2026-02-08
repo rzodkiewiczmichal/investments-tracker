@@ -24,11 +24,13 @@ public record Instrument(
         InstrumentType type,
         Price currentPrice) {
 
+    /**
+     * @param currentPrice nullable - price is unknown until fetched from market data provider
+     */
     public Instrument {
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(name, "name cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
-        Objects.requireNonNull(currentPrice, "currentPrice cannot be null");
     }
 
     /**

@@ -4,7 +4,6 @@ import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,8 +17,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("Position aggregate")
 class PositionTest {
 
-    private static final Price DEFAULT_PRICE = Price.pln("100");
-
     @Nested
     @DisplayName("creation")
     class Creation {
@@ -27,7 +24,7 @@ class PositionTest {
         @Test
         @DisplayName("creates Position with single holding")
         void createsWithSingleHolding() {
-            Position position = createPosition("AAPL", 100, "500.00", "550");
+            Position position = createPosition("AAPL", 100, "500.00");
 
             assertThat(position.symbol().value()).isEqualTo("AAPL");
             assertThat(position.holdings()).hasSize(1);
@@ -40,12 +37,10 @@ class PositionTest {
             List<AccountHolding> holdings = List.of(
                     new AccountHolding(new AccountId(1L), Quantity.of(50), CostBasis.pln("500")),
                     new AccountHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520")));
-            Price price = Price.pln("550");
 
-            Position position = new Position(InstrumentSymbol.of("AAPL"), holdings, price);
+            Position position = new Position(InstrumentSymbol.of("AAPL"), holdings);
 
             assertThat(position.holdings()).hasSize(2);
-            assertThat(position.currentPrice()).isEqualTo(price);
             assertThat(position.calculateTotalQuantity().value()).isEqualByComparingTo("80");
         }
 
@@ -53,20 +48,9 @@ class PositionTest {
         @DisplayName("throws exception for empty holdings list")
         void throwsForEmptyHoldings() {
             assertThatThrownBy(() ->
-                    new Position(InstrumentSymbol.of("AAPL"), List.of(), DEFAULT_PRICE))
+                    new Position(InstrumentSymbol.of("AAPL"), List.of()))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("at least one holding");
-        }
-
-        @Test
-        @DisplayName("throws exception for null price")
-        void throwsForNullPrice() {
-            assertThatThrownBy(() ->
-                    new Position(InstrumentSymbol.of("AAPL"),
-                            List.of(new AccountHolding(new AccountId(1L), Quantity.of(100), CostBasis.pln("500"))),
-                            null))
-                    .isInstanceOf(NullPointerException.class)
-                    .hasMessageContaining("currentPrice cannot be null");
         }
     }
 
@@ -77,7 +61,7 @@ class PositionTest {
         @Test
         @DisplayName("adds new holding for new account")
         void addsNewHolding() {
-            Position position = createPosition("AAPL", 50, "500", "550");
+            Position position = createPosition("AAPL", 50, "500");
 
             Position updated = position.addHolding(
                     new AccountId(2L),
@@ -93,7 +77,7 @@ class PositionTest {
         @Test
         @DisplayName("merges holding for existing account with weighted average")
         void mergesHoldingWithWeightedAverage() {
-            Position position = createPosition("AAPL", 50, "500", "550");
+            Position position = createPosition("AAPL", 50, "500");
 
             // Add 50 more shares at 600 PLN = (50*500 + 50*600) / 100 = 550 PLN avg
             Position updated = position.addHolding(
@@ -110,7 +94,7 @@ class PositionTest {
         @Test
         @DisplayName("removes holding from account")
         void removesHolding() {
-            Position position = createPosition("AAPL", 50, "500", "550");
+            Position position = createPosition("AAPL", 50, "500");
             position = position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             Position updated = position.removeHolding(new AccountId(2L));
@@ -122,7 +106,7 @@ class PositionTest {
         @Test
         @DisplayName("throws when removing last holding")
         void throwsWhenRemovingLastHolding() {
-            Position position = createPosition("AAPL", 50, "500", "550");
+            Position position = createPosition("AAPL", 50, "500");
 
             assertThatThrownBy(() -> position.removeHolding(new AccountId(1L)))
                     .isInstanceOf(DomainException.class)
@@ -132,7 +116,7 @@ class PositionTest {
         @Test
         @DisplayName("throws when removing non-existent holding")
         void throwsWhenRemovingNonExistent() {
-            Position position = createPosition("AAPL", 50, "500", "550");
+            Position position = createPosition("AAPL", 50, "500");
             position = position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             Position finalPosition = position;
@@ -149,7 +133,7 @@ class PositionTest {
         @Test
         @DisplayName("calculates total quantity from multiple holdings")
         void calculatesTotalQuantity() {
-            Position position = createPosition("AAPL", 50, "500", "550");
+            Position position = createPosition("AAPL", 50, "500");
             position = position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             Quantity totalQuantity = position.calculateTotalQuantity();
@@ -160,7 +144,7 @@ class PositionTest {
         @Test
         @DisplayName("calculates weighted average cost basis")
         void calculatesWeightedAverageCostBasis() {
-            Position position = createPosition("AAPL", 50, "500", "550"); // 50 * 500 = 25000
+            Position position = createPosition("AAPL", 50, "500"); // 50 * 500 = 25000
             position = position.addHolding(
                     new AccountId(2L),
                     Quantity.of(30),
@@ -175,34 +159,11 @@ class PositionTest {
         @Test
         @DisplayName("calculates invested amount")
         void calculatesInvestedAmount() {
-            Position position = createPosition("AAPL", 100, "500", "550");
+            Position position = createPosition("AAPL", 100, "500");
 
             // 100 * 500 = 50000
             assertThat(position.calculateInvestedAmount().money().amount())
                     .isEqualByComparingTo("50000");
-        }
-
-        @Test
-        @DisplayName("calculates current value")
-        void calculatesCurrentValue() {
-            Position position = createPosition("AAPL", 100, "500", "550");
-
-            com.investments.tracker.domain.model.value.CurrentValue currentValue =
-                    position.calculateCurrentValue();
-
-            assertThat(currentValue.money().amount()).isEqualByComparingTo("55000");
-        }
-
-        @Test
-        @DisplayName("calculates profit and loss")
-        void calculatesProfitAndLoss() {
-            Position position = createPosition("AAPL", 100, "500", "550"); // invested: 50000, current: 55000
-
-            var pnl = position.calculateProfitAndLoss();
-
-            assertThat(pnl.amount().amount()).isEqualByComparingTo("5000"); // profit
-            assertThat(pnl.percentage().value()).isEqualByComparingTo("10"); // 10%
-            assertThat(pnl.isProfit()).isTrue();
         }
     }
 
@@ -213,8 +174,8 @@ class PositionTest {
         @Test
         @DisplayName("equals by symbol only (identity)")
         void equalsBySymbolOnly() {
-            Position p1 = createPosition("AAPL", 100, "500", "550");
-            Position p2 = createPosition("AAPL", 100, "500", "550");
+            Position p1 = createPosition("AAPL", 100, "500");
+            Position p2 = createPosition("AAPL", 100, "500");
 
             assertThat(p1).isEqualTo(p2);
             assertThat(p1.hashCode()).isEqualTo(p2.hashCode());
@@ -223,13 +184,12 @@ class PositionTest {
         @Test
         @DisplayName("equals same symbol with different state (DDD entity semantics)")
         void equalsSameSymbolDifferentState() {
-            Position p1 = createPosition("AAPL", 100, "500", "550");
+            Position p1 = createPosition("AAPL", 100, "500");
             Position p2 = new Position(
                     InstrumentSymbol.of("AAPL"),
-                    List.of(new AccountHolding(new AccountId(2L), Quantity.of(200), CostBasis.pln("600"))),
-                    Price.pln("700"));
+                    List.of(new AccountHolding(new AccountId(2L), Quantity.of(200), CostBasis.pln("600"))));
 
-            // Same symbol = same entity, regardless of different holdings/price
+            // Same symbol = same entity, regardless of different holdings
             assertThat(p1).isEqualTo(p2);
             assertThat(p1.hashCode()).isEqualTo(p2.hashCode());
         }
@@ -237,17 +197,16 @@ class PositionTest {
         @Test
         @DisplayName("not equals different symbols")
         void notEqualsDifferentSymbols() {
-            Position p1 = createPosition("AAPL", 100, "500", "550");
-            Position p2 = createPosition("MSFT", 100, "500", "550");
+            Position p1 = createPosition("AAPL", 100, "500");
+            Position p2 = createPosition("MSFT", 100, "500");
 
             assertThat(p1).isNotEqualTo(p2);
         }
     }
 
-    private Position createPosition(String symbol, int qty, String costBasis, String price) {
+    private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))),
-                Price.pln(price));
+                List.of(new AccountHolding(new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))));
     }
 }

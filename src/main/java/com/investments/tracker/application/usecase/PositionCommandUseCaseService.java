@@ -9,7 +9,6 @@ import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.AccountRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
@@ -43,23 +42,22 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
     @Override
     public Position addPosition(InstrumentSymbol symbol, InstrumentName instrumentName,
                                 InstrumentType instrumentType, AccountId accountId,
-                                Quantity quantity, CostBasis costBasis, Price currentPrice) {
+                                Quantity quantity, CostBasis costBasis) {
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(instrumentName, "instrumentName cannot be null");
         Objects.requireNonNull(instrumentType, "instrumentType cannot be null");
         Objects.requireNonNull(accountId, "accountId cannot be null");
         Objects.requireNonNull(quantity, "quantity cannot be null");
         Objects.requireNonNull(costBasis, "costBasis cannot be null");
-        Objects.requireNonNull(currentPrice, "currentPrice cannot be null");
 
         // Validate account exists (Layer 2 validation per ADR-011)
         if (!accountRepository.existsById(accountId)) {
             throw new ResourceNotFoundException("Account", "id", accountId.value().toString());
         }
 
-        // Create instrument if it doesn't exist
+        // Create instrument if it doesn't exist (no current price until fetched from market data)
         if (!instrumentRepository.existsBySymbol(symbol)) {
-            Instrument instrument = new Instrument(symbol, instrumentName, instrumentType, currentPrice);
+            Instrument instrument = new Instrument(symbol, instrumentName, instrumentType, null);
             instrumentRepository.save(instrument);
         }
 
@@ -68,8 +66,7 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
                 .map(existing -> existing.addHolding(accountId, quantity, costBasis))
                 .orElseGet(() -> new Position(
                         symbol,
-                        List.of(new AccountHolding(accountId, quantity, costBasis)),
-                        currentPrice));
+                        List.of(new AccountHolding(accountId, quantity, costBasis))));
 
         return positionRepository.save(position);
     }

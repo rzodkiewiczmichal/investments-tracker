@@ -23,7 +23,7 @@
       <p-card>
         <div class="summary-card-content">
           <span class="label">Total Value</span>
-          <span class="value">{{ formatMoney(portfolio()!.totalCurrentValue.amount) }}</span>
+          <span class="value">{{ formatMoney(portfolio()!.totalCurrentValue?.amount) }}</span>
         </div>
       </p-card>
       <p-card>
@@ -35,8 +35,8 @@
       <p-card>
         <div class="summary-card-content">
           <span class="label">Profit/Loss</span>
-          <span class="value" [class]="getProfitLossClass(portfolio()!.totalProfitLoss.amount)">
-            {{ formatMoney(portfolio()!.totalProfitLoss.amount) }}
+          <span class="value" [class]="getProfitLossClass(portfolio()!.totalProfitLoss?.amount)">
+            {{ formatMoney(portfolio()!.totalProfitLoss?.amount) }}
           </span>
         </div>
       </p-card>
@@ -97,9 +97,9 @@
               </td>
               <td class="text-right">{{ formatQuantity(position.quantity) }}</td>
               <td class="text-right">{{ formatMoney(position.averageCost.amount) }}</td>
-              <td class="text-right font-semibold">{{ formatMoney(position.currentValue.amount) }}</td>
-              <td class="text-right" [class]="getProfitLossClass(position.profitLoss.amount)">
-                {{ formatMoney(position.profitLoss.amount) }}
+              <td class="text-right font-semibold">{{ formatMoney(position.currentValue?.amount) }}</td>
+              <td class="text-right" [class]="getProfitLossClass(position.profitLoss?.amount)">
+                {{ formatMoney(position.profitLoss?.amount) }}
               </td>
               <td class="text-right" [class]="getProfitLossClass(position.returnPercentage)">
                 {{ formatPercentage(position.returnPercentage) }}

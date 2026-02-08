@@ -7,7 +7,6 @@ import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.PositionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,8 +61,8 @@ class PositionQueryUseCaseServiceTest {
         @DisplayName("should return all positions")
         void shouldReturnAllPositions() {
             // Given
-            Position position1 = createPosition("AAPL", 10, "150.00", "175.00");
-            Position position2 = createPosition("MSFT", 100, "300.00", "350.00");
+            Position position1 = createPosition("AAPL", 10, "150.00");
+            Position position2 = createPosition("MSFT", 100, "300.00");
             when(positionRepository.findAll()).thenReturn(List.of(position1, position2));
 
             // When
@@ -83,7 +82,7 @@ class PositionQueryUseCaseServiceTest {
         @DisplayName("should return position when found")
         void shouldReturnPositionWhenFound() {
             // Given
-            Position position = createPosition("AAPL", 100, "150.00", "175.00");
+            Position position = createPosition("AAPL", 100, "150.00");
             when(positionRepository.findBySymbol(any())).thenReturn(Optional.of(position));
 
             // When
@@ -108,13 +107,12 @@ class PositionQueryUseCaseServiceTest {
         }
     }
 
-    private Position createPosition(String symbol, int qty, String costBasis, String price) {
+    private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
                 List.of(new AccountHolding(
                         new AccountId(1L),
                         Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))),
-                new Price(Money.pln(price)));
+                        CostBasis.of(Money.pln(costBasis)))));
     }
 }

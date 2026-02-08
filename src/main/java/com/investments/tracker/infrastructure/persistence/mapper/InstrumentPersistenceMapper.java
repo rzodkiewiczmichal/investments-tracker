@@ -52,9 +52,9 @@ public class InstrumentPersistenceMapper {
                 instrument.symbol().value(),
                 instrument.name().value(),
                 mapToPersistenceType(instrument.type()).name(),
-                instrument.currentPrice().money().amount(),
-                instrument.currentPrice().currency().getCode(),
-                LocalDateTime.now(),
+                instrument.currentPrice() != null ? instrument.currentPrice().money().amount() : null,
+                instrument.currentPrice() != null ? instrument.currentPrice().currency().getCode() : null,
+                instrument.currentPrice() != null ? LocalDateTime.now() : null,
                 version
         );
     }

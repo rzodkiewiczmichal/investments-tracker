@@ -20,7 +20,6 @@ import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -89,8 +88,8 @@ public class PositionController {
                     return positionMapper.toSummaryDTO(position, instrument);
                 })
                 .sorted(Comparator.comparing(
-                        (PositionSummaryDTO dto) -> dto.currentValue().amount(),
-                        Comparator.reverseOrder()))
+                        (PositionSummaryDTO dto) -> dto.currentValue() != null ? dto.currentValue().amount() : null,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
         return new PositionListResponse(summaries, summaries.size());
@@ -127,9 +126,7 @@ public class PositionController {
                 InstrumentType.valueOf(request.instrumentType()),
                 new AccountId(request.accountId()),
                 new Quantity(request.quantity()),
-                CostBasis.of(Money.pln(request.averageCost())),
-                // MVP: use averageCost as initial currentPrice until price fetching is implemented
-                new Price(Money.pln(request.averageCost())));
+                CostBasis.of(Money.pln(request.averageCost())));
         Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Map<AccountId, String> accountNames = getAccountNames(position);
         return positionMapper.toDetailResponse(position, instrument, accountNames);
