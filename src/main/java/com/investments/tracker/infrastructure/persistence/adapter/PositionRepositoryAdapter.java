@@ -6,17 +6,17 @@ import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.PositionRepository;
-import com.investments.tracker.infrastructure.persistence.entity.PositionJpaEntity;
+import com.investments.tracker.infrastructure.persistence.entity.PositionJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.mapper.PositionPersistenceMapper;
-import com.investments.tracker.infrastructure.persistence.repository.InstrumentJpaRepository;
-import com.investments.tracker.infrastructure.persistence.repository.PositionJpaRepository;
+import com.investments.tracker.infrastructure.persistence.repository.InstrumentJdbcRepository;
+import com.investments.tracker.infrastructure.persistence.repository.PositionJdbcRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.Optional;
 
 /**
- * JPA-based implementation of the PositionRepository domain port.
+ * Spring Data JDBC implementation of the PositionRepository domain port.
  * <p>
  * This adapter has special requirements:
  * <ul>
@@ -28,21 +28,21 @@ import java.util.Optional;
 @Repository
 public class PositionRepositoryAdapter implements PositionRepository {
 
-    private final PositionJpaRepository jpaRepository;
-    private final InstrumentJpaRepository instrumentJpaRepository;
+    private final PositionJdbcRepository jdbcRepository;
+    private final InstrumentJdbcRepository instrumentJdbcRepository;
     private final PositionPersistenceMapper mapper;
 
-    public PositionRepositoryAdapter(PositionJpaRepository jpaRepository,
-                                     InstrumentJpaRepository instrumentJpaRepository,
+    public PositionRepositoryAdapter(PositionJdbcRepository jdbcRepository,
+                                     InstrumentJdbcRepository instrumentJdbcRepository,
                                      PositionPersistenceMapper mapper) {
-        this.jpaRepository = jpaRepository;
-        this.instrumentJpaRepository = instrumentJpaRepository;
+        this.jdbcRepository = jdbcRepository;
+        this.instrumentJdbcRepository = instrumentJdbcRepository;
         this.mapper = mapper;
     }
 
     @Override
     public Optional<Position> findBySymbol(InstrumentSymbol symbol) {
-        return jpaRepository.findById(symbol.value())
+        return jdbcRepository.findById(symbol.value())
                 .map(entity -> {
                     Price currentPrice = fetchCurrentPrice(symbol.value());
                     return mapper.toDomain(entity, currentPrice);
@@ -51,9 +51,9 @@ public class PositionRepositoryAdapter implements PositionRepository {
 
     @Override
     public Collection<Position> findAll() {
-        return jpaRepository.findAll().stream()
+        return jdbcRepository.findAll().stream()
                 .map(entity -> {
-                    Price currentPrice = fetchCurrentPrice(entity.getInstrumentSymbol());
+                    Price currentPrice = fetchCurrentPrice(entity.instrumentSymbol());
                     return mapper.toDomain(entity, currentPrice);
                 })
                 .toList();
@@ -61,26 +61,26 @@ public class PositionRepositoryAdapter implements PositionRepository {
 
     @Override
     public Position save(Position position) {
-        // Repository only handles Position aggregate
-        // Instrument MUST already exist (use case responsibility)
-        PositionJpaEntity entity = mapper.toEntity(position);
-        PositionJpaEntity saved = jpaRepository.save(entity);
+        Long version = jdbcRepository.findById(position.symbol().value())
+                .map(PositionJdbcEntity::version).orElse(null);
+        PositionJdbcEntity entity = mapper.toEntity(position, version);
+        PositionJdbcEntity saved = jdbcRepository.save(entity);
         return mapper.toDomain(saved, position.currentPrice());
     }
 
     @Override
     public void deleteBySymbol(InstrumentSymbol symbol) {
-        jpaRepository.deleteById(symbol.value());
+        jdbcRepository.deleteById(symbol.value());
     }
 
     @Override
     public boolean existsBySymbol(InstrumentSymbol symbol) {
-        return jpaRepository.existsById(symbol.value());
+        return jdbcRepository.existsById(symbol.value());
     }
 
     @Override
     public long count() {
-        return jpaRepository.count();
+        return jdbcRepository.count();
     }
 
     /**
@@ -91,16 +91,16 @@ public class PositionRepositoryAdapter implements PositionRepository {
      * @throws IllegalStateException if Instrument not found or has no current price
      */
     private Price fetchCurrentPrice(String symbol) {
-        return instrumentJpaRepository.findById(symbol)
+        return instrumentJdbcRepository.findById(symbol)
                 .map(instrument -> {
-                    if (instrument.getCurrentPriceAmount() == null) {
+                    if (instrument.currentPriceAmount() == null) {
                         throw new IllegalStateException(
                                 "Instrument " + symbol + " exists but has no current price set"
                         );
                     }
                     return new Price(new Money(
-                            instrument.getCurrentPriceAmount(),
-                            Currency.valueOf(instrument.getCurrentPriceCurrency())
+                            instrument.currentPriceAmount(),
+                            Currency.valueOf(instrument.currentPriceCurrency())
                     ));
                 })
                 .orElseThrow(() -> new IllegalStateException(

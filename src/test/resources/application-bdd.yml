@@ -11,16 +11,6 @@ spring:
     username: cucumber
     password: cucumber
 
-  # JPA / Hibernate Configuration
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
   # Flyway Configuration
   flyway:
     enabled: true
@@ -45,6 +35,5 @@ logging:
     root: WARN
     com.investments.tracker: INFO
     org.springframework.web: WARN
-    org.hibernate.SQL: WARN
     org.flywaydb: WARN
     io.cucumber: INFO

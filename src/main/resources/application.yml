@@ -15,22 +15,6 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
-  # JPA / Hibernate Configuration
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: validate  # IMPORTANT: Flyway manages schema, Hibernate only validates
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
-        use_sql_comments: true
-        jdbc:
-          batch_size: 20
-          fetch_size: 50
-        order_inserts: true
-        order_updates: true
-
   # Flyway Database Migration
   flyway:
     enabled: true
@@ -68,8 +52,6 @@ logging:
     root: INFO
     com.investments.tracker: DEBUG
     org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.flywaydb: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

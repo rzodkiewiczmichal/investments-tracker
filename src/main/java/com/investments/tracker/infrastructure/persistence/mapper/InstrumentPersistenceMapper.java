@@ -7,100 +7,81 @@ import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.infrastructure.persistence.entity.InstrumentJpaEntity;
-import com.investments.tracker.infrastructure.persistence.entity.JpaInstrumentType;
+import com.investments.tracker.infrastructure.persistence.entity.InstrumentJdbcEntity;
+import com.investments.tracker.infrastructure.persistence.entity.InstrumentTypeValue;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
- * Mapper for converting between Instrument domain model and InstrumentJpaEntity.
+ * Mapper for converting between Instrument domain model and InstrumentJdbcEntity.
  */
 @Component
 public class InstrumentPersistenceMapper {
 
     /**
-     * Converts a JPA entity to a domain model.
+     * Converts a JDBC entity to a domain model.
      *
-     * @param entity the JPA entity to convert
+     * @param entity the JDBC entity to convert
      * @return the domain Instrument
      */
-    public Instrument toDomain(InstrumentJpaEntity entity) {
+    public Instrument toDomain(InstrumentJdbcEntity entity) {
         Objects.requireNonNull(entity, "entity cannot be null");
 
         Price currentPrice = createPriceFromEntity(entity);
 
         return new Instrument(
-                new InstrumentSymbol(entity.getSymbol()),
-                new InstrumentName(entity.getName()),
-                mapToDomainType(entity.getInstrumentType()),
+                new InstrumentSymbol(entity.symbol()),
+                new InstrumentName(entity.name()),
+                mapToDomainType(entity.instrumentType()),
                 currentPrice
         );
     }
 
     /**
-     * Converts a domain model to a JPA entity.
-     * Sets priceUpdatedAt to the current time.
+     * Converts a domain model to a JDBC entity.
      *
      * @param instrument the domain Instrument to convert
-     * @return the JPA entity
+     * @param version the current version for optimistic locking (null for new entities)
+     * @return the JDBC entity
      */
-    public InstrumentJpaEntity toEntity(Instrument instrument) {
+    public InstrumentJdbcEntity toEntity(Instrument instrument, Long version) {
         Objects.requireNonNull(instrument, "instrument cannot be null");
-        InstrumentJpaEntity entity = new InstrumentJpaEntity();
-        entity.setSymbol(instrument.symbol().value());
-        entity.setName(instrument.name().value());
-        entity.setInstrumentType(mapToJpaType(instrument.type()));
-        entity.setCurrentPriceAmount(instrument.currentPrice().money().amount());
-        entity.setCurrentPriceCurrency(instrument.currentPrice().currency().getCode());
-        entity.setPriceUpdatedAt(LocalDateTime.now());
-        return entity;
+        return new InstrumentJdbcEntity(
+                instrument.symbol().value(),
+                instrument.name().value(),
+                mapToPersistenceType(instrument.type()).name(),
+                instrument.currentPrice().money().amount(),
+                instrument.currentPrice().currency().getCode(),
+                LocalDateTime.now(),
+                version
+        );
     }
 
-    /**
-     * Creates a Price from entity's currentPriceAmount and currentPriceCurrency.
-     * Returns null if price information is not available.
-     *
-     * @param entity the JPA entity
-     * @return the Price or null if not available
-     */
-    private Price createPriceFromEntity(InstrumentJpaEntity entity) {
-        if (entity.getCurrentPriceAmount() == null || entity.getCurrentPriceCurrency() == null) {
+    private Price createPriceFromEntity(InstrumentJdbcEntity entity) {
+        if (entity.currentPriceAmount() == null || entity.currentPriceCurrency() == null) {
             return null;
         }
-        Currency currency = Currency.valueOf(entity.getCurrentPriceCurrency());
-        Money money = new Money(entity.getCurrentPriceAmount(), currency);
+        Currency currency = Currency.valueOf(entity.currentPriceCurrency());
+        Money money = new Money(entity.currentPriceAmount(), currency);
         return new Price(money);
     }
 
-    /**
-     * Maps JpaInstrumentType to domain InstrumentType.
-     * STOCK -> STOCK, ETF -> ETF, BOND_ETF and POLISH_GOV_BOND -> BOND
-     *
-     * @param jpaType the JPA instrument type
-     * @return the domain instrument type
-     */
-    private InstrumentType mapToDomainType(JpaInstrumentType jpaType) {
-        return switch (jpaType) {
+    private InstrumentType mapToDomainType(String instrumentType) {
+        InstrumentTypeValue typeValue = InstrumentTypeValue.valueOf(instrumentType);
+        return switch (typeValue) {
             case STOCK -> InstrumentType.STOCK;
             case ETF -> InstrumentType.ETF;
             case BOND_ETF, POLISH_GOV_BOND -> InstrumentType.BOND;
         };
     }
 
-    /**
-     * Maps domain InstrumentType to JpaInstrumentType.
-     * BOND maps to BOND_ETF by default.
-     *
-     * @param domainType the domain instrument type
-     * @return the JPA instrument type
-     */
-    private JpaInstrumentType mapToJpaType(InstrumentType domainType) {
+    private InstrumentTypeValue mapToPersistenceType(InstrumentType domainType) {
         return switch (domainType) {
-            case STOCK -> JpaInstrumentType.STOCK;
-            case ETF -> JpaInstrumentType.ETF;
-            case BOND -> JpaInstrumentType.BOND_ETF;
+            case STOCK -> InstrumentTypeValue.STOCK;
+            case ETF -> InstrumentTypeValue.ETF;
+            case BOND -> InstrumentTypeValue.BOND_ETF;
         };
     }
 }
