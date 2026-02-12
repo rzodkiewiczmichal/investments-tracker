@@ -7,6 +7,8 @@ import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.Currency;
+import com.investments.tracker.domain.model.value.ExchangeRate;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
@@ -28,6 +30,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("PositionMapper")
 class PositionMapperTest {
 
+    private static final Map<Currency, ExchangeRate> PLN_RATES =
+            Map.of(Currency.PLN, ExchangeRate.identity(Currency.PLN));
+
     private PositionMapper mapper;
 
     @BeforeEach
@@ -47,7 +52,7 @@ class PositionMapperTest {
             Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
 
             // When
-            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument);
+            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -70,7 +75,7 @@ class PositionMapperTest {
             Instrument instrument = createInstrumentWithoutPrice("AAPL", "Apple Inc.", InstrumentType.STOCK);
 
             // When
-            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument);
+            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -95,7 +100,7 @@ class PositionMapperTest {
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames);
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -116,7 +121,7 @@ class PositionMapperTest {
             Map<AccountId, String> accountNames = Map.of(); // Empty map
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames);
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.holdings().getFirst().accountName()).isEqualTo("Unknown Account");
@@ -131,7 +136,7 @@ class PositionMapperTest {
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames);
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.currentPrice()).isNull();

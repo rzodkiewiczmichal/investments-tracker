@@ -2,16 +2,12 @@ package com.investments.tracker.domain.model.value;
 
 /**
  * Supported currencies for the Investment Tracker.
- * <p>
- * For v0.1, only PLN (Polish Zloty) is supported.
- * Multi-currency support is planned for v2.0+.
- * </p>
  */
 public enum Currency {
-    /**
-     * Polish Zloty - the default and only supported currency in v0.1.
-     */
-    PLN("PLN", "Polish Zloty", 2);
+    PLN("PLN", "Polish Zloty", 2),
+    EUR("EUR", "Euro", 2),
+    GBP("GBP", "British Pound Sterling", 2),
+    USD("USD", "US Dollar", 2);
 
     private final String code;
     private final String displayName;

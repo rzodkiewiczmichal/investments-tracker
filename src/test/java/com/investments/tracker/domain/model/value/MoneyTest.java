@@ -57,7 +57,7 @@ class MoneyTest {
         void throwsForNullAmount() {
             assertThatThrownBy(() -> new Money(null, Currency.PLN))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("Amount cannot be null");
+                    .hasMessage("amount cannot be null");
         }
 
         @Test
@@ -65,7 +65,7 @@ class MoneyTest {
         void throwsForNullCurrency() {
             assertThatThrownBy(() -> new Money(BigDecimal.TEN, null))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("Currency cannot be null");
+                    .hasMessage("currency cannot be null");
         }
 
         @Test

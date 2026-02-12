@@ -53,6 +53,17 @@
 
 
 
+### Currency & Conversion
+
+**Exchange Rate**
+- Definition: The rate at which one currency can be converted to another
+- Source: External provider (NBP API for official PLN rates)
+- Usage: Applied at query time to convert native-currency values to PLN
+- Example: ExchangeRate(GBP, PLN, 5.25) means 1 GBP = 5.25 PLN
+- Identity: PLN-to-PLN exchange rate is always 1.0
+
+
+
 ### Calculated Metrics
 
 **P&L (Profit & Loss)**
@@ -134,7 +145,7 @@
 
 2. **Cost Basis Rule**: Average cost method is used for all profit/loss calculations
 
-3. **Currency Rule**: All values are displayed in PLN (Polish Zloty)
+3. **Currency Rule**: Aggregated values (invested amount, current value, P&L) are always displayed in PLN. Cost basis and current price are stored in their native currency and converted to PLN at query time using current exchange rates
 
 4. **Pricing Rule**: End-of-day prices are sufficient for all calculations
 
@@ -150,7 +161,7 @@
 - Portfolio allocation analysis
 - Risk metrics (volatility, beta, correlation)
 - Benchmark comparisons
-- Multiple currency support (future consideration)
+- Full multi-currency accounting (all values stored in multiple currencies simultaneously)
 - Sector or geographic allocation tracking
 
 ---

@@ -1,5 +1,7 @@
 package com.investments.tracker.domain.model.value;
 
+import com.investments.tracker.domain.exception.DomainException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
@@ -27,8 +29,8 @@ public record Money(BigDecimal amount, Currency currency) {
      * Canonical constructor with validation.
      */
     public Money {
-        Objects.requireNonNull(amount, "Amount cannot be null");
-        Objects.requireNonNull(currency, "Currency cannot be null");
+        Objects.requireNonNull(amount, "amount cannot be null");
+        Objects.requireNonNull(currency, "currency cannot be null");
         if (amount.scale() > SCALE) {
             throw new IllegalArgumentException(
                     "Amount cannot exceed " + SCALE + " decimal places, got: " + amount.scale());
@@ -157,7 +159,33 @@ public record Money(BigDecimal amount, Currency currency) {
     }
 
     /**
-     * Formats for display (2 decimal places for PLN).
+     * Converts this Money to another currency using the given exchange rate.
+     * The exchange rate's source currency must match this Money's currency.
+     *
+     * @param exchangeRate the exchange rate to apply
+     * @return new Money in the target currency
+     * @throws DomainException if exchange rate source doesn't match this currency
+     */
+    public Money convertTo(ExchangeRate exchangeRate) {
+        Objects.requireNonNull(exchangeRate, "exchangeRate cannot be null");
+
+        if (!this.currency.equals(exchangeRate.from())) {
+            throw new DomainException(
+                    "Exchange rate source currency (" + exchangeRate.from() +
+                    ") does not match money currency (" + this.currency + ")");
+        }
+
+        if (exchangeRate.isIdentity()) {
+            return this;
+        }
+
+        BigDecimal convertedAmount = this.amount.multiply(exchangeRate.rate())
+                .setScale(SCALE, ROUNDING_MODE);
+        return new Money(convertedAmount, exchangeRate.to());
+    }
+
+    /**
+     * Formats for display using currency's decimal places.
      *
      * @return formatted string like "1234.56 PLN"
      */

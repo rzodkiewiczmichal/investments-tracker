@@ -47,6 +47,7 @@ We use the Michael Nygard format with the following structure:
 | [ADR-027](ADR-027-immutable-domain-vs-hibernate-entity-tracking.md) | Immutable Domain vs Hibernate Entity Tracking | Accepted | 2026-02-08 |
 | [ADR-028](ADR-028-spring-data-jdbc-persistence.md) | Spring Data JDBC as Persistence Mechanism | Accepted | 2026-02-08 |
 | [ADR-029](ADR-029-local-dev-startup-script.md) | Local Development Startup Script | Accepted | 2026-02-08 |
+| [ADR-030](ADR-030-external-financial-data-providers.md) | External Financial Data Providers | Accepted | 2026-02-08 |
 
 ### REST API
 

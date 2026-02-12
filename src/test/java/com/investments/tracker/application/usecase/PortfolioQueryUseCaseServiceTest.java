@@ -6,12 +6,15 @@ import com.investments.tracker.domain.model.Portfolio;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.Currency;
+import com.investments.tracker.domain.model.value.ExchangeRate;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
+import com.investments.tracker.domain.repository.ExchangeRateProvider;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
 import com.investments.tracker.domain.service.PortfolioCalculationService;
@@ -25,19 +28,27 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @DisplayName("PortfolioQueryUseCaseService")
 @ExtendWith(MockitoExtension.class)
 class PortfolioQueryUseCaseServiceTest {
 
+    private static final Map<Currency, ExchangeRate> PLN_RATES = Map.of(
+            Currency.PLN, ExchangeRate.identity(Currency.PLN));
+
     @Mock
     private PositionRepository positionRepository;
 
     @Mock
     private InstrumentRepository instrumentRepository;
+
+    @Mock
+    private ExchangeRateProvider exchangeRateProvider;
 
     private PortfolioCalculationService portfolioCalculationService;
     private PortfolioQueryUseCaseService portfolioQueryUseCaseService;
@@ -46,7 +57,7 @@ class PortfolioQueryUseCaseServiceTest {
     void setUp() {
         portfolioCalculationService = new PortfolioCalculationService(new PositionCalculationService());
         portfolioQueryUseCaseService = new PortfolioQueryUseCaseService(
-                positionRepository, instrumentRepository, portfolioCalculationService);
+                positionRepository, instrumentRepository, exchangeRateProvider, portfolioCalculationService);
     }
 
     @Nested
@@ -59,6 +70,7 @@ class PortfolioQueryUseCaseServiceTest {
             // Given
             when(positionRepository.findAll()).thenReturn(List.of());
             when(instrumentRepository.findAll()).thenReturn(List.of());
+            when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
             // When
             Portfolio portfolio = portfolioQueryUseCaseService.getPortfolio();
@@ -81,6 +93,7 @@ class PortfolioQueryUseCaseServiceTest {
                     new Price(Money.pln("175.00")));
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
+            when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
             // When
             Portfolio portfolio = portfolioQueryUseCaseService.getPortfolio();
@@ -106,6 +119,7 @@ class PortfolioQueryUseCaseServiceTest {
                     null);
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
+            when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
             // When
             Portfolio portfolio = portfolioQueryUseCaseService.getPortfolio();

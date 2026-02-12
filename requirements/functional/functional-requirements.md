@@ -588,10 +588,10 @@ Requirements are organized into the following categories:
 **Dependencies:** None
 **Target Version:** Future (v2.0+)
 
-### FR-089: All Values Displayed in PLN
+### FR-089: Aggregated Values Displayed in PLN
 **Category:** Metrics & Calculations
 **Priority:** Must Have
-**Description:** System displays all monetary values in Polish Zloty (PLN) currency.
+**Description:** System displays all aggregated monetary values (invested amount, current value, P&L) in Polish Zloty (PLN). Cost basis and current price are stored in their native currency (PLN, EUR, GBP, USD) and converted to PLN at query time using current exchange rates from an external provider.
 **Related Scenarios:** View total portfolio value
 - View portfolio with positive returns
 - View portfolio with negative returns

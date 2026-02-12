@@ -4,7 +4,9 @@ import com.investments.tracker.domain.model.AccountHolding;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.CurrentValue;
+import com.investments.tracker.domain.model.value.ExchangeRate;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.ProfitAndLoss;
@@ -21,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("PositionCalculationService")
 class PositionCalculationServiceTest {
 
+    private static final ExchangeRate PLN_IDENTITY = ExchangeRate.identity(Currency.PLN);
     private PositionCalculationService service;
 
     @BeforeEach
@@ -37,7 +40,7 @@ class PositionCalculationServiceTest {
         void calculatesWithGivenPrice() {
             Position position = createPosition("AAPL", 100, "500");
 
-            CurrentValue result = service.calculateCurrentValue(position, Price.pln("600"));
+            CurrentValue result = service.calculateCurrentValue(position, Price.pln("600"), PLN_IDENTITY);
 
             assertThat(result.money().amount()).isEqualByComparingTo("60000");
         }
@@ -52,7 +55,7 @@ class PositionCalculationServiceTest {
         void calculatesProfit() {
             Position position = createPosition("AAPL", 100, "500"); // invested: 50000
 
-            ProfitAndLoss pnl = service.calculateProfitAndLoss(position, Price.pln("550")); // current: 55000
+            ProfitAndLoss pnl = service.calculateProfitAndLoss(position, Price.pln("550"), PLN_IDENTITY); // current: 55000
 
             assertThat(pnl.amount().amount()).isEqualByComparingTo("5000");
             assertThat(pnl.percentage().value()).isEqualByComparingTo("10");
@@ -64,7 +67,7 @@ class PositionCalculationServiceTest {
         void calculatesLoss() {
             Position position = createPosition("AAPL", 100, "500"); // invested: 50000
 
-            ProfitAndLoss pnl = service.calculateProfitAndLoss(position, Price.pln("450")); // current: 45000
+            ProfitAndLoss pnl = service.calculateProfitAndLoss(position, Price.pln("450"), PLN_IDENTITY); // current: 45000
 
             assertThat(pnl.amount().amount()).isEqualByComparingTo("-5000");
             assertThat(pnl.percentage().value()).isEqualByComparingTo("-10");
@@ -76,7 +79,7 @@ class PositionCalculationServiceTest {
         void calculatesZeroPnl() {
             Position position = createPosition("AAPL", 100, "500"); // invested: 50000
 
-            ProfitAndLoss pnl = service.calculateProfitAndLoss(position, Price.pln("500")); // current: 50000
+            ProfitAndLoss pnl = service.calculateProfitAndLoss(position, Price.pln("500"), PLN_IDENTITY); // current: 50000
 
             assertThat(pnl.amount().amount()).isEqualByComparingTo("0");
             assertThat(pnl.isProfit()).isFalse();
