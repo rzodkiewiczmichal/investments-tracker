@@ -1,7 +1,7 @@
 # ADR-030: External Financial Data Providers
 
 ## Status
-Accepted
+Accepted (revised 2026-02-12, replaces initial version from 2026-02-08)
 
 ## Context
 
@@ -12,30 +12,40 @@ The Investment Tracker requires two types of external financial data:
 
 ### Requirements
 
-- Free tier sufficient for personal use (20-30 instruments, multiple daily updates)
-- REST API with JSON responses
+- Free tier sufficient for personal use (50-100 instruments, daily updates)
 - PLN exchange rates (EUR/PLN, GBP/PLN, USD/PLN)
-- Stock and ETF prices from global markets (NYSE, NASDAQ, LSE, GPW)
-- Reliable and legal (no unofficial scraping)
+- Stock and ETF prices from Warsaw Stock Exchange (GPW) and US markets (NYSE, NASDAQ)
+- Reliable for a personal hobby project (occasional downtime acceptable)
 
-### Research Findings
+### Research Findings (February 2026)
 
-A comprehensive evaluation of 13+ APIs was conducted (see `temp/financial-apis-research-report.md`). Key findings:
+A comprehensive evaluation of 10+ APIs was conducted for each concern. Key findings:
 
-- No single free API provides both comprehensive stock prices AND currency exchange rates with sufficient daily limits
-- Best approach is combining two specialized APIs
-- Official government source exists for PLN exchange rates (NBP)
+**Currency exchange rates:**
+- NBP API (Polish National Bank) is the clear winner: free, unlimited, no auth, official PLN rates
+- Commercial alternatives (ExchangeRate-API, Fixer.io, Open Exchange Rates) offer no advantage over NBP for PLN
+
+**Stock/ETF prices - the GPW problem:**
+- Most free API tiers only cover US markets. Warsaw Stock Exchange (GPW) is gated behind expensive paid tiers:
+  - **Twelve Data**: GPW requires Ultra tier ($999/month) - free tier covers US only
+  - **FMP (Financial Modeling Prep)**: GPW likely requires Ultimate tier ($149/month) - free tier is US-limited
+  - **Polygon.io**: International data requires $99+/month
+  - **Tiingo, IEX Cloud**: US-only on free tier
+- **No single official free API covers both GPW and US markets**
+- Stooq.pl (Polish financial data site) provides a well-known CSV endpoint used by the quant community for GPW data
+- Finnhub provides free real-time US stock data with an official Java client
 
 ## Decision
 
-### Two-Provider Architecture
+### Three-Provider Architecture
 
-We adopt a two-provider strategy, using specialized APIs for each concern:
+We adopt a three-provider strategy, using the best free option for each market segment:
 
-| Concern | Provider | Free Tier | Coverage |
-|---------|----------|-----------|----------|
-| **Currency Exchange Rates** | NBP API (Narodowy Bank Polski) | Unlimited, no auth | Official PLN rates |
-| **Stock/ETF Prices** | Twelve Data | 800 calls/day | Global markets (US, EU, GPW) |
+| Concern | Provider | Type | Free Tier | Coverage |
+|---------|----------|------|-----------|----------|
+| **Currency Exchange Rates** | NBP API | Official government API | Unlimited, no auth | PLN rates for 35+ currencies |
+| **Polish Stocks/ETFs (GPW)** | Stooq.pl | Unofficial CSV endpoint | Unlimited, no auth | Full GPW coverage |
+| **US Stocks/ETFs** | Finnhub | Official commercial API | Unlimited (60 req/min) | NYSE, NASDAQ, real-time |
 
 ### Provider 1: NBP API (Currency Exchange Rates)
 
@@ -45,57 +55,122 @@ We adopt a two-provider strategy, using specialized APIs for each concern:
 **Update Frequency**: Daily on working days (~11:45-12:15 CET)
 
 **Why NBP**:
-1. **Official source** - Polish National Bank, used by banks and financial institutions
+1. **Official source** - Narodowy Bank Polski, used by banks and financial institutions
 2. **Free and unlimited** - no registration, no API key, no rate limits
-3. **Perfect for PLN** - all rates expressed relative to PLN
-4. **Government-backed** - highest reliability and authority
-5. **Simple API** - clean REST endpoints, JSON responses
+3. **Perfect for PLN** - all rates expressed relative to PLN (native base currency)
+4. **Government-backed** - highest reliability, stable API for 10+ years
+5. **Simple REST API** - clean endpoints, JSON responses
 
 **Key Endpoints**:
 ```
-GET /api/exchangerates/rates/a/{currency}/     # Single currency rate
-GET /api/exchangerates/tables/a/               # All Table A rates (35 currencies)
+GET /api/exchangerates/rates/a/{currency}/          # Single currency rate (e.g., /a/eur/)
+GET /api/exchangerates/rates/a/{currency}/today/    # Today's rate
+GET /api/exchangerates/tables/a/                    # All Table A rates (35 currencies)
 ```
 
-**Supported currencies (Table A)**: EUR, USD, GBP, CHF, JPY, and 30+ others
+**Response Example**:
+```json
+{
+  "table": "A",
+  "currency": "euro",
+  "code": "EUR",
+  "rates": [{
+    "no": "030/A/NBP/2026",
+    "effectiveDate": "2026-02-12",
+    "mid": 4.3214
+  }]
+}
+```
 
 **Limitations**:
-- Currency only (no stock data)
+- Returns 404 on weekends and Polish holidays (no rates published)
 - Daily updates only (no intraday)
-- No weekend/holiday updates (uses last working day rate)
+- Separate call per currency (no batch endpoint for specific currencies)
+- Polish field names in some responses (e.g., "dolar amerykanski")
 
-### Provider 2: Twelve Data (Stock/ETF Prices)
+**Weekend/Holiday Handling**:
+- Cache last business day rate in database
+- On 404, serve cached rate flagged as stale
+- Fetch schedule: once daily at 13:00 CET (after NBP publishes ~12:00)
 
-**URL**: https://api.twelvedata.com
-**Authentication**: API key (free registration, email only)
-**Rate Limit**: 800 requests/day, 8 requests/minute
-**Data Delay**: 15-20 minutes for US markets
+### Provider 2: Stooq.pl (Polish Stocks and ETFs)
 
-**Why Twelve Data**:
-1. **Generous free tier** - 800 calls/day sufficient for personal use
-2. **Global coverage** - 60+ exchanges including GPW (Warsaw)
-3. **Batch requests** - query multiple symbols in one call
-4. **Simple REST API** - clean JSON responses
-5. **Legal and official** - proper API with terms of service
+**URL**: https://stooq.pl
+**Authentication**: None required
+**Rate Limit**: Undocumented, low daily quota (sufficient for ~100 daily queries)
+**Data**: End-of-day and intraday prices
+
+**Why Stooq**:
+1. **Full GPW coverage** - Polish financial data site, GPW is their home turf
+2. **Free, no auth** - no registration or API key needed
+3. **Well-known CSV endpoint** - widely used by Polish quant community since 2001
+4. **Simple integration** - HTTP GET returns CSV, trivial to parse
+
+**Key Endpoint**:
+```
+GET /q/l/?s={symbols}&f=sd2t2ohlcv&h&e=csv
+```
+
+**Parameters**:
+- `s` - comma-separated symbols (e.g., `pko,pzu,kghm,cdr`)
+- `f` - fields: `s`=symbol, `d2`=date, `t2`=time, `o`=open, `h`=high, `l`=low, `c`=close, `v`=volume
+- `h` - include header row
+- `e=csv` - CSV output format
+
+**Response Example**:
+```csv
+Symbol,Date,Time,Open,High,Low,Close,Volume
+PKO,2026-02-12,17:04:01,92,92.94,91.66,92,2646515
+PZU,2026-02-12,17:04:01,45.5,46.1,45.2,45.8,1234567
+```
+
+**Multiple symbols in one request** - comma-separated in `s` parameter.
+
+**Limitations**:
+- **Unofficial** - no SLA, no documentation, no support
+- Undocumented rate limits (community reports low daily quota to prevent abuse)
+- Could change without notice (though stable for 20+ years)
+- CSV format only (no JSON)
+- Polish-centric (symbol format may differ from international conventions)
+
+### Provider 3: Finnhub (US Stocks and ETFs)
+
+**URL**: https://finnhub.io
+**Authentication**: API key (free registration)
+**Rate Limit**: 60 API calls/minute (no daily cap)
+**Data**: Real-time US stock prices on free tier
+
+**Why Finnhub**:
+1. **Official Java client** - `io.finnhub:finnhub-java-client`, maintained by Finnhub
+2. **Real-time US data** - unique among free providers (most offer 15-min delay)
+3. **Generous rate limits** - 60/min with no daily cap (vs Twelve Data's 800/day)
+4. **Proper documented API** - OpenAPI spec, clear ToS, commercial provider
+5. **Free tier explicitly covers US** - no exchange tier gating for NYSE/NASDAQ
 
 **Key Endpoints**:
 ```
-GET /quote?symbol=AAPL&apikey=KEY              # Single quote
-GET /quote?symbol=AAPL,MSFT,GOOGL&apikey=KEY   # Batch quotes
+GET /api/v1/quote?symbol=AAPL&token=KEY         # Real-time quote
+GET /api/v1/stock/symbol?exchange=US&token=KEY   # List all US symbols
 ```
 
-**Usage Estimate** (personal portfolio):
-- 25 instruments x 4 updates/day = 100 calls (with batch: ~10 calls)
-- Well within 800/day limit
+**Java Client Example**:
+```java
+// Official Finnhub Java client
+ApiClient client = new DefaultApi().getApiClient();
+client.addDefaultHeader("X-Finnhub-Token", apiKey);
+Quote quote = defaultApi.quote("AAPL");
+BigDecimal currentPrice = quote.getC(); // Current price
+```
 
 **Limitations**:
-- 15-20 minute delay for US stocks (acceptable for portfolio tracking)
-- 800 calls/day (sufficient but monitor usage)
-- Free tier excludes real-time WebSocket streaming
+- US markets only on free tier (international exchanges require paid plans)
+- 60 calls/minute means ~100 instruments take ~2 minutes sequentially
+- No batch endpoint (one call per symbol)
+- WebSocket available for real-time streaming but REST sufficient for daily updates
 
 ### Domain Integration
 
-Both providers are accessed through domain port interfaces:
+All three providers are accessed through domain port interfaces:
 
 ```java
 // Currency rates - implemented by NBP adapter
@@ -104,72 +179,75 @@ public interface ExchangeRateProvider {
     Map<Currency, ExchangeRate> getExchangeRatesToPln(Iterable<Currency> currencies);
 }
 
-// Stock prices - implemented by Twelve Data adapter (future)
+// Stock/ETF prices - implemented by Stooq adapter (GPW) and Finnhub adapter (US)
 public interface InstrumentPriceProvider {
     Price getCurrentPrice(InstrumentSymbol symbol);
     Map<InstrumentSymbol, Price> getCurrentPrices(List<InstrumentSymbol> symbols);
 }
 ```
 
+The `InstrumentPriceProvider` has two adapters. Routing logic (which adapter handles which symbol) belongs in the infrastructure layer, transparent to the domain.
+
 ### Caching Strategy
 
-- **NBP rates**: Cache for 24 hours (rates update once daily)
-- **Twelve Data prices**: Cache for 15 minutes (matches data delay)
-- Caching reduces API call count and improves response times
+| Provider | Cache Duration | Rationale |
+|----------|---------------|-----------|
+| NBP rates | 24 hours | Rates update once daily on business days |
+| Stooq prices | Until next market close | GPW closes at 17:00 CET |
+| Finnhub prices | 15 minutes | Real-time data, but no need for constant refresh |
 
-### Error Handling
+### API Key Management
 
-- Track Twelve Data daily call count to avoid exceeding limits
-- Implement exponential backoff on failures
-- Cache last successful response as fallback for temporary outages
-- NBP API very reliable (government-backed), minimal error handling needed
+- **NBP API**: No credentials needed
+- **Stooq.pl**: No credentials needed
+- **Finnhub**: API key stored in environment variable / application properties (not committed to git)
 
 ## Consequences
 
 ### Positive
 
-1. **Zero cost** - both APIs completely free for personal use
-2. **Official PLN rates** - most authoritative source for Polish currency
-3. **Global market coverage** - US, European, and Polish stocks/ETFs
-4. **Separation of concerns** - independent providers for independent functions
-5. **Reliability** - if one fails, the other still works
-6. **Hexagonal architecture** - providers behind port interfaces, easy to swap
+1. **Zero cost** - all three providers completely free for personal use
+2. **Full market coverage** - GPW via Stooq, US via Finnhub, currencies via NBP
+3. **Official PLN rates** - most authoritative source for Polish currency
+4. **Official Java client** - Finnhub provides maintained Java SDK
+5. **Hexagonal architecture** - providers behind port interfaces, easy to swap
+6. **Independence** - each provider serves a distinct concern, failures are isolated
 
 ### Negative
 
-1. **Two integrations to maintain** - more code than single provider
-2. **NBP daily rates only** - no intraday currency updates
-3. **Twelve Data delayed data** - 15-20 min delay for US stocks
-4. **Twelve Data daily limit** - 800 calls/day requires monitoring
+1. **Three integrations to maintain** - more code than single provider
+2. **Two unofficial providers** - Stooq has no SLA (NBP is official, Finnhub is official)
+3. **Different data formats** - JSON (NBP, Finnhub) and CSV (Stooq)
+4. **Symbol mapping needed** - GPW symbols on Stooq may differ from other providers
 
 ### Mitigation
 
-1. **Provider abstraction** - port interfaces make swapping easy
-2. **Daily rates sufficient** - portfolio tracking doesn't need real-time currency
-3. **Delayed data acceptable** - not a trading platform
-4. **Caching + batching** - reduces actual API calls significantly
+1. **Provider abstraction** - port interfaces make swapping providers trivial
+2. **Stooq stability** - operating since 2001, widely used, unlikely to disappear
+3. **Caching** - reduces dependency on provider availability
+4. **Simple CSV parsing** - Stooq's format is straightforward
 
 ## Alternatives Considered
 
-### Alternative 1: Alpha Vantage (Single Provider)
+### Alternative 1: Twelve Data (Single Stock Provider)
 
-Both stocks and forex from one API. **Rejected**: Only 25 calls/day total - too restrictive for 20+ instrument portfolio.
+Initially chosen in first version of this ADR. **Rejected after deeper analysis**: Free tier only covers US, Crypto, and Forex (3 markets). Warsaw Stock Exchange requires Ultra tier at $999/month. The original assumption of "60+ exchanges including GPW" on free tier was incorrect.
 
-### Alternative 2: Yahoo Finance (Unofficial)
+### Alternative 2: Financial Modeling Prep (Single Stock Provider)
 
-Free, good coverage, no auth needed. **Rejected**: Unofficial API, no SLA, can break anytime, may violate ToS. Not suitable for reliable portfolio tracking.
+Confirmed GPW support claimed online. **Rejected**: Pricing structure shows free tier is heavily exchange-limited. GPW likely requires Ultimate tier ($149/month). Could not verify without API key.
 
-### Alternative 3: ExchangeRate-API (Currency Only)
+### Alternative 3: Yahoo Finance (Single Stock Provider)
 
-1,500 calls/month, good PLN support. **Not adopted**: NBP API is better (unlimited, official, no auth).
+Free, good coverage including partial GPW (.WA suffix). **Not adopted as primary**: Unofficial API with history of breaking changes (2017 cookie/crumb requirement, 2023 endpoint changes). Acceptable risk for hobby project but Stooq is more reliable for GPW and Finnhub is more reliable for US.
 
-### Alternative 4: Finnhub
+### Alternative 4: EOD Historical Data (Paid)
 
-60 calls/minute, real-time US data. **Rejected**: PLN currency pair support unclear, primarily US-focused.
+Best GPW coverage, proper API. **Deferred**: $20/month. Could adopt if free providers fail. Best paid fallback option.
 
-### Alternative 5: Paid Solution
+### Alternative 5: Alpha Vantage
 
-Twelve Data Pro ($9/month). **Deferred**: Free tier sufficient for personal use. Can upgrade if needed.
+Both stocks and forex. **Rejected**: Only 25 calls/day total - insufficient for 50+ instrument portfolio.
 
 ## Related Decisions
 
@@ -184,10 +262,15 @@ Port interface `ExchangeRateProvider` created in domain layer. NBP adapter imple
 
 ### Phase 2 (Future): InstrumentPriceProvider
 
-Port interface for stock/ETF prices. Twelve Data adapter implementation planned for price management version.
+Port interface for stock/ETF prices. Two adapters planned:
+- `StooqPriceAdapter` - for GPW instruments (CSV parsing)
+- `FinnhubPriceAdapter` - for US instruments (official Java client)
 
-### API Key Management
+Routing logic determines which adapter handles each symbol based on exchange/market metadata.
 
-- Twelve Data API key stored in application properties (not committed to git)
-- NBP API requires no credentials
-- Use Spring's `@Value` or environment variables for API key injection
+### Dependencies
+
+```gradle
+// Finnhub official Java client
+implementation 'io.finnhub:finnhub-java-client:x.x.x'
+```
