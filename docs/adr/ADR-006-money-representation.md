@@ -5,7 +5,7 @@ Accepted
 
 ## Context
 
-Financial applications require precise decimal arithmetic to avoid rounding errors. The Investment Tracker tracks monetary values in Polish Zloty (PLN) and must:
+Financial applications require precise decimal arithmetic to avoid rounding errors. The Investment Tracker tracks monetary values in multiple currencies (PLN, EUR, GBP, USD) and must:
 
 1. **Prevent Rounding Errors**: Financial calculations must be exact (no floating-point imprecision)
 2. **Support Polish Currency**: Store amounts to grosz precision (0.01 PLN)
@@ -16,7 +16,7 @@ Financial applications require precise decimal arithmetic to avoid rounding erro
 
 ### Requirements
 
-- **Currency**: PLN (Polish Zloty) in v0.1, multi-currency in v2.0+ (NFR-089)
+- **Currency**: PLN, EUR, GBP, USD supported; aggregated values (invested amount, current value, P&L) converted to PLN at query time (FR-089)
 - **Precision**: Exact decimal arithmetic for financial calculations
 - **Performance**: Efficient storage and indexing
 - **Portability**: Standard SQL type (no database-specific extensions)
@@ -117,21 +117,17 @@ cost_basis_currency     VARCHAR(3) NOT NULL DEFAULT 'PLN'
 **Rationale**:
 
 1. **ISO 4217 Standard**:
-   - 3-letter currency codes: PLN, USD, EUR, etc.
+   - 3-letter currency codes: PLN, USD, EUR, GBP
    - Industry standard for currency representation
 
-2. **v0.1 Simplification**:
-   - Default to 'PLN' for all amounts
-   - Single-currency portfolio in MVP
+2. **Multi-Currency Support**:
+   - Stores native currency of the instrument (e.g., USD for US stocks, GBP for LSE stocks)
+   - Default remains 'PLN' for backward compatibility
+   - Conversion to PLN happens at query time via ExchangeRate value object
 
-3. **v2.0+ Multi-Currency**:
-   - Column exists but always PLN in v0.1
-   - No application logic change needed to support multi-currency
-   - Can add conversion rates table in future
-
-4. **Type Safety**:
-   - Could use CHECK constraint: `CHECK (currency = 'PLN')` in v0.1
-   - Remove constraint when adding multi-currency support
+3. **Type Safety**:
+   - Currency enum in Java domain model restricts to supported currencies (PLN, EUR, GBP, USD)
+   - Database accepts any 3-char code for future extensibility
 
 ### Rounding Mode: HALF_EVEN (Banker's Rounding)
 
@@ -194,14 +190,14 @@ public record Money(BigDecimal amount, Currency currency) {
 5. **Java Compatibility**: Maps cleanly to BigDecimal
 6. **Standard SQL**: DECIMAL supported by all databases
 7. **Efficient Storage**: 9-16 bytes per value
-8. **Future-Proof**: Currency column ready for multi-currency (v2.0+)
+8. **Multi-Currency**: Currency column stores native currency; conversion to PLN at query time
 9. **Consistent Rounding**: HALF_EVEN matches PostgreSQL and financial standards
 
 ### Negative
 
 1. **Storage Overhead**: DECIMAL larger than FLOAT (but necessary for correctness)
 2. **Always 4 Decimals**: Display logic must format to 2 decimals for PLN
-3. **Currency Column Unused**: VARCHAR(3) always 'PLN' in v0.1 (but prepares for v2.0)
+3. **Currency Conversion Dependency**: Requires external exchange rate provider for non-PLN currencies
 4. **Scale Fixed**: Cannot change precision without migration (but unlikely to need)
 
 ### Mitigation Strategies
@@ -222,12 +218,10 @@ public record Money(BigDecimal amount, Currency currency) {
    }
    ```
 
-3. **Currency Check**: Validate PLN-only in v0.1:
+3. **Currency Conversion**: Money supports conversion via ExchangeRate value object:
    ```java
-   public Money {
-       if (!"PLN".equals(currency)) {
-           throw new IllegalArgumentException("Only PLN supported in v0.1");
-       }
+   public Money convertTo(ExchangeRate exchangeRate) {
+       // Validates source currency matches, applies rate, returns new Money in target currency
    }
    ```
 
@@ -278,10 +272,10 @@ Use floating-point types.
 
 Create `currencies` table with conversion rates.
 
-**Deferred to v2.0**:
-- Not needed for single-currency v0.1
-- Will add when multi-currency support required
-- Simpler MVP without foreign key to currency table
+**Not adopted**:
+- Currency is stored as VARCHAR(3) alongside each money amount
+- ExchangeRate value object handles conversions at query time
+- External API (NBP) provides rates; no need for separate DB table
 
 ## Implementation Examples
 
@@ -416,4 +410,4 @@ public class Position {
 - [Java BigDecimal](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/math/BigDecimal.html)
 - [ISO 4217 Currency Codes](https://en.wikipedia.org/wiki/ISO_4217)
 - Martin Fowler - Patterns of Enterprise Application Architecture (Money pattern)
-- NFR-089: Single currency (PLN) in v0.1
+- FR-089: Aggregated values in PLN, native currencies for cost basis and prices

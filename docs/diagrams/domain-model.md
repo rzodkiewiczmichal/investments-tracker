@@ -70,6 +70,13 @@ classDiagram
         String value
     }
 
+    class ExchangeRate {
+        <<Value Object>>
+        Currency from
+        Currency to
+        BigDecimal rate
+    }
+
     %% Relationships
     Position "1" *-- "1..*" AccountHolding : contains
     Portfolio "1" o-- "0..*" Position : references
@@ -83,6 +90,7 @@ classDiagram
 
     Price --> Money
     CostBasis --> Money
+    Money ..> ExchangeRate : converts via
 
     %% Styling
     style Position fill:#e1f5ff
@@ -94,6 +102,7 @@ classDiagram
     style CostBasis fill:#fff4e6
     style ProfitAndLoss fill:#fff4e6
     style InstrumentSymbol fill:#fff4e6
+    style ExchangeRate fill:#fff4e6
 ```
 
 **Legend**:

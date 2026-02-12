@@ -81,8 +81,7 @@ CREATE TABLE instruments (
 
     CONSTRAINT instruments_symbol_not_empty CHECK (TRIM(symbol) <> ''),
     CONSTRAINT instruments_name_not_empty CHECK (TRIM(name) <> ''),
-    CONSTRAINT instruments_price_positive CHECK (current_price_amount IS NULL OR current_price_amount > 0),
-    CONSTRAINT instruments_currency_pln CHECK (current_price_currency = 'PLN' OR current_price_currency IS NULL)
+    CONSTRAINT instruments_price_positive CHECK (current_price_amount IS NULL OR current_price_amount > 0)
 );
 ```
 
@@ -90,9 +89,9 @@ CREATE TABLE instruments (
 - `VARCHAR(50) symbol` PRIMARY KEY: Natural key, supports tickers (10 chars) and ISINs (12 chars)
 - `current_price_amount`: Nullable - may not be set initially
 - `DECIMAL(19, 4)`: Money precision decision (see ADR-006)
+- `current_price_currency`: Supports PLN, EUR, GBP, USD (native currency of instrument)
 - `price_updated_at`: Track staleness for price refresh
 - `version`: Optimistic locking to prevent concurrent price update conflicts
-- `instruments_currency_pln`: Enforce PLN-only currency for v0.1 (FR-089)
 
 #### 3. positions (Position Aggregate Root)
 
@@ -108,7 +107,6 @@ CREATE TABLE positions (
 
     CONSTRAINT positions_quantity_positive CHECK (total_quantity > 0),
     CONSTRAINT positions_cost_positive CHECK (avg_cost_basis_amount > 0),
-    CONSTRAINT positions_currency_pln CHECK (avg_cost_basis_currency = 'PLN'),
     CONSTRAINT fk_positions_instrument FOREIGN KEY (instrument_symbol)
         REFERENCES instruments(symbol) ON DELETE RESTRICT
 );
@@ -137,7 +135,6 @@ CREATE TABLE account_holdings (
 
     CONSTRAINT account_holdings_quantity_positive CHECK (quantity > 0),
     CONSTRAINT account_holdings_cost_positive CHECK (cost_basis_amount > 0),
-    CONSTRAINT account_holdings_currency_pln CHECK (cost_basis_currency = 'PLN'),
     CONSTRAINT fk_account_holdings_position FOREIGN KEY (instrument_symbol)
         REFERENCES positions(instrument_symbol) ON DELETE CASCADE,
     CONSTRAINT fk_account_holdings_account FOREIGN KEY (account_id)
@@ -325,7 +322,7 @@ CREATE TRIGGER increment_instruments_version BEFORE UPDATE ON instruments
 1. **No Soft Delete**: Deleted positions cannot be undeleted (mitigated by audit log)
 2. **Natural Key Limitation**: If InstrumentSymbol changes, Position must be recreated
 3. **No Timezone Support**: TIMESTAMP without timezone limits multi-timezone deployments (v2.0 concern)
-4. **Currency Column Overhead**: VARCHAR(3) for always-PLN adds storage (mitigated - prepares for v2.0)
+4. **Currency Column**: VARCHAR(3) stores native currency per instrument (PLN, EUR, GBP, USD)
 5. **JSONB Size**: Audit log can grow large (mitigated by archiving strategy in future)
 
 ### Mitigation Strategies

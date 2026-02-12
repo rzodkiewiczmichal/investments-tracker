@@ -23,7 +23,7 @@ erDiagram
         VARCHAR(255) name
         VARCHAR(50) instrument_type "STOCK,ETF,BOND_ETF,POLISH_GOV_BOND"
         DECIMAL(19_4) current_price_amount "nullable"
-        VARCHAR(3) current_price_currency "PLN"
+        VARCHAR(3) current_price_currency "PLN,EUR,GBP,USD"
         TIMESTAMP price_updated_at "nullable"
         TIMESTAMP created_at
         TIMESTAMP updated_at
@@ -34,7 +34,7 @@ erDiagram
         VARCHAR(50) instrument_symbol PK,FK "Natural key"
         DECIMAL(19_8) total_quantity "Sum of holdings"
         DECIMAL(19_4) avg_cost_basis_amount "Weighted average"
-        VARCHAR(3) avg_cost_basis_currency "PLN"
+        VARCHAR(3) avg_cost_basis_currency "PLN,EUR,GBP,USD"
         TIMESTAMP created_at
         TIMESTAMP updated_at
         BIGINT version "optimistic lock"
@@ -45,7 +45,7 @@ erDiagram
         BIGINT account_id PK,FK
         DECIMAL(19_8) quantity
         DECIMAL(19_4) cost_basis_amount
-        VARCHAR(3) cost_basis_currency "PLN"
+        VARCHAR(3) cost_basis_currency "PLN,EUR,GBP,USD"
         TIMESTAMP created_at
         TIMESTAMP updated_at
     }
