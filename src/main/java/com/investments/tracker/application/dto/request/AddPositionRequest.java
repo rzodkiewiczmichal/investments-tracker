@@ -19,6 +19,9 @@ public record AddPositionRequest(
         @NotBlank(message = "Instrument type is required")
         String instrumentType,
 
+        @NotBlank(message = "Currency is required")
+        String currency,
+
         @NotNull(message = "Account ID is required")
         Long accountId,
 

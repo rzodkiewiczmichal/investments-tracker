@@ -6,6 +6,7 @@ import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
@@ -71,12 +72,13 @@ class PositionCommandUseCaseServiceTest {
             InstrumentSymbol symbol = InstrumentSymbol.of("AAPL");
             InstrumentName instrumentName = new InstrumentName("Apple Inc.");
             InstrumentType instrumentType = InstrumentType.STOCK;
+            Currency currency = Currency.PLN;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
 
             // When
             Position result = positionCommandUseCaseService.addPosition(
-                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis);
+                    symbol, instrumentName, instrumentType, currency, accountId, quantity, costBasis);
 
             // Then
             assertThat(result.symbol().value()).isEqualTo("AAPL");
@@ -94,6 +96,7 @@ class PositionCommandUseCaseServiceTest {
             assertThat(savedInstrument.symbol().value()).isEqualTo("AAPL");
             assertThat(savedInstrument.name().value()).isEqualTo("Apple Inc.");
             assertThat(savedInstrument.type()).isEqualTo(InstrumentType.STOCK);
+            assertThat(savedInstrument.currency()).isEqualTo(Currency.PLN);
             assertThat(savedInstrument.currentPrice()).isNull();
         }
 
@@ -102,21 +105,26 @@ class PositionCommandUseCaseServiceTest {
         void shouldAddToExistingPositionWithoutCreatingInstrument() {
             // Given
             Position existingPosition = createPosition("AAPL", 50, "140.00");
+            Instrument existingInstrument = new Instrument(
+                    InstrumentSymbol.of("AAPL"), new InstrumentName("Apple Inc."),
+                    InstrumentType.STOCK, Currency.PLN, null);
             AccountId accountId = new AccountId(1L);
             when(accountRepository.existsById(accountId)).thenReturn(true);
             when(instrumentRepository.existsBySymbol(any())).thenReturn(true);
+            when(instrumentRepository.findBySymbol(any())).thenReturn(Optional.of(existingInstrument));
             when(positionRepository.findBySymbol(any())).thenReturn(Optional.of(existingPosition));
             when(positionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             InstrumentSymbol symbol = InstrumentSymbol.of("AAPL");
             InstrumentName instrumentName = new InstrumentName("Apple Inc.");
             InstrumentType instrumentType = InstrumentType.STOCK;
+            Currency currency = Currency.PLN;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
 
             // When
             Position result = positionCommandUseCaseService.addPosition(
-                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis);
+                    symbol, instrumentName, instrumentType, currency, accountId, quantity, costBasis);
 
             // Then
             assertThat(result.symbol().value()).isEqualTo("AAPL");
@@ -137,12 +145,13 @@ class PositionCommandUseCaseServiceTest {
             InstrumentSymbol symbol = InstrumentSymbol.of("AAPL");
             InstrumentName instrumentName = new InstrumentName("Apple Inc.");
             InstrumentType instrumentType = InstrumentType.STOCK;
+            Currency currency = Currency.PLN;
             Quantity quantity = Quantity.of(100);
             CostBasis costBasis = CostBasis.of(Money.pln("150.00"));
 
             // When/Then
             assertThatThrownBy(() -> positionCommandUseCaseService.addPosition(
-                    symbol, instrumentName, instrumentType, accountId, quantity, costBasis))
+                    symbol, instrumentName, instrumentType, currency, accountId, quantity, costBasis))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("Account")
                     .hasMessageContaining("999");

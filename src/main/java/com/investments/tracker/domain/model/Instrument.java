@@ -1,5 +1,6 @@
 package com.investments.tracker.domain.model;
 
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
@@ -22,6 +23,7 @@ public record Instrument(
         InstrumentSymbol symbol,
         InstrumentName name,
         InstrumentType type,
+        Currency currency,
         Price currentPrice) {
 
     /**
@@ -31,6 +33,7 @@ public record Instrument(
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(name, "name cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
+        Objects.requireNonNull(currency, "currency cannot be null");
     }
 
     /**

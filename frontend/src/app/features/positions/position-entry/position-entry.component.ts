@@ -14,7 +14,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { PositionService, AccountService } from '../../../core/services';
-import { Account, CreateAccountRequest, InstrumentType, ApiError, ValidationError } from '../../../core/models';
+import { Account, CreateAccountRequest, InstrumentType, CurrencyCode, ApiError, ValidationError } from '../../../core/models';
 
 @Component({
   selector: 'app-position-entry',
@@ -60,6 +60,13 @@ export class PositionEntryComponent implements OnInit {
     { value: 'ETF', label: 'ETF' }
   ];
 
+  currencies: { value: CurrencyCode; label: string }[] = [
+    { value: 'PLN', label: 'PLN' },
+    { value: 'EUR', label: 'EUR' },
+    { value: 'USD', label: 'USD' },
+    { value: 'GBP', label: 'GBP' }
+  ];
+
   ngOnInit(): void {
     this.initForm();
     this.initAccountForm();
@@ -71,6 +78,7 @@ export class PositionEntryComponent implements OnInit {
       instrumentName: ['', [Validators.required, Validators.maxLength(255)]],
       instrumentSymbol: ['', [Validators.required, Validators.maxLength(50)]],
       instrumentType: ['STOCK', [Validators.required]],
+      currency: ['PLN', [Validators.required]],
       accountId: [null, [Validators.required]],
       quantity: [null, [Validators.required, Validators.min(0.00000001)]],
       averageCost: [null, [Validators.required, Validators.min(0.0001)]]

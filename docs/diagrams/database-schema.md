@@ -22,6 +22,7 @@ erDiagram
         VARCHAR(50) symbol PK "Ticker or ISIN"
         VARCHAR(255) name
         VARCHAR(50) instrument_type "STOCK,ETF,BOND_ETF,POLISH_GOV_BOND"
+        VARCHAR(3) currency "PLN,EUR,GBP,USD"
         DECIMAL(19_4) current_price_amount "nullable"
         VARCHAR(3) current_price_currency "PLN,EUR,GBP,USD"
         TIMESTAMP price_updated_at "nullable"

@@ -27,6 +27,8 @@ classDiagram
         <<Entity>>
         InstrumentSymbol symbol
         String name
+        InstrumentType type
+        Currency currency
         Price currentPrice
     }
 
@@ -87,6 +89,7 @@ classDiagram
     AccountHolding --> CostBasis
     Instrument --> InstrumentSymbol
     Instrument --> Price
+    Instrument --> Currency
 
     Price --> Money
     CostBasis --> Money

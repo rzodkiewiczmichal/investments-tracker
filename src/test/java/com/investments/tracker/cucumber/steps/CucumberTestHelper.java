@@ -64,7 +64,7 @@ final class CucumberTestHelper {
             );
         } else {
             jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, ?, 'PLN', CURRENT_TIMESTAMP, 0)",
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, 'PLN', ?, 'PLN', CURRENT_TIMESTAMP, 0)",
                     symbol, name != null ? name : symbol, "STOCK", currentPrice
             );
         }
@@ -117,7 +117,7 @@ final class CucumberTestHelper {
             );
         } else {
             jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, NULL, NULL, NULL, 0)",
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, 'PLN', NULL, NULL, NULL, 0)",
                     symbol, name != null ? name : symbol, "STOCK"
             );
         }
