@@ -26,6 +26,21 @@ services:
       - tracker-network
     restart: unless-stopped
 
+  # Redis 7 - Cache Layer (ADR-032)
+  redis:
+    image: redis:7-alpine
+    container_name: investments-tracker-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tracker-network
+    restart: unless-stopped
+
   # Grafana Tempo - OTLP Trace Collector
   tempo:
     image: grafana/tempo:2.7.2

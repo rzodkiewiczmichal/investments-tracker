@@ -1,9 +1,15 @@
 # Test Profile Configuration
-# Used by integration tests with Testcontainers PostgreSQL
+# Used by integration tests with Testcontainers PostgreSQL and Redis
 
 spring:
   application:
     name: investments-tracker-test
+
+  # Redis Configuration - Overridden by Testcontainers in IntegrationTestBase
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   # Database Configuration - Overridden by Testcontainers in IntegrationTestBase
   datasource:

@@ -1,9 +1,15 @@
 # BDD (Behavior-Driven Development) Profile Configuration
-# Used by behavior tests (Cucumber) with Testcontainers PostgreSQL
+# Used by behavior tests (Cucumber) with Testcontainers PostgreSQL and Redis
 
 spring:
   application:
     name: investments-tracker-bdd
+
+  # Redis Configuration - Overridden by Testcontainers in CucumberSpringConfiguration
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
   # Database Configuration - Overridden by Testcontainers in CucumberSpringConfiguration
   datasource:

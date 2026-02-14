@@ -1,6 +1,6 @@
 # Local Development Profile
 # Use with: ./gradlew bootRun --args='--spring.profiles.active=local'
-# Requires: docker-compose up -d postgres tempo grafana
+# Requires: docker-compose up -d postgres redis tempo grafana
 
 # Database credentials matching docker-compose.yml
 spring:
