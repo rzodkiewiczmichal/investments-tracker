@@ -80,28 +80,6 @@ public final class IntegrationTestHelper {
     }
 
     /**
-     * Inserts a test instrument with price directly into the database.
-     */
-    public void insertInstrumentWithPrice(String symbol, String name, String instrumentType, BigDecimal price) {
-        insertInstrumentWithPrice(symbol, name, instrumentType, "PLN", price);
-    }
-
-    /**
-     * Inserts a test instrument with price and currency directly into the database.
-     */
-    public void insertInstrumentWithPrice(String symbol, String name, String instrumentType,
-                                          String currency, BigDecimal price) {
-        jdbcTemplate.update(
-                """
-                INSERT INTO instruments (symbol, name, instrument_type, currency, current_price_amount,
-                                         current_price_currency, price_updated_at, created_at, updated_at, version)
-                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW(), 0)
-                """,
-                symbol, name, instrumentType, currency, price, currency
-        );
-    }
-
-    /**
      * Inserts a position directly into the database.
      */
     public void insertPosition(String instrumentSymbol, BigDecimal totalQuantity, BigDecimal avgCostBasis) {
@@ -127,20 +105,6 @@ public final class IntegrationTestHelper {
                 VALUES (?, ?, ?, ?, 'PLN', NOW(), NOW())
                 """,
                 instrumentSymbol, accountId, quantity, costBasis
-        );
-    }
-
-    /**
-     * Updates the current price of an instrument.
-     */
-    public void updateInstrumentPrice(String symbol, BigDecimal price) {
-        jdbcTemplate.update(
-                """
-                UPDATE instruments
-                SET current_price_amount = ?, price_updated_at = NOW(), updated_at = NOW()
-                WHERE symbol = ?
-                """,
-                price, symbol
         );
     }
 

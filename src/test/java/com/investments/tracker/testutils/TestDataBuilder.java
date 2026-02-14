@@ -101,14 +101,13 @@ public final class TestDataBuilder {
 
     /**
      * Builder for instrument test data.
-     * Schema: instruments(symbol, name, instrument_type, current_price_amount, ...)
+     * Schema: instruments(symbol, name, instrument_type, currency, ...)
      */
     public static class InstrumentDataBuilder {
         private String symbol = "AAPL";
         private String name = "Apple Inc.";
         private String instrumentType = "STOCK";
         private String currency = "PLN";
-        private BigDecimal currentPrice = null;
 
         public InstrumentDataBuilder symbol(String symbol) {
             this.symbol = symbol;
@@ -145,18 +144,8 @@ public final class TestDataBuilder {
             return this;
         }
 
-        public InstrumentDataBuilder currentPrice(String price) {
-            this.currentPrice = new BigDecimal(price);
-            return this;
-        }
-
-        public InstrumentDataBuilder currentPrice(BigDecimal price) {
-            this.currentPrice = price;
-            return this;
-        }
-
         public InstrumentData build() {
-            return new InstrumentData(symbol, name, instrumentType, currency, currentPrice);
+            return new InstrumentData(symbol, name, instrumentType, currency);
         }
     }
 
@@ -262,8 +251,7 @@ public final class TestDataBuilder {
             String symbol,
             String name,
             String instrumentType,
-            String currency,
-            BigDecimal currentPrice
+            String currency
     ) {}
 
     /**

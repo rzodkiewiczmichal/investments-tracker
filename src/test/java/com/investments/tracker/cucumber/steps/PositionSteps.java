@@ -96,10 +96,6 @@ public class PositionSteps {
     public void theCurrentValueOfTheseBondsIsPLN(Integer currentValue) {
         String symbol = instrumentSymbols.get("Polish Government Bond");
         if (symbol != null) {
-            jdbcTemplate.update(
-                    "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
-                    new BigDecimal(currentValue), symbol
-            );
             priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(currentValue))));
         }
     }

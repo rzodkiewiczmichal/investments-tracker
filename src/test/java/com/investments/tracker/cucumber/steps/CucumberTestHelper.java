@@ -46,8 +46,9 @@ final class CucumberTestHelper {
     }
 
     /**
-     * Ensures an instrument exists with the given current price.
-     * Creates or updates the instrument directly in the database.
+     * Ensures an instrument exists in the database.
+     * The currentPrice parameter is kept for backward compatibility with step definitions
+     * but is no longer written to the database (prices are now in PriceCache/Redis).
      */
     static void ensureInstrumentExists(JdbcTemplate jdbcTemplate, String symbol, String name,
                                        BigDecimal currentPrice) {
@@ -57,15 +58,10 @@ final class CucumberTestHelper {
                 symbol
         );
 
-        if (count != null && count > 0) {
+        if (count == null || count == 0) {
             jdbcTemplate.update(
-                    "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
-                    currentPrice, symbol
-            );
-        } else {
-            jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, currency, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, 'PLN', ?, 'PLN', CURRENT_TIMESTAMP, 0)",
-                    symbol, name != null ? name : symbol, "STOCK", currentPrice
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, version) VALUES (?, ?, ?, 'PLN', 0)",
+                    symbol, name != null ? name : symbol, "STOCK"
             );
         }
     }
@@ -101,7 +97,7 @@ final class CucumberTestHelper {
 
     /**
      * Ensures an instrument exists without a current price.
-     * Creates the instrument directly in the database with NULL price fields.
+     * No price is set in PriceCache (callers should not populate it).
      */
     static void ensureInstrumentExistsWithoutPrice(JdbcTemplate jdbcTemplate, String symbol, String name) {
         Integer count = jdbcTemplate.queryForObject(
@@ -110,14 +106,9 @@ final class CucumberTestHelper {
                 symbol
         );
 
-        if (count != null && count > 0) {
+        if (count == null || count == 0) {
             jdbcTemplate.update(
-                    "UPDATE instruments SET current_price_amount = NULL, current_price_currency = NULL, price_updated_at = NULL WHERE symbol = ?",
-                    symbol
-            );
-        } else {
-            jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, currency, current_price_amount, current_price_currency, price_updated_at, version) VALUES (?, ?, ?, 'PLN', NULL, NULL, NULL, 0)",
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, version) VALUES (?, ?, ?, 'PLN', 0)",
                     symbol, name != null ? name : symbol, "STOCK"
             );
         }

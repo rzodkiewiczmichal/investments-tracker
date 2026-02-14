@@ -93,10 +93,6 @@ public class PortfolioSteps {
     @Given("the current price of {string} is {int} PLN")
     public void theCurrentPriceOfIsPLN(String instrument, Integer price) {
         String symbol = CucumberTestHelper.generateValidSymbol(instrument);
-        jdbcTemplate.update(
-                "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
-                new BigDecimal(price), symbol
-        );
         priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(price))));
     }
 
