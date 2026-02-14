@@ -63,12 +63,19 @@ public final class IntegrationTestHelper {
      * Inserts a test instrument directly into the database.
      */
     public void insertInstrument(String symbol, String name, String instrumentType) {
+        insertInstrument(symbol, name, instrumentType, "PLN");
+    }
+
+    /**
+     * Inserts a test instrument with specified currency directly into the database.
+     */
+    public void insertInstrument(String symbol, String name, String instrumentType, String currency) {
         jdbcTemplate.update(
                 """
-                INSERT INTO instruments (symbol, name, instrument_type, created_at, updated_at, version)
-                VALUES (?, ?, ?, NOW(), NOW(), 0)
+                INSERT INTO instruments (symbol, name, instrument_type, currency, created_at, updated_at, version)
+                VALUES (?, ?, ?, ?, NOW(), NOW(), 0)
                 """,
-                symbol, name, instrumentType
+                symbol, name, instrumentType, currency
         );
     }
 
@@ -76,13 +83,21 @@ public final class IntegrationTestHelper {
      * Inserts a test instrument with price directly into the database.
      */
     public void insertInstrumentWithPrice(String symbol, String name, String instrumentType, BigDecimal price) {
+        insertInstrumentWithPrice(symbol, name, instrumentType, "PLN", price);
+    }
+
+    /**
+     * Inserts a test instrument with price and currency directly into the database.
+     */
+    public void insertInstrumentWithPrice(String symbol, String name, String instrumentType,
+                                          String currency, BigDecimal price) {
         jdbcTemplate.update(
                 """
-                INSERT INTO instruments (symbol, name, instrument_type, current_price_amount, current_price_currency,
-                                         price_updated_at, created_at, updated_at, version)
-                VALUES (?, ?, ?, ?, 'PLN', NOW(), NOW(), NOW(), 0)
+                INSERT INTO instruments (symbol, name, instrument_type, currency, current_price_amount,
+                                         current_price_currency, price_updated_at, created_at, updated_at, version)
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW(), NOW(), 0)
                 """,
-                symbol, name, instrumentType, price
+                symbol, name, instrumentType, currency, price, currency
         );
     }
 

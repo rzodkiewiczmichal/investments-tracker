@@ -2,6 +2,7 @@ package com.investments.tracker.application.usecase;
 
 import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.domain.model.Instrument;
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
@@ -121,6 +122,7 @@ class InstrumentQueryUseCaseServiceTest {
                 InstrumentSymbol.of(symbol),
                 new InstrumentName(name),
                 InstrumentType.valueOf(type),
+                Currency.PLN,
                 new Price(Money.pln(price)));
     }
 }

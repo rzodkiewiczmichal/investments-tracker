@@ -311,8 +311,8 @@ public record Money(BigDecimal amount, String currency) {
         if (amount.scale() > 4) {
             throw new IllegalArgumentException("Amount cannot exceed 4 decimal places");
         }
-        if (!"PLN".equals(currency)) {
-            throw new IllegalArgumentException("Only PLN supported in v0.1");
+        if (currency == null) {
+            throw new IllegalArgumentException("Currency cannot be null");
         }
     }
 
@@ -361,43 +361,9 @@ public record Money(BigDecimal amount, String currency) {
 }
 ```
 
-### JPA Embeddable
+### Persistence
 
-```java
-@Embeddable
-public record Money(
-    @Column(name = "amount", precision = 19, scale = 4, nullable = false)
-    BigDecimal amount,
-
-    @Column(name = "currency", length = 3, nullable = false)
-    String currency
-) {
-    // Same validation and operations as above
-}
-```
-
-### Usage in Position Entity
-
-```java
-@Entity
-@Table(name = "positions")
-public class Position {
-    @Embedded
-    @AttributeOverrides({
-        @AttributeOverride(name = "amount", column = @Column(name = "avg_cost_basis_amount")),
-        @AttributeOverride(name = "currency", column = @Column(name = "avg_cost_basis_currency"))
-    })
-    private Money avgCostBasis;
-
-    @Column(name = "total_quantity", precision = 19, scale = 8, nullable = false)
-    private BigDecimal totalQuantity;  // Using BigDecimal directly for quantity
-
-    // Calculated methods
-    public Money calculateInvestedAmount() {
-        return avgCostBasis.multiply(totalQuantity);
-    }
-}
-```
+See [ADR-028: Spring Data JDBC as Persistence Mechanism](ADR-028-spring-data-jdbc-persistence.md) for the persistence approach used in this project.
 
 ## Related Decisions
 

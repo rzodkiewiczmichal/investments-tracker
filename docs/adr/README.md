@@ -49,6 +49,7 @@ We use the Michael Nygard format with the following structure:
 | [ADR-029](ADR-029-local-dev-startup-script.md) | Local Development Startup Script | Accepted | 2026-02-08 |
 | [ADR-030](ADR-030-currency-exchange-rate-provider.md) | Currency Exchange Rate Provider (NBP API) | Accepted (revised) | 2026-02-13 |
 | [ADR-031](ADR-031-instrument-price-providers.md) | Instrument Price Providers (Stooq + Finnhub) | Accepted | 2026-02-13 |
+| [ADR-032](ADR-032-external-data-caching-strategy.md) | External Data Caching Strategy (Redis) | Accepted (revised) | 2026-02-14 |
 
 ### REST API
 

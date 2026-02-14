@@ -17,7 +17,7 @@
 **Instrument**
 - Definition: A tradeable financial instrument (stock, ETF, or Polish government bond)
 - Types: Stock, Stock ETF, Bond ETF, Polish Government Bond
-- Attributes: Symbol/identifier, name, instrument type, current price
+- Attributes: Symbol/identifier, name, instrument type, currency, current price
 
 
 
@@ -145,7 +145,7 @@
 
 2. **Cost Basis Rule**: Average cost method is used for all profit/loss calculations
 
-3. **Currency Rule**: Aggregated values (invested amount, current value, P&L) are always displayed in PLN. Cost basis and current price are stored in their native currency and converted to PLN at query time using current exchange rates
+3. **Currency Rule**: Aggregated values (invested amount, current value, P&L) are always displayed in PLN. Cost basis and current price are stored in their native currency and converted to PLN at query time using current exchange rates. Currency is an instrument-level property — all holdings of an instrument share its currency
 
 4. **Pricing Rule**: End-of-day prices are sufficient for all calculations
 

@@ -75,6 +75,24 @@
                 <small class="p-error">{{ getFieldError('instrumentType') }}</small>
               }
             </div>
+
+            <div class="field">
+              <label for="currency">Currency *</label>
+              <p-select
+                id="currency"
+                formControlName="currency"
+                [options]="currencies"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select currency"
+                styleClass="w-full"
+                [class.ng-invalid]="hasFieldError('currency')"
+                [class.ng-dirty]="form.get('currency')?.touched"
+              />
+              @if (hasFieldError('currency')) {
+                <small class="p-error">{{ getFieldError('currency') }}</small>
+              }
+            </div>
           </div>
         </section>
 
@@ -139,12 +157,12 @@
             </div>
 
             <div class="field">
-              <label for="averageCost">Average Cost (PLN) *</label>
+              <label for="averageCost">Average Cost *</label>
               <p-inputNumber
                 id="averageCost"
                 formControlName="averageCost"
                 mode="currency"
-                currency="PLN"
+                [currency]="form.get('currency')?.value || 'PLN'"
                 locale="pl-PL"
                 [minFractionDigits]="2"
                 [maxFractionDigits]="4"

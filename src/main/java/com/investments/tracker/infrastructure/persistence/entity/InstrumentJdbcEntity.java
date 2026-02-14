@@ -16,6 +16,7 @@ public record InstrumentJdbcEntity(
         @Id String symbol,
         String name,
         @Column("instrument_type") String instrumentType,
+        String currency,
         @Column("current_price_amount") BigDecimal currentPriceAmount,
         @Column("current_price_currency") String currentPriceCurrency,
         @Column("price_updated_at") LocalDateTime priceUpdatedAt,

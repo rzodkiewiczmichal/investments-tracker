@@ -105,6 +105,7 @@ public class ManualEntrySteps {
         if (!positionData.containsKey("instrumentType")) {
             positionData.put("instrumentType", "STOCK");
         }
+        positionData.putIfAbsent("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", quantity);
         positionData.put("averageCost", averageCost);
@@ -155,6 +156,7 @@ public class ManualEntrySteps {
         if (!positionData.containsKey("instrumentType")) {
             positionData.put("instrumentType", "BOND");
         }
+        positionData.putIfAbsent("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", BigDecimal.ONE);
         positionData.put("averageCost", investedAmount);
@@ -170,6 +172,7 @@ public class ManualEntrySteps {
 
         // Missing instrumentSymbol and instrumentName
         positionData.put("instrumentType", "STOCK");
+        positionData.put("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", new BigDecimal("100"));
         positionData.put("averageCost", new BigDecimal("50"));
@@ -185,6 +188,7 @@ public class ManualEntrySteps {
         positionData.put("instrumentSymbol", testInstrumentSymbol);
         positionData.put("instrumentName", "Test Instrument");
         positionData.put("instrumentType", "STOCK");
+        positionData.put("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", new BigDecimal(quantity));
         positionData.put("averageCost", new BigDecimal("100"));
@@ -200,6 +204,7 @@ public class ManualEntrySteps {
         positionData.put("instrumentSymbol", testInstrumentSymbol);
         positionData.put("instrumentName", "Test Instrument");
         positionData.put("instrumentType", "STOCK");
+        positionData.put("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", new BigDecimal("100"));
         positionData.put("averageCost", new BigDecimal(averageCost));

@@ -134,13 +134,15 @@ public class PositionController {
     @ResponseStatus(HttpStatus.CREATED)
     public PositionDetailResponse addPosition(@Valid @RequestBody AddPositionRequest request) {
         InstrumentSymbol instrumentSymbol = new InstrumentSymbol(request.instrumentSymbol());
+        Currency currency = Currency.valueOf(request.currency());
         Position position = positionCommandUseCase.addPosition(
                 instrumentSymbol,
                 new InstrumentName(request.instrumentName()),
                 InstrumentType.valueOf(request.instrumentType()),
+                currency,
                 new AccountId(request.accountId()),
                 new Quantity(request.quantity()),
-                CostBasis.of(Money.pln(request.averageCost())));
+                CostBasis.of(new Money(request.averageCost(), currency)));
         Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Map<AccountId, String> accountNames = getAccountNames(position);
         Map<Currency, ExchangeRate> exchangeRates = getExchangeRates(position);
@@ -159,12 +161,12 @@ public class PositionController {
             @PathVariable String symbol,
             @Valid @RequestBody UpdatePositionRequest request) {
         InstrumentSymbol instrumentSymbol = new InstrumentSymbol(symbol);
+        Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Position position = positionCommandUseCase.updatePosition(
                 instrumentSymbol,
                 new AccountId(request.accountId()),
                 new Quantity(request.quantity()),
-                CostBasis.of(Money.pln(request.averageCost())));
-        Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
+                CostBasis.of(new Money(request.averageCost(), instrument.currency())));
         Map<AccountId, String> accountNames = getAccountNames(position);
         Map<Currency, ExchangeRate> exchangeRates = getExchangeRates(position);
         return positionMapper.toDetailResponse(position, instrument, accountNames, exchangeRates);

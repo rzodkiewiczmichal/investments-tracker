@@ -35,6 +35,7 @@ public class InstrumentPersistenceMapper {
                 new InstrumentSymbol(entity.symbol()),
                 new InstrumentName(entity.name()),
                 mapToDomainType(entity.instrumentType()),
+                Currency.valueOf(entity.currency()),
                 currentPrice
         );
     }
@@ -52,6 +53,7 @@ public class InstrumentPersistenceMapper {
                 instrument.symbol().value(),
                 instrument.name().value(),
                 mapToPersistenceType(instrument.type()).name(),
+                instrument.currency().getCode(),
                 instrument.currentPrice() != null ? instrument.currentPrice().money().amount() : null,
                 instrument.currentPrice() != null ? instrument.currentPrice().currency().getCode() : null,
                 instrument.currentPrice() != null ? LocalDateTime.now() : null,

@@ -90,6 +90,7 @@ class PortfolioQueryUseCaseServiceTest {
                     InstrumentSymbol.of("AAPL"),
                     new InstrumentName("Apple Inc."),
                     InstrumentType.STOCK,
+                    Currency.PLN,
                     new Price(Money.pln("175.00")));
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
@@ -116,6 +117,7 @@ class PortfolioQueryUseCaseServiceTest {
                     InstrumentSymbol.of("AAPL"),
                     new InstrumentName("Apple Inc."),
                     InstrumentType.STOCK,
+                    Currency.PLN,
                     null);
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));

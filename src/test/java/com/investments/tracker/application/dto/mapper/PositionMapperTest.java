@@ -161,6 +161,7 @@ class PositionMapperTest {
                 new InstrumentSymbol(symbol),
                 new InstrumentName(name),
                 type,
+                Currency.PLN,
                 new Price(Money.pln(new BigDecimal(price))));
     }
 
@@ -169,6 +170,7 @@ class PositionMapperTest {
                 new InstrumentSymbol(symbol),
                 new InstrumentName(name),
                 type,
+                Currency.PLN,
                 null);
     }
 }
