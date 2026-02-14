@@ -15,7 +15,7 @@ import java.util.Objects;
  * </p>
  * <p>
  * Instrument is pure reference data identified by its symbol (natural key).
- * Current prices are managed separately via PriceCache.
+ * Current prices are managed separately via {@link com.investments.tracker.domain.repository.CurrentPriceProvider}.
  * </p>
  */
 public record Instrument(

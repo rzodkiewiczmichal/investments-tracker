@@ -16,7 +16,7 @@ import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.ExchangeRateProvider;
 import com.investments.tracker.domain.repository.InstrumentRepository;
-import com.investments.tracker.domain.repository.PriceCache;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.PositionRepository;
 import com.investments.tracker.domain.service.PortfolioCalculationService;
 import com.investments.tracker.domain.service.PositionCalculationService;
@@ -49,7 +49,7 @@ class PortfolioQueryUseCaseServiceTest {
     private InstrumentRepository instrumentRepository;
 
     @Mock
-    private PriceCache priceCache;
+    private CurrentPriceProvider currentPriceProvider;
 
     @Mock
     private ExchangeRateProvider exchangeRateProvider;
@@ -61,7 +61,7 @@ class PortfolioQueryUseCaseServiceTest {
     void setUp() {
         portfolioCalculationService = new PortfolioCalculationService(new PositionCalculationService());
         portfolioQueryUseCaseService = new PortfolioQueryUseCaseService(
-                positionRepository, instrumentRepository, priceCache,
+                positionRepository, instrumentRepository, currentPriceProvider,
                 exchangeRateProvider, portfolioCalculationService);
     }
 
@@ -75,7 +75,7 @@ class PortfolioQueryUseCaseServiceTest {
             // Given
             when(positionRepository.findAll()).thenReturn(List.of());
             when(instrumentRepository.findAll()).thenReturn(List.of());
-            when(priceCache.getPrices(any())).thenReturn(Map.of());
+            when(currentPriceProvider.getPrices(any())).thenReturn(Map.of());
             when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
             // When
@@ -99,7 +99,7 @@ class PortfolioQueryUseCaseServiceTest {
                     Currency.PLN);
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
-            when(priceCache.getPrices(any())).thenReturn(Map.of(
+            when(currentPriceProvider.getPrices(any())).thenReturn(Map.of(
                     InstrumentSymbol.of("AAPL"), new Price(Money.pln("175.00"))));
             when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
@@ -127,7 +127,7 @@ class PortfolioQueryUseCaseServiceTest {
                     Currency.PLN);
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
-            when(priceCache.getPrices(any())).thenReturn(Map.of());
+            when(currentPriceProvider.getPrices(any())).thenReturn(Map.of());
             when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
             // When

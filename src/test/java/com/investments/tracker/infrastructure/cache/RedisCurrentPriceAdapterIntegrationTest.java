@@ -22,14 +22,14 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
-@DisplayName("RedisPriceCacheAdapter integration test")
-class RedisPriceCacheAdapterIntegrationTest {
+@DisplayName("RedisCurrentPriceAdapter integration test")
+class RedisCurrentPriceAdapterIntegrationTest {
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
             .withExposedPorts(6379);
 
-    private RedisPriceCacheAdapter adapter;
+    private RedisCurrentPriceAdapter adapter;
     private RedisTemplate<String, String> redisTemplate;
 
     @BeforeEach
@@ -49,7 +49,7 @@ class RedisPriceCacheAdapterIntegrationTest {
         // Clear all keys before each test
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
 
-        adapter = new RedisPriceCacheAdapter(redisTemplate);
+        adapter = new RedisCurrentPriceAdapter(redisTemplate);
     }
 
     @Test
@@ -87,8 +87,8 @@ class RedisPriceCacheAdapterIntegrationTest {
     }
 
     @Test
-    @DisplayName("should retrieve multiple prices")
-    void shouldRetrieveMultiplePrices() {
+    @DisplayName("should retrieve multiple prices via pipeline")
+    void shouldRetrieveMultiplePricesViaPipeline() {
         InstrumentSymbol aapl = InstrumentSymbol.of("AAPL");
         InstrumentSymbol msft = InstrumentSymbol.of("MSFT");
         InstrumentSymbol unknown = InstrumentSymbol.of("UNKNOWN");
@@ -102,6 +102,27 @@ class RedisPriceCacheAdapterIntegrationTest {
         assertThat(result).containsKey(aapl);
         assertThat(result).containsKey(msft);
         assertThat(result).doesNotContainKey(unknown);
+    }
+
+    @Test
+    @DisplayName("should return immutable map from getPrices")
+    void shouldReturnImmutableMapFromGetPrices() {
+        InstrumentSymbol aapl = InstrumentSymbol.of("AAPL");
+        adapter.putPrice(aapl, new Price(new Money(new BigDecimal("175.00"), Currency.PLN)));
+
+        Map<InstrumentSymbol, Price> result = adapter.getPrices(List.of(aapl));
+
+        assertThat(result).hasSize(1);
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                () -> result.put(InstrumentSymbol.of("X"), new Price(Money.pln("1"))))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    @DisplayName("should return empty map for empty symbols collection")
+    void shouldReturnEmptyMapForEmptySymbols() {
+        Map<InstrumentSymbol, Price> result = adapter.getPrices(List.of());
+        assertThat(result).isEmpty();
     }
 
     @Test

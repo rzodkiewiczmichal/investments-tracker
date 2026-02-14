@@ -8,6 +8,8 @@ import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Quantity;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
+import com.investments.tracker.domain.repository.ExchangeRateProvider;
 import com.investments.tracker.domain.repository.PositionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,11 +35,25 @@ class PositionQueryUseCaseServiceTest {
     @Mock
     private PositionRepository positionRepository;
 
+    @Mock
+    private InstrumentQueryUseCase instrumentQueryUseCase;
+
+    @Mock
+    private AccountQueryUseCase accountQueryUseCase;
+
+    @Mock
+    private CurrentPriceProvider currentPriceProvider;
+
+    @Mock
+    private ExchangeRateProvider exchangeRateProvider;
+
     private PositionQueryUseCaseService positionQueryUseCaseService;
 
     @BeforeEach
     void setUp() {
-        positionQueryUseCaseService = new PositionQueryUseCaseService(positionRepository);
+        positionQueryUseCaseService = new PositionQueryUseCaseService(
+                positionRepository, instrumentQueryUseCase, accountQueryUseCase,
+                currentPriceProvider, exchangeRateProvider);
     }
 
     @Nested

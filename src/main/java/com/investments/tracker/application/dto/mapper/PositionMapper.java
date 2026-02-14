@@ -3,7 +3,10 @@ package com.investments.tracker.application.dto.mapper;
 import com.investments.tracker.application.dto.response.AccountHoldingDTO;
 import com.investments.tracker.application.dto.response.MoneyDTO;
 import com.investments.tracker.application.dto.response.PositionDetailResponse;
+import com.investments.tracker.application.dto.response.PositionListResponse;
 import com.investments.tracker.application.dto.response.PositionSummaryDTO;
+import com.investments.tracker.application.usecase.PositionDetailData;
+import com.investments.tracker.application.usecase.PositionWithMarketData;
 import com.investments.tracker.domain.model.AccountHolding;
 import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
@@ -21,6 +24,7 @@ import com.investments.tracker.domain.service.PositionCalculationService;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,7 +47,7 @@ public class PositionMapper {
      *
      * @param position the position domain object
      * @param instrument the instrument providing name and type
-     * @param currentPrice the current price from PriceCache (nullable)
+     * @param currentPrice the current market price (nullable)
      * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
      * @return the position summary DTO
      */
@@ -65,12 +69,40 @@ public class PositionMapper {
     }
 
     /**
+     * Maps a list of positions with market data to a sorted list response.
+     * Sorted by current value descending (FR-014).
+     *
+     * @param data positions with market data
+     * @return the position list response
+     */
+    public PositionListResponse toListResponse(List<PositionWithMarketData> data) {
+        List<PositionSummaryDTO> summaries = data.stream()
+                .map(d -> toSummaryDTO(d.position(), d.instrument(), d.currentPrice(), d.exchangeRates()))
+                .sorted(Comparator.comparing(
+                        (PositionSummaryDTO dto) -> dto.currentValue() != null ? dto.currentValue().amount() : null,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+        return new PositionListResponse(summaries, summaries.size());
+    }
+
+    /**
+     * Maps position detail data to a detail response.
+     *
+     * @param data position detail data
+     * @return the position detail response
+     */
+    public PositionDetailResponse toDetailResponse(PositionDetailData data) {
+        return toDetailResponse(data.position(), data.instrument(), data.currentPrice(),
+                data.accountNames(), data.exchangeRates());
+    }
+
+    /**
      * Maps a Position to PositionDetailResponse, enriched with Instrument data.
      * Aggregated monetary values (invested amount, current value, P&L) are converted to PLN.
      *
      * @param position the position domain object
      * @param instrument the instrument providing name and type
-     * @param currentPrice the current price from PriceCache (nullable)
+     * @param currentPrice the current price (nullable)
      * @param accountNames map of account IDs to names for display
      * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
      * @return the position detail response
