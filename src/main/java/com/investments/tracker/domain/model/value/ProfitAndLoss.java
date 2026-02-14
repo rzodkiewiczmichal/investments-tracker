@@ -4,16 +4,13 @@ import java.util.Objects;
 
 /**
  * Value object representing profit and loss.
- * <p>
- * Contains both the absolute amount (in PLN) and the percentage change.
- * Can be positive (profit) or negative (loss).
- * </p>
+ *
+ * <p>Contains both the absolute amount (in PLN) and the percentage change. Can be positive (profit)
+ * or negative (loss).
  */
 public record ProfitAndLoss(Money amount, Percentage percentage) {
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public ProfitAndLoss {
         Objects.requireNonNull(amount, "P&L amount cannot be null");
         Objects.requireNonNull(percentage, "P&L percentage cannot be null");
@@ -30,17 +27,16 @@ public record ProfitAndLoss(Money amount, Percentage percentage) {
 
     /**
      * Calculates P&L from current value and invested amount.
-     * <p>
-     * Formula:
-     * - Amount: Current Value - Invested Amount
-     * - Percentage: (Current Value - Invested Amount) / Invested Amount * 100
-     * </p>
+     *
+     * <p>Formula: - Amount: Current Value - Invested Amount - Percentage: (Current Value - Invested
+     * Amount) / Invested Amount * 100
      *
      * @param currentValue the current market value
      * @param investedAmount the original invested amount
      * @return the calculated P&L
      */
-    public static ProfitAndLoss calculate(CurrentValue currentValue, InvestedAmount investedAmount) {
+    public static ProfitAndLoss calculate(
+            CurrentValue currentValue, InvestedAmount investedAmount) {
         Objects.requireNonNull(currentValue, "Current value cannot be null");
         Objects.requireNonNull(investedAmount, "Invested amount cannot be null");
 

@@ -1,17 +1,16 @@
 package com.investments.tracker.infrastructure.config;
 
-import com.investments.tracker.domain.service.PortfolioCalculationService;
-import com.investments.tracker.domain.service.PositionCalculationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.investments.tracker.domain.service.PortfolioCalculationService;
+import com.investments.tracker.domain.service.PositionCalculationService;
+
 /**
  * Spring configuration for domain services.
- * <p>
- * Domain services are pure domain objects without Spring annotations.
- * This configuration exposes them as Spring beans for dependency injection
- * in the application layer.
- * </p>
+ *
+ * <p>Domain services are pure domain objects without Spring annotations. This configuration exposes
+ * them as Spring beans for dependency injection in the application layer.
  */
 @Configuration
 public class DomainServiceConfig {

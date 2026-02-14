@@ -1,21 +1,18 @@
 package com.investments.tracker.domain.model.value;
 
-import com.investments.tracker.domain.exception.InvalidPriceException;
-
 import java.util.Objects;
+
+import com.investments.tracker.domain.exception.InvalidPriceException;
 
 /**
  * Value object representing the average cost basis per unit.
- * <p>
- * Cost basis must be greater than zero. Used to track the average
- * purchase price of shares for P&L calculations.
- * </p>
+ *
+ * <p>Cost basis must be greater than zero. Used to track the average purchase price of shares for
+ * P&L calculations.
  */
 public record CostBasis(Money money) {
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public CostBasis {
         Objects.requireNonNull(money, "Cost basis money cannot be null");
         if (money.isNegative()) {

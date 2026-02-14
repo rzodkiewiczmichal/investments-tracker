@@ -1,18 +1,17 @@
 package com.investments.tracker.domain.repository;
 
+import java.util.Collection;
+import java.util.Optional;
+
 import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.AccountName;
 import com.investments.tracker.domain.model.value.BrokerName;
 
-import java.util.Collection;
-import java.util.Optional;
-
 /**
  * Repository port for Account aggregate persistence.
- * <p>
- * This is a driven port that will be implemented by infrastructure adapters.
- * </p>
+ *
+ * <p>This is a driven port that will be implemented by infrastructure adapters.
  */
 public interface AccountRepository {
 

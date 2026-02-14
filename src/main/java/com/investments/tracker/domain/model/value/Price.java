@@ -1,21 +1,17 @@
 package com.investments.tracker.domain.model.value;
 
-import com.investments.tracker.domain.exception.InvalidPriceException;
-
 import java.util.Objects;
+
+import com.investments.tracker.domain.exception.InvalidPriceException;
 
 /**
  * Value object representing a price per unit.
- * <p>
- * Price must be greater than zero. Wraps Money to ensure
- * the positivity constraint is enforced.
- * </p>
+ *
+ * <p>Price must be greater than zero. Wraps Money to ensure the positivity constraint is enforced.
  */
 public record Price(Money money) {
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public Price {
         Objects.requireNonNull(money, "Price money cannot be null");
         if (money.isNegative()) {

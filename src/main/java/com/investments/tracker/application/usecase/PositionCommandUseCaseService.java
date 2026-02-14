@@ -1,5 +1,11 @@
 package com.investments.tracker.application.usecase;
 
+import java.util.List;
+import java.util.Objects;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.AccountHolding;
@@ -15,15 +21,8 @@ import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.AccountRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-
-/**
- * Implementation of position command use case.
- */
+/** Implementation of position command use case. */
 @Service
 @Transactional
 public class PositionCommandUseCaseService implements PositionCommandUseCase {
@@ -42,9 +41,14 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
     }
 
     @Override
-    public Position addPosition(InstrumentSymbol symbol, InstrumentName instrumentName,
-                                InstrumentType instrumentType, Currency currency,
-                                AccountId accountId, Quantity quantity, CostBasis costBasis) {
+    public Position addPosition(
+            InstrumentSymbol symbol,
+            InstrumentName instrumentName,
+            InstrumentType instrumentType,
+            Currency currency,
+            AccountId accountId,
+            Quantity quantity,
+            CostBasis costBasis) {
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(instrumentName, "instrumentName cannot be null");
         Objects.requireNonNull(instrumentType, "instrumentType cannot be null");
@@ -60,31 +64,42 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
 
         // Create instrument if it doesn't exist, or validate currency matches
         if (!instrumentRepository.existsBySymbol(symbol)) {
-            Instrument instrument = new Instrument(symbol, instrumentName, instrumentType, currency);
+            Instrument instrument =
+                    new Instrument(symbol, instrumentName, instrumentType, currency);
             instrumentRepository.save(instrument);
         } else {
             Instrument existing = instrumentRepository.findBySymbol(symbol).orElseThrow();
             if (existing.currency() != currency) {
                 throw new DomainException(
-                        "Currency mismatch: instrument " + symbol.value() +
-                        " has currency " + existing.currency().getCode() +
-                        " but " + currency.getCode() + " was provided");
+                        "Currency mismatch: instrument "
+                                + symbol.value()
+                                + " has currency "
+                                + existing.currency().getCode()
+                                + " but "
+                                + currency.getCode()
+                                + " was provided");
             }
         }
 
         // Find or create position
-        Position position = positionRepository.findBySymbol(symbol)
-                .map(existing -> existing.addHolding(accountId, quantity, costBasis))
-                .orElseGet(() -> new Position(
-                        symbol,
-                        List.of(new AccountHolding(accountId, quantity, costBasis))));
+        Position position =
+                positionRepository
+                        .findBySymbol(symbol)
+                        .map(existing -> existing.addHolding(accountId, quantity, costBasis))
+                        .orElseGet(
+                                () ->
+                                        new Position(
+                                                symbol,
+                                                List.of(
+                                                        new AccountHolding(
+                                                                accountId, quantity, costBasis))));
 
         return positionRepository.save(position);
     }
 
     @Override
-    public Position updatePosition(InstrumentSymbol symbol, AccountId accountId,
-                                   Quantity quantity, CostBasis costBasis) {
+    public Position updatePosition(
+            InstrumentSymbol symbol, AccountId accountId, Quantity quantity, CostBasis costBasis) {
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(accountId, "accountId cannot be null");
         Objects.requireNonNull(quantity, "quantity cannot be null");
@@ -96,9 +111,13 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
         }
 
         // Find existing position
-        Position position = positionRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Position", "symbol", symbol.value()));
+        Position position =
+                positionRepository
+                        .findBySymbol(symbol)
+                        .orElseThrow(
+                                () ->
+                                        new ResourceNotFoundException(
+                                                "Position", "symbol", symbol.value()));
 
         // Add shares to position
         Position updated = position.addHolding(accountId, quantity, costBasis);

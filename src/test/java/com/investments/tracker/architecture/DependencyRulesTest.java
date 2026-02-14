@@ -1,26 +1,24 @@
 package com.investments.tracker.architecture;
 
-import com.tngtech.archunit.core.domain.JavaClasses;
-import com.tngtech.archunit.core.importer.ClassFileImporter;
-import com.tngtech.archunit.core.importer.ImportOption;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 
 /**
  * ArchUnit tests enforcing strict dependency rules.
- * <p>
- * Ensures that:
- * - Domain layer uses ONLY Java standard library (no external libraries)
- * - Application layer uses ONLY Java standard library and domain classes
- * - Infrastructure layer is the only place for framework dependencies
- * </p>
- * <p>
- * Note: Tests will pass if packages are empty (no classes exist yet).
- * They will fail only when code is added that violates the rules.
- * </p>
+ *
+ * <p>Ensures that: - Domain layer uses ONLY Java standard library (no external libraries) -
+ * Application layer uses ONLY Java standard library and domain classes - Infrastructure layer is
+ * the only place for framework dependencies
+ *
+ * <p>Note: Tests will pass if packages are empty (no classes exist yet). They will fail only when
+ * code is added that violates the rules.
  */
 @DisplayName("Strict Dependency Rules Tests")
 class DependencyRulesTest {
@@ -29,17 +27,21 @@ class DependencyRulesTest {
 
     @BeforeAll
     static void setUp() {
-        allClasses = new ClassFileImporter()
-                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages("com.investments.tracker");
+        allClasses =
+                new ClassFileImporter()
+                        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                        .importPackages("com.investments.tracker");
     }
 
     @Test
     @DisplayName("Domain layer should not depend on Spring Framework")
     void domainShouldNotDependOnSpring() {
         noClasses()
-                .that().resideInAPackage("..domain..")
-                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
+                .that()
+                .resideInAPackage("..domain..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("org.springframework..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -48,11 +50,11 @@ class DependencyRulesTest {
     @DisplayName("Domain layer should not use JPA/Hibernate")
     void domainShouldNotUseJpaHibernate() {
         noClasses()
-                .that().resideInAPackage("..domain..")
-                .should().dependOnClassesThat().resideInAnyPackage(
-                        "jakarta.persistence..",
-                        "org.hibernate.."
-                )
+                .that()
+                .resideInAPackage("..domain..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("jakarta.persistence..", "org.hibernate..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -61,8 +63,11 @@ class DependencyRulesTest {
     @DisplayName("Domain layer should not use Lombok")
     void domainShouldNotUseLombok() {
         noClasses()
-                .that().resideInAPackage("..domain..")
-                .should().dependOnClassesThat().resideInAnyPackage("lombok..")
+                .that()
+                .resideInAPackage("..domain..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("lombok..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -72,9 +77,13 @@ class DependencyRulesTest {
     void applicationDtosShouldNotDependOnSpring() {
         // DTOs must be framework-free (excludes mappers which need @Component)
         noClasses()
-                .that().resideInAPackage("..application.dto..")
-                .and().resideOutsideOfPackage("..application.dto.mapper..")
-                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
+                .that()
+                .resideInAPackage("..application.dto..")
+                .and()
+                .resideOutsideOfPackage("..application.dto.mapper..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("org.springframework..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -84,14 +93,16 @@ class DependencyRulesTest {
     void applicationMappersMayUseSpringAnnotationsOnly() {
         // Mappers can use @Component but should not depend on other Spring packages
         noClasses()
-                .that().resideInAPackage("..application.dto.mapper..")
-                .should().dependOnClassesThat().resideInAnyPackage(
+                .that()
+                .resideInAPackage("..application.dto.mapper..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
                         "org.springframework.web..",
                         "org.springframework.data..",
                         "org.springframework.http..",
                         "org.springframework.security..",
-                        "org.springframework.transaction.."
-                )
+                        "org.springframework.transaction..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -100,8 +111,11 @@ class DependencyRulesTest {
     @DisplayName("Application exceptions should not depend on Spring Framework")
     void applicationExceptionsShouldNotDependOnSpring() {
         noClasses()
-                .that().resideInAPackage("..application.exception..")
-                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
+                .that()
+                .resideInAPackage("..application.exception..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("org.springframework..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -112,13 +126,15 @@ class DependencyRulesTest {
         // Use cases can use @Service and @Transactional per ADR-003
         // But should not depend on other Spring packages like web, data, etc.
         noClasses()
-                .that().resideInAPackage("..application.usecase..")
-                .should().dependOnClassesThat().resideInAnyPackage(
+                .that()
+                .resideInAPackage("..application.usecase..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
                         "org.springframework.web..",
                         "org.springframework.data..",
                         "org.springframework.http..",
-                        "org.springframework.security.."
-                )
+                        "org.springframework.security..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -127,11 +143,11 @@ class DependencyRulesTest {
     @DisplayName("Application layer should not use JPA/Hibernate")
     void applicationShouldNotUseJpaHibernate() {
         noClasses()
-                .that().resideInAPackage("..application..")
-                .should().dependOnClassesThat().resideInAnyPackage(
-                        "jakarta.persistence..",
-                        "org.hibernate.."
-                )
+                .that()
+                .resideInAPackage("..application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("jakarta.persistence..", "org.hibernate..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -140,8 +156,11 @@ class DependencyRulesTest {
     @DisplayName("Application layer should not use Lombok")
     void applicationShouldNotUseLombok() {
         noClasses()
-                .that().resideInAPackage("..application..")
-                .should().dependOnClassesThat().resideInAnyPackage("lombok..")
+                .that()
+                .resideInAPackage("..application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("lombok..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -150,8 +169,11 @@ class DependencyRulesTest {
     @DisplayName("Domain and application layers should not use Jackson")
     void domainAndApplicationShouldNotUseJackson() {
         noClasses()
-                .that().resideInAnyPackage("..domain..", "..application..")
-                .should().dependOnClassesThat().resideInAnyPackage("com.fasterxml.jackson..")
+                .that()
+                .resideInAnyPackage("..domain..", "..application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("com.fasterxml.jackson..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -160,13 +182,15 @@ class DependencyRulesTest {
     @DisplayName("Domain and application layers should not use logging frameworks")
     void domainAndApplicationShouldNotUseLogging() {
         noClasses()
-                .that().resideInAnyPackage("..domain..", "..application..")
-                .should().dependOnClassesThat().resideInAnyPackage(
+                .that()
+                .resideInAnyPackage("..domain..", "..application..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage(
                         "org.slf4j..",
                         "ch.qos.logback..",
                         "org.apache.logging..",
-                        "java.util.logging.."
-                )
+                        "java.util.logging..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -176,8 +200,11 @@ class DependencyRulesTest {
     void useCasesShouldNotDependOnDtos() {
         // Use cases operate on domain model only
         noClasses()
-                .that().resideInAPackage("..application.usecase..")
-                .should().dependOnClassesThat().resideInAPackage("..dto..")
+                .that()
+                .resideInAPackage("..application.usecase..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..dto..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }
@@ -187,9 +214,13 @@ class DependencyRulesTest {
     void outputPortsShouldNotDependOnDtos() {
         // Output ports (repositories, domain ports) operate on domain model only
         noClasses()
-                .that().resideInAPackage("..domain.repository..")
-                .or().resideInAPackage("..domain.port..")
-                .should().dependOnClassesThat().resideInAPackage("..dto..")
+                .that()
+                .resideInAPackage("..domain.repository..")
+                .or()
+                .resideInAPackage("..domain.port..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAPackage("..dto..")
                 .allowEmptyShould(true)
                 .check(allClasses);
     }

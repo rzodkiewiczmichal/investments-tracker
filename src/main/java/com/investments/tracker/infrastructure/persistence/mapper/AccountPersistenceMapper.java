@@ -1,18 +1,17 @@
 package com.investments.tracker.infrastructure.persistence.mapper;
 
+import java.util.Objects;
+
+import org.springframework.stereotype.Component;
+
 import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.AccountName;
 import com.investments.tracker.domain.model.value.BrokerName;
 import com.investments.tracker.infrastructure.persistence.entity.AccountJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.entity.AccountType;
-import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-
-/**
- * Mapper for converting between Account domain model and AccountJdbcEntity.
- */
+/** Mapper for converting between Account domain model and AccountJdbcEntity. */
 @Component
 public class AccountPersistenceMapper {
 
@@ -27,8 +26,7 @@ public class AccountPersistenceMapper {
         return new Account(
                 new AccountId(entity.id()),
                 new AccountName(entity.name()),
-                new BrokerName(entity.brokerName())
-        );
+                new BrokerName(entity.brokerName()));
     }
 
     /**
@@ -45,8 +43,7 @@ public class AccountPersistenceMapper {
                 account.name().value(),
                 account.brokerName().value(),
                 AccountType.NORMAL.name(),
-                version
-        );
+                version);
     }
 
     /**
@@ -60,11 +57,6 @@ public class AccountPersistenceMapper {
         Objects.requireNonNull(name, "name cannot be null");
         Objects.requireNonNull(brokerName, "brokerName cannot be null");
         return new AccountJdbcEntity(
-                null,
-                name.value(),
-                brokerName.value(),
-                AccountType.NORMAL.name(),
-                null
-        );
+                null, name.value(), brokerName.value(), AccountType.NORMAL.name(), null);
     }
 }

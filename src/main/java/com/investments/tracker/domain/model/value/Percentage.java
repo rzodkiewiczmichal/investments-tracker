@@ -6,31 +6,22 @@ import java.util.Objects;
 
 /**
  * Value object representing a percentage value.
- * <p>
- * Percentage is stored as a decimal (e.g., 10.5 represents 10.5%).
- * Can be positive (gain) or negative (loss).
- * </p>
+ *
+ * <p>Percentage is stored as a decimal (e.g., 10.5 represents 10.5%). Can be positive (gain) or
+ * negative (loss).
  */
 public record Percentage(BigDecimal value) {
 
-    /**
-     * Scale for percentage values.
-     */
+    /** Scale for percentage values. */
     public static final int SCALE = 4;
 
-    /**
-     * Rounding mode for percentage calculations.
-     */
+    /** Rounding mode for percentage calculations. */
     public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_EVEN;
 
-    /**
-     * 100 for percentage calculations.
-     */
+    /** 100 for percentage calculations. */
     private static final BigDecimal HUNDRED = new BigDecimal("100");
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public Percentage {
         Objects.requireNonNull(value, "Percentage value cannot be null");
         // Normalize the scale to ensure consistent representation
@@ -47,8 +38,7 @@ public record Percentage(BigDecimal value) {
     }
 
     /**
-     * Calculates percentage from a part and a whole.
-     * Formula: (part / whole) * 100
+     * Calculates percentage from a part and a whole. Formula: (part / whole) * 100
      *
      * @param part the part value
      * @param whole the whole value
@@ -65,8 +55,7 @@ public record Percentage(BigDecimal value) {
     }
 
     /**
-     * Calculates percentage from a part and a whole Money.
-     * Formula: (part / whole) * 100
+     * Calculates percentage from a part and a whole Money. Formula: (part / whole) * 100
      *
      * @param part the part Money value
      * @param whole the whole Money value

@@ -8,12 +8,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
  * Redis configuration for the cache layer.
- * <p>
- * Provides a RedisTemplate with String serializers for both keys and values.
- * Used by cache adapters to store instrument prices and exchange rates.
- * </p>
  *
- * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032: External Data Caching Strategy</a>
+ * <p>Provides a RedisTemplate with String serializers for both keys and values. Used by cache
+ * adapters to store instrument prices and exchange rates.
+ *
+ * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032: External Data
+ *     Caching Strategy</a>
  */
 @Configuration
 public class RedisConfig {

@@ -1,19 +1,20 @@
 package com.investments.tracker.application.usecase;
 
+import java.util.Map;
+import java.util.Objects;
+
+import org.springframework.lang.Nullable;
+
 import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.ExchangeRate;
 import com.investments.tracker.domain.model.value.Price;
-import org.springframework.lang.Nullable;
-
-import java.util.Map;
-import java.util.Objects;
 
 /**
- * Application-layer record bundling a position with its market data and account names
- * for detail display. Used by {@link PositionQueryUseCase#getPositionDetail}.
+ * Application-layer record bundling a position with its market data and account names for detail
+ * display. Used by {@link PositionQueryUseCase#getPositionDetail}.
  */
 public record PositionDetailData(
         Position position,

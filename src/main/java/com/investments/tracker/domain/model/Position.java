@@ -1,5 +1,11 @@
 package com.investments.tracker.domain.model;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
@@ -8,36 +14,26 @@ import com.investments.tracker.domain.model.value.InvestedAmount;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Quantity;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
 /**
  * Holdings of a specific instrument across accounts.
- * <p>
- * Position is the main aggregate for tracking investments. It contains
- * AccountHoldings for each broker account where the instrument is held.
- * </p>
- * <p>
- * Position does NOT contain currentPrice - that belongs to the Instrument
- * aggregate. Cross-aggregate calculations (CurrentValue, P&L) are performed
- * by PositionCalculationService (see ADR-024).
- * </p>
- * <p>
- * Key invariants:
+ *
+ * <p>Position is the main aggregate for tracking investments. It contains AccountHoldings for each
+ * broker account where the instrument is held.
+ *
+ * <p>Position does NOT contain currentPrice - that belongs to the Instrument aggregate.
+ * Cross-aggregate calculations (CurrentValue, P&L) are performed by PositionCalculationService (see
+ * ADR-024).
+ *
+ * <p>Key invariants:
+ *
  * <ul>
- *   <li>Total quantity equals sum of all AccountHolding quantities</li>
- *   <li>Weighted average cost basis correctly calculated from all holdings</li>
- *   <li>All quantities must be positive</li>
- *   <li>No duplicate account holdings for same account</li>
+ *   <li>Total quantity equals sum of all AccountHolding quantities
+ *   <li>Weighted average cost basis correctly calculated from all holdings
+ *   <li>All quantities must be positive
+ *   <li>No duplicate account holdings for same account
  * </ul>
- * </p>
  */
-public record Position(
-        InstrumentSymbol symbol,
-        List<AccountHolding> holdings) {
+public record Position(InstrumentSymbol symbol, List<AccountHolding> holdings) {
 
     public Position {
         Objects.requireNonNull(symbol, "symbol cannot be null");
@@ -50,8 +46,8 @@ public record Position(
     }
 
     /**
-     * Returns a new Position with an added or merged holding.
-     * If a holding for the same account exists, merges with weighted average cost basis.
+     * Returns a new Position with an added or merged holding. If a holding for the same account
+     * exists, merges with weighted average cost basis.
      *
      * @param accountId the account ID
      * @param quantity the quantity to add
@@ -95,12 +91,12 @@ public record Position(
         Objects.requireNonNull(accountId, "accountId cannot be null");
 
         if (holdings.size() == 1) {
-            throw new DomainException("Cannot remove last holding - position must be deleted instead");
+            throw new DomainException(
+                    "Cannot remove last holding - position must be deleted instead");
         }
 
-        List<AccountHolding> newHoldings = holdings.stream()
-                .filter(h -> !h.accountId().equals(accountId))
-                .toList();
+        List<AccountHolding> newHoldings =
+                holdings.stream().filter(h -> !h.accountId().equals(accountId)).toList();
 
         if (newHoldings.size() == holdings.size()) {
             throw new DomainException("Holding not found for account: " + accountId);
@@ -117,9 +113,7 @@ public record Position(
      */
     public Optional<AccountHolding> findHolding(AccountId accountId) {
         Objects.requireNonNull(accountId, "accountId cannot be null");
-        return holdings.stream()
-                .filter(h -> h.accountId().equals(accountId))
-                .findFirst();
+        return holdings.stream().filter(h -> h.accountId().equals(accountId)).findFirst();
     }
 
     /**
@@ -136,9 +130,8 @@ public record Position(
 
     /**
      * Calculates the weighted average cost basis across all holdings.
-     * <p>
-     * Formula: (sum of qty*cost for each holding) / total quantity
-     * </p>
+     *
+     * <p>Formula: (sum of qty*cost for each holding) / total quantity
      *
      * @return the weighted average cost basis
      */
@@ -153,10 +146,15 @@ public record Position(
      * @return the weighted average cost basis
      */
     private CostBasis calculateWeightedAverageCostBasis(Quantity totalQuantity) {
-        BigDecimal totalInvested = holdings.stream()
-                .map(h -> h.costBasis().money().amount()
-                        .multiply(h.quantity().toBigDecimal()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalInvested =
+                holdings.stream()
+                        .map(
+                                h ->
+                                        h.costBasis()
+                                                .money()
+                                                .amount()
+                                                .multiply(h.quantity().toBigDecimal()))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Money avgCost = Money.pln(totalInvested).divide(totalQuantity.toBigDecimal());
         return CostBasis.of(avgCost);
@@ -183,8 +181,8 @@ public record Position(
     }
 
     /**
-     * Identity-based equality. Positions are equal if they have the same symbol.
-     * This overrides record's default structural equality to follow DDD entity semantics.
+     * Identity-based equality. Positions are equal if they have the same symbol. This overrides
+     * record's default structural equality to follow DDD entity semantics.
      */
     @Override
     public boolean equals(Object o) {
@@ -193,9 +191,7 @@ public record Position(
         return symbol.equals(other.symbol);
     }
 
-    /**
-     * Hash code based on identity (symbol) only.
-     */
+    /** Hash code based on identity (symbol) only. */
     @Override
     public int hashCode() {
         return symbol.hashCode();

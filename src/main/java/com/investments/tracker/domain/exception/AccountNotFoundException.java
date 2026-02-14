@@ -2,9 +2,7 @@ package com.investments.tracker.domain.exception;
 
 import com.investments.tracker.domain.model.value.AccountId;
 
-/**
- * Exception thrown when an account cannot be found.
- */
+/** Exception thrown when an account cannot be found. */
 public class AccountNotFoundException extends DomainException {
 
     private final AccountId accountId;

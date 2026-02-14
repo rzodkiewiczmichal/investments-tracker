@@ -1,5 +1,9 @@
 package com.investments.tracker.infrastructure.persistence.mapper;
 
+import java.util.Objects;
+
+import org.springframework.stereotype.Component;
+
 import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
@@ -7,13 +11,8 @@ import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.infrastructure.persistence.entity.InstrumentJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.entity.InstrumentTypeValue;
-import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-
-/**
- * Mapper for converting between Instrument domain model and InstrumentJdbcEntity.
- */
+/** Mapper for converting between Instrument domain model and InstrumentJdbcEntity. */
 @Component
 public class InstrumentPersistenceMapper {
 
@@ -30,8 +29,7 @@ public class InstrumentPersistenceMapper {
                 new InstrumentSymbol(entity.symbol()),
                 new InstrumentName(entity.name()),
                 mapToDomainType(entity.instrumentType()),
-                Currency.valueOf(entity.currency())
-        );
+                Currency.valueOf(entity.currency()));
     }
 
     /**
@@ -48,8 +46,7 @@ public class InstrumentPersistenceMapper {
                 instrument.name().value(),
                 mapToPersistenceType(instrument.type()).name(),
                 instrument.currency().getCode(),
-                version
-        );
+                version);
     }
 
     private InstrumentType mapToDomainType(String instrumentType) {

@@ -1,5 +1,16 @@
 package com.investments.tracker.application.dto.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import com.investments.tracker.application.dto.response.PositionDetailResponse;
 import com.investments.tracker.application.dto.response.PositionSummaryDTO;
 import com.investments.tracker.domain.model.AccountHolding;
@@ -16,16 +27,6 @@ import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.service.PositionCalculationService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("PositionMapper")
 class PositionMapperTest {
@@ -69,7 +70,8 @@ class PositionMapperTest {
         }
 
         @Test
-        @DisplayName("should map position to summary DTO with null price-dependent fields when no price")
+        @DisplayName(
+                "should map position to summary DTO with null price-dependent fields when no price")
         void shouldMapPositionToSummaryDTOWithNullFieldsWhenNoPrice() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
@@ -102,7 +104,8 @@ class PositionMapperTest {
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, price, accountNames, PLN_RATES);
+            PositionDetailResponse dto =
+                    mapper.toDetailResponse(position, instrument, price, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -124,7 +127,8 @@ class PositionMapperTest {
             Map<AccountId, String> accountNames = Map.of(); // Empty map
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, price, accountNames, PLN_RATES);
+            PositionDetailResponse dto =
+                    mapper.toDetailResponse(position, instrument, price, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.holdings().getFirst().accountName()).isEqualTo("Unknown Account");
@@ -139,7 +143,8 @@ class PositionMapperTest {
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, null, accountNames, PLN_RATES);
+            PositionDetailResponse dto =
+                    mapper.toDetailResponse(position, instrument, null, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.currentPrice()).isNull();
@@ -153,17 +158,15 @@ class PositionMapperTest {
     private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(
-                        new AccountId(1L),
-                        Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))));
+                List.of(
+                        new AccountHolding(
+                                new AccountId(1L),
+                                Quantity.of(qty),
+                                CostBasis.of(Money.pln(costBasis)))));
     }
 
     private Instrument createInstrument(String symbol, String name, InstrumentType type) {
         return new Instrument(
-                new InstrumentSymbol(symbol),
-                new InstrumentName(name),
-                type,
-                Currency.PLN);
+                new InstrumentSymbol(symbol), new InstrumentName(name), type, Currency.PLN);
     }
 }

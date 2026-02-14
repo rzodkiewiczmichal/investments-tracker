@@ -1,28 +1,23 @@
 package com.investments.tracker.domain.model;
 
+import java.util.Objects;
+
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 
-import java.util.Objects;
-
 /**
  * A financial instrument (stock or ETF).
- * <p>
- * Polish government bonds are not included here - they will be handled separately
- * in a future version with different valuation logic.
- * </p>
- * <p>
- * Instrument is pure reference data identified by its symbol (natural key).
- * Current prices are managed separately via {@link com.investments.tracker.domain.repository.CurrentPriceProvider}.
- * </p>
+ *
+ * <p>Polish government bonds are not included here - they will be handled separately in a future
+ * version with different valuation logic.
+ *
+ * <p>Instrument is pure reference data identified by its symbol (natural key). Current prices are
+ * managed separately via {@link com.investments.tracker.domain.repository.CurrentPriceProvider}.
  */
 public record Instrument(
-        InstrumentSymbol symbol,
-        InstrumentName name,
-        InstrumentType type,
-        Currency currency) {
+        InstrumentSymbol symbol, InstrumentName name, InstrumentType type, Currency currency) {
 
     public Instrument {
         Objects.requireNonNull(symbol, "symbol cannot be null");
@@ -32,8 +27,8 @@ public record Instrument(
     }
 
     /**
-     * Identity-based equality. Instruments are equal if they have the same symbol.
-     * This overrides record's default structural equality to follow DDD entity semantics.
+     * Identity-based equality. Instruments are equal if they have the same symbol. This overrides
+     * record's default structural equality to follow DDD entity semantics.
      */
     @Override
     public boolean equals(Object o) {
@@ -42,9 +37,7 @@ public record Instrument(
         return symbol.equals(other.symbol);
     }
 
-    /**
-     * Hash code based on identity (symbol) only.
-     */
+    /** Hash code based on identity (symbol) only. */
     @Override
     public int hashCode() {
         return symbol.hashCode();

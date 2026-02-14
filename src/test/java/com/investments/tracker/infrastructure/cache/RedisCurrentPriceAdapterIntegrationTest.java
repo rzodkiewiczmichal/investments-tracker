@@ -1,9 +1,12 @@
 package com.investments.tracker.infrastructure.cache;
 
-import com.investments.tracker.domain.model.value.Currency;
-import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,28 +17,26 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.investments.tracker.domain.model.value.Currency;
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Money;
+import com.investments.tracker.domain.model.value.Price;
 
 @Testcontainers
 @DisplayName("RedisCurrentPriceAdapter integration test")
 class RedisCurrentPriceAdapterIntegrationTest {
 
     @Container
-    static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
-            .withExposedPorts(6379);
+    static GenericContainer<?> redis =
+            new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
 
     private RedisCurrentPriceAdapter adapter;
     private RedisTemplate<String, String> redisTemplate;
 
     @BeforeEach
     void setUp() {
-        LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(
-                redis.getHost(), redis.getMappedPort(6379));
+        LettuceConnectionFactory connectionFactory =
+                new LettuceConnectionFactory(redis.getHost(), redis.getMappedPort(6379));
         connectionFactory.afterPropertiesSet();
 
         redisTemplate = new RedisTemplate<>();
@@ -114,7 +115,7 @@ class RedisCurrentPriceAdapterIntegrationTest {
 
         assertThat(result).hasSize(1);
         org.assertj.core.api.Assertions.assertThatThrownBy(
-                () -> result.put(InstrumentSymbol.of("X"), new Price(Money.pln("1"))))
+                        () -> result.put(InstrumentSymbol.of("X"), new Price(Money.pln("1"))))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 

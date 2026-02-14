@@ -1,6 +1,11 @@
 <div class="position-entry">
   <div class="page-header">
-    <p-button label="Back to Portfolio" icon="pi pi-arrow-left" [text]="true" (onClick)="goBack()" />
+    <p-button
+      label="Back to Portfolio"
+      icon="pi pi-arrow-left"
+      [text]="true"
+      (onClick)="goBack()"
+    />
     <h1>Add Position</h1>
   </div>
 
@@ -11,7 +16,7 @@
   @if (loadingAccounts()) {
     <p-card>
       <div class="loading-form">
-        @for (i of [1,2,3,4,5,6]; track i) {
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
           <div class="skeleton-field">
             <p-skeleton width="30%" height="1rem" styleClass="mb-2" />
             <p-skeleton width="100%" height="2.5rem" />
@@ -208,15 +213,37 @@
   <form [formGroup]="accountForm">
     <div class="field">
       <label for="accountName">Account Name *</label>
-      <input pInputText id="accountName" formControlName="name" placeholder="e.g., XTB IKE" class="w-full" />
+      <input
+        pInputText
+        id="accountName"
+        formControlName="name"
+        placeholder="e.g., XTB IKE"
+        class="w-full"
+      />
     </div>
     <div class="field">
       <label for="accountBroker">Broker *</label>
-      <input pInputText id="accountBroker" formControlName="broker" placeholder="e.g., XTB" class="w-full" />
+      <input
+        pInputText
+        id="accountBroker"
+        formControlName="broker"
+        placeholder="e.g., XTB"
+        class="w-full"
+      />
     </div>
   </form>
   <ng-template pTemplate="footer">
-    <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="showAccountDialog.set(false)" />
-    <p-button label="Create" icon="pi pi-check" (onClick)="submitAccountDialog()" [loading]="accountDialogLoading()" />
+    <p-button
+      label="Cancel"
+      severity="secondary"
+      [text]="true"
+      (onClick)="showAccountDialog.set(false)"
+    />
+    <p-button
+      label="Create"
+      icon="pi pi-check"
+      (onClick)="submitAccountDialog()"
+      [loading]="accountDialogLoading()"
+    />
   </ng-template>
 </p-dialog>

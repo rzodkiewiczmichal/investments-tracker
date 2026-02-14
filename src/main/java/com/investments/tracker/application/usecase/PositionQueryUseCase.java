@@ -1,14 +1,12 @@
 package com.investments.tracker.application.usecase;
 
-import com.investments.tracker.domain.model.Position;
-import com.investments.tracker.domain.model.value.InstrumentSymbol;
-
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Use case for querying positions.
- */
+import com.investments.tracker.domain.model.Position;
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+
+/** Use case for querying positions. */
 public interface PositionQueryUseCase {
 
     /**
@@ -23,7 +21,8 @@ public interface PositionQueryUseCase {
      *
      * @param symbol the instrument symbol
      * @return the position
-     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position not found
+     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position
+     *     not found
      */
     Position getPosition(InstrumentSymbol symbol);
 
@@ -39,7 +38,8 @@ public interface PositionQueryUseCase {
      *
      * @param symbol the instrument symbol
      * @return position detail data
-     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position not found
+     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position
+     *     not found
      */
     PositionDetailData getPositionDetail(InstrumentSymbol symbol);
 }

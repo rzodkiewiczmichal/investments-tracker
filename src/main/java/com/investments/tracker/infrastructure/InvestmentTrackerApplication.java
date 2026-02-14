@@ -5,17 +5,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * Main entry point for Investment Tracker application.
- * <p>
- * Spring Boot application configured with hexagonal architecture:
- * - Domain layer: Pure business logic, no framework dependencies
- * - Application layer: Use cases (ports) and application services
+ *
+ * <p>Spring Boot application configured with hexagonal architecture: - Domain layer: Pure business
+ * logic, no framework dependencies - Application layer: Use cases (ports) and application services
  * - Infrastructure layer: Framework adapters (REST, JPA, configuration)
- * </p>
- * <p>
- * Component scanning is configured to scan:
- * - com.investments.tracker.application - Application services
- * - com.investments.tracker.infrastructure - Infrastructure adapters
- * </p>
+ *
+ * <p>Component scanning is configured to scan: - com.investments.tracker.application - Application
+ * services - com.investments.tracker.infrastructure - Infrastructure adapters
  */
 @SpringBootApplication(scanBasePackages = "com.investments.tracker")
 public class InvestmentTrackerApplication {

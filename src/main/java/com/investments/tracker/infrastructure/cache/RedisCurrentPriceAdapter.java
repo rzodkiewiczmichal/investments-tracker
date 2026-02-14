@@ -1,19 +1,5 @@
 package com.investments.tracker.infrastructure.cache;
 
-import com.investments.tracker.domain.model.value.Currency;
-import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.domain.repository.CurrentPriceProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.data.redis.RedisSystemException;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -24,15 +10,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.data.redis.RedisSystemException;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+import com.investments.tracker.domain.model.value.Currency;
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Money;
+import com.investments.tracker.domain.model.value.Price;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
+
 /**
  * Redis-backed implementation of the {@link CurrentPriceProvider} domain port.
- * <p>
- * Stores instrument prices as Redis Hash keys with 24-hour TTL.
- * Key format: {@code price:current:{symbol}}
- * Hash fields: {@code amount}, {@code currency}
- * </p>
  *
- * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032: External Data Caching Strategy</a>
+ * <p>Stores instrument prices as Redis Hash keys with 24-hour TTL. Key format: {@code
+ * price:current:{symbol}} Hash fields: {@code amount}, {@code currency}
+ *
+ * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032: External Data
+ *     Caching Strategy</a>
  */
 @Component
 public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
@@ -77,14 +76,21 @@ public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
         }
         List<InstrumentSymbol> symbolList = new ArrayList<>(symbols);
         try {
-            List<Object> pipelineResults = redisTemplate.executePipelined(
-                    (RedisCallback<Object>) connection -> {
-                        for (InstrumentSymbol symbol : symbolList) {
-                            connection.hashCommands().hGetAll(
-                                    toKey(symbol).getBytes(StandardCharsets.UTF_8));
-                        }
-                        return null;
-                    });
+            List<Object> pipelineResults =
+                    redisTemplate.executePipelined(
+                            (RedisCallback<Object>)
+                                    connection -> {
+                                        for (InstrumentSymbol symbol : symbolList) {
+                                            connection
+                                                    .hashCommands()
+                                                    .hGetAll(
+                                                            toKey(symbol)
+                                                                    .getBytes(
+                                                                            StandardCharsets
+                                                                                    .UTF_8));
+                                        }
+                                        return null;
+                                    });
 
             Map<InstrumentSymbol, Price> result = new HashMap<>();
             for (int i = 0; i < symbolList.size(); i++) {
@@ -105,9 +111,9 @@ public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
     }
 
     /**
-     * Stores a price in Redis for the given instrument.
-     * This is not part of the {@link CurrentPriceProvider} domain port —
-     * it is used by infrastructure-level data providers to populate the cache.
+     * Stores a price in Redis for the given instrument. This is not part of the {@link
+     * CurrentPriceProvider} domain port — it is used by infrastructure-level data providers to
+     * populate the cache.
      *
      * @param symbol the instrument symbol
      * @param price the price to store
@@ -118,17 +124,21 @@ public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
             byte[] rawKey = key.getBytes(StandardCharsets.UTF_8);
             byte[] rawAmountField = FIELD_AMOUNT.getBytes(StandardCharsets.UTF_8);
             byte[] rawCurrencyField = FIELD_CURRENCY.getBytes(StandardCharsets.UTF_8);
-            byte[] rawAmount = price.money().amount().toPlainString().getBytes(StandardCharsets.UTF_8);
+            byte[] rawAmount =
+                    price.money().amount().toPlainString().getBytes(StandardCharsets.UTF_8);
             byte[] rawCurrency = price.currency().getCode().getBytes(StandardCharsets.UTF_8);
 
-            redisTemplate.execute((RedisCallback<Object>) connection -> {
-                Map<byte[], byte[]> rawFields = Map.of(
-                        rawAmountField, rawAmount,
-                        rawCurrencyField, rawCurrency);
-                connection.hashCommands().hMSet(rawKey, rawFields);
-                connection.keyCommands().expire(rawKey, TTL.getSeconds());
-                return null;
-            });
+            redisTemplate.execute(
+                    (RedisCallback<Object>)
+                            connection -> {
+                                Map<byte[], byte[]> rawFields =
+                                        Map.of(
+                                                rawAmountField, rawAmount,
+                                                rawCurrencyField, rawCurrency);
+                                connection.hashCommands().hMSet(rawKey, rawFields);
+                                connection.keyCommands().expire(rawKey, TTL.getSeconds());
+                                return null;
+                            });
         } catch (RedisConnectionFailureException | RedisSystemException e) {
             log.warn("Failed to write price to Redis for {}: {}", symbol.value(), e.getMessage());
         }

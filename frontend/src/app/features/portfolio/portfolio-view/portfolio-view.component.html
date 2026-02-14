@@ -11,7 +11,7 @@
 
   @if (loading()) {
     <div class="summary-cards">
-      @for (i of [1,2,3,4,5]; track i) {
+      @for (i of [1, 2, 3, 4, 5]; track i) {
         <p-card>
           <p-skeleton width="60%" height="1rem" styleClass="mb-2" />
           <p-skeleton width="80%" height="2rem" />
@@ -93,11 +93,16 @@
                 </div>
               </td>
               <td>
-                <p-tag [value]="position.instrumentType" [severity]="getInstrumentTypeSeverity(position.instrumentType)" />
+                <p-tag
+                  [value]="position.instrumentType"
+                  [severity]="getInstrumentTypeSeverity(position.instrumentType)"
+                />
               </td>
               <td class="text-right">{{ formatQuantity(position.quantity) }}</td>
               <td class="text-right">{{ formatMoney(position.averageCost.amount) }}</td>
-              <td class="text-right font-semibold">{{ formatMoney(position.currentValue?.amount) }}</td>
+              <td class="text-right font-semibold">
+                {{ formatMoney(position.currentValue?.amount) }}
+              </td>
               <td class="text-right" [class]="getProfitLossClass(position.profitLoss?.amount)">
                 {{ formatMoney(position.profitLoss?.amount) }}
               </td>

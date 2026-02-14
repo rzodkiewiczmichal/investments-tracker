@@ -1,5 +1,14 @@
 package com.investments.tracker.application.dto.mapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import com.investments.tracker.application.dto.response.PortfolioSummaryResponse;
 import com.investments.tracker.domain.model.AccountHolding;
 import com.investments.tracker.domain.model.Portfolio;
@@ -13,14 +22,6 @@ import com.investments.tracker.domain.model.value.InvestedAmount;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.ProfitAndLoss;
 import com.investments.tracker.domain.model.value.Quantity;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("PortfolioMapper")
 class PortfolioMapperTest {
@@ -43,7 +44,8 @@ class PortfolioMapperTest {
             // Then
             assertThat(response.positionsCount()).isZero();
             assertThat(response.totalCurrentValue()).isNull();
-            assertThat(response.totalInvestedAmount().amount()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(response.totalInvestedAmount().amount())
+                    .isEqualByComparingTo(BigDecimal.ZERO);
             assertThat(response.totalProfitLoss().amount()).isEqualByComparingTo(BigDecimal.ZERO);
             assertThat(response.totalReturnPercentage()).isEqualByComparingTo(BigDecimal.ZERO);
             assertThat(response.message()).isEqualTo("No positions yet");
@@ -54,13 +56,14 @@ class PortfolioMapperTest {
         void shouldMapPortfolioWithPositionsAndPrices() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("15000")),
-                    new CurrentValue(Money.pln("17500")),
-                    ProfitAndLoss.calculate(
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(
+                            new InvestedAmount(Money.pln("15000")),
                             new CurrentValue(Money.pln("17500")),
-                            new InvestedAmount(Money.pln("15000"))),
-                    1);
+                            ProfitAndLoss.calculate(
+                                    new CurrentValue(Money.pln("17500")),
+                                    new InvestedAmount(Money.pln("15000"))),
+                            1);
             Portfolio portfolio = new Portfolio(List.of(position), metrics);
 
             // When
@@ -80,11 +83,8 @@ class PortfolioMapperTest {
         void shouldMapPortfolioWithNullCurrentValueWhenPricesUnknown() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("15000")),
-                    null,
-                    null,
-                    1);
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(new InvestedAmount(Money.pln("15000")), null, null, 1);
             Portfolio portfolio = new Portfolio(List.of(position), metrics);
 
             // When
@@ -103,9 +103,10 @@ class PortfolioMapperTest {
     private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(
-                        new AccountId(1L),
-                        Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))));
+                List.of(
+                        new AccountHolding(
+                                new AccountId(1L),
+                                Quantity.of(qty),
+                                CostBasis.of(Money.pln(costBasis)))));
     }
 }

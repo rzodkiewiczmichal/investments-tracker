@@ -2,9 +2,8 @@ package com.investments.tracker.domain.exception;
 
 /**
  * Exception thrown when a price value is invalid.
- * <p>
- * A price is invalid if it is negative or zero.
- * </p>
+ *
+ * <p>A price is invalid if it is negative or zero.
  */
 public class InvalidPriceException extends DomainException {
 

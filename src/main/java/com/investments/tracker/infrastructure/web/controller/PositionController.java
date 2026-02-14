@@ -1,5 +1,19 @@
 package com.investments.tracker.infrastructure.web.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.investments.tracker.application.dto.mapper.PositionMapper;
 import com.investments.tracker.application.dto.request.AddPositionRequest;
 import com.investments.tracker.application.dto.request.UpdatePositionRequest;
@@ -19,22 +33,8 @@ import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Quantity;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-/**
- * REST controller for position operations.
- */
+/** REST controller for position operations. */
 @RestController
 @RequestMapping("/api/v1/positions")
 public class PositionController {
@@ -74,7 +74,8 @@ public class PositionController {
      */
     @GetMapping("/{symbol}")
     public PositionDetailResponse getPosition(@PathVariable String symbol) {
-        PositionDetailData data = positionQueryUseCase.getPositionDetail(new InstrumentSymbol(symbol));
+        PositionDetailData data =
+                positionQueryUseCase.getPositionDetail(new InstrumentSymbol(symbol));
         return positionMapper.toDetailResponse(data);
     }
 
@@ -110,8 +111,7 @@ public class PositionController {
      */
     @PutMapping("/{symbol}")
     public PositionDetailResponse updatePosition(
-            @PathVariable String symbol,
-            @Valid @RequestBody UpdatePositionRequest request) {
+            @PathVariable String symbol, @Valid @RequestBody UpdatePositionRequest request) {
         InstrumentSymbol instrumentSymbol = new InstrumentSymbol(symbol);
         Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         positionCommandUseCase.updatePosition(

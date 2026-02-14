@@ -1,16 +1,15 @@
 package com.investments.tracker.domain.repository;
 
-import com.investments.tracker.domain.model.Instrument;
-import com.investments.tracker.domain.model.value.InstrumentSymbol;
-
 import java.util.Collection;
 import java.util.Optional;
 
+import com.investments.tracker.domain.model.Instrument;
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+
 /**
  * Repository port for Instrument reference data persistence.
- * <p>
- * This is a driven port that will be implemented by infrastructure adapters.
- * </p>
+ *
+ * <p>This is a driven port that will be implemented by infrastructure adapters.
  */
 public interface InstrumentRepository {
 

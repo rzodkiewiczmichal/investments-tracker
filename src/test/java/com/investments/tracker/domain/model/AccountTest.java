@@ -1,14 +1,16 @@
 package com.investments.tracker.domain.model;
 
-import com.investments.tracker.domain.model.value.AccountId;
-import com.investments.tracker.domain.model.value.AccountName;
-import com.investments.tracker.domain.model.value.BrokerName;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.investments.tracker.domain.exception.DomainException;
+import com.investments.tracker.domain.model.value.AccountId;
+import com.investments.tracker.domain.model.value.AccountName;
+import com.investments.tracker.domain.model.value.BrokerName;
 
 @DisplayName("Account aggregate")
 class AccountTest {
@@ -34,7 +36,8 @@ class AccountTest {
         @Test
         @DisplayName("throws exception for null id")
         void throwsForNullId() {
-            assertThatThrownBy(() -> new Account(null, AccountName.of("My IKE"), BrokerName.of("XTB")))
+            assertThatThrownBy(
+                            () -> new Account(null, AccountName.of("My IKE"), BrokerName.of("XTB")))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("Account ID cannot be null");
         }
@@ -86,7 +89,7 @@ class AccountTest {
         @DisplayName("AccountName throws for blank value")
         void accountNameThrowsForBlank() {
             assertThatThrownBy(() -> AccountName.of("   "))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(DomainException.class)
                     .hasMessage("Account name cannot be blank");
         }
 
@@ -102,7 +105,7 @@ class AccountTest {
         @DisplayName("BrokerName throws for blank value")
         void brokerNameThrowsForBlank() {
             assertThatThrownBy(() -> BrokerName.of("   "))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(DomainException.class)
                     .hasMessage("Broker name cannot be blank");
         }
     }
@@ -139,8 +142,10 @@ class AccountTest {
         @Test
         @DisplayName("not equals different IDs")
         void notEqualsDifferentIds() {
-            Account a1 = new Account(new AccountId(1L), AccountName.of("Account"), BrokerName.of("XTB"));
-            Account a2 = new Account(new AccountId(2L), AccountName.of("Account"), BrokerName.of("XTB"));
+            Account a1 =
+                    new Account(new AccountId(1L), AccountName.of("Account"), BrokerName.of("XTB"));
+            Account a2 =
+                    new Account(new AccountId(2L), AccountName.of("Account"), BrokerName.of("XTB"));
 
             assertThat(a1).isNotEqualTo(a2);
         }

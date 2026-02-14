@@ -1,5 +1,20 @@
 package com.investments.tracker.application.usecase;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.investments.tracker.domain.model.AccountHolding;
 import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Portfolio;
@@ -14,55 +29,42 @@ import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ExchangeRateProvider;
 import com.investments.tracker.domain.repository.InstrumentRepository;
-import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.PositionRepository;
 import com.investments.tracker.domain.service.PortfolioCalculationService;
 import com.investments.tracker.domain.service.PositionCalculationService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @DisplayName("PortfolioQueryUseCaseService")
 @ExtendWith(MockitoExtension.class)
 class PortfolioQueryUseCaseServiceTest {
 
-    private static final Map<Currency, ExchangeRate> PLN_RATES = Map.of(
-            Currency.PLN, ExchangeRate.identity(Currency.PLN));
+    private static final Map<Currency, ExchangeRate> PLN_RATES =
+            Map.of(Currency.PLN, ExchangeRate.identity(Currency.PLN));
 
-    @Mock
-    private PositionRepository positionRepository;
+    @Mock private PositionRepository positionRepository;
 
-    @Mock
-    private InstrumentRepository instrumentRepository;
+    @Mock private InstrumentRepository instrumentRepository;
 
-    @Mock
-    private CurrentPriceProvider currentPriceProvider;
+    @Mock private CurrentPriceProvider currentPriceProvider;
 
-    @Mock
-    private ExchangeRateProvider exchangeRateProvider;
+    @Mock private ExchangeRateProvider exchangeRateProvider;
 
     private PortfolioCalculationService portfolioCalculationService;
     private PortfolioQueryUseCaseService portfolioQueryUseCaseService;
 
     @BeforeEach
     void setUp() {
-        portfolioCalculationService = new PortfolioCalculationService(new PositionCalculationService());
-        portfolioQueryUseCaseService = new PortfolioQueryUseCaseService(
-                positionRepository, instrumentRepository, currentPriceProvider,
-                exchangeRateProvider, portfolioCalculationService);
+        portfolioCalculationService =
+                new PortfolioCalculationService(new PositionCalculationService());
+        portfolioQueryUseCaseService =
+                new PortfolioQueryUseCaseService(
+                        positionRepository,
+                        instrumentRepository,
+                        currentPriceProvider,
+                        exchangeRateProvider,
+                        portfolioCalculationService);
     }
 
     @Nested
@@ -92,15 +94,17 @@ class PortfolioQueryUseCaseServiceTest {
         void shouldReturnPortfolioWithPositionsAndPrices() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = new Instrument(
-                    InstrumentSymbol.of("AAPL"),
-                    new InstrumentName("Apple Inc."),
-                    InstrumentType.STOCK,
-                    Currency.PLN);
+            Instrument instrument =
+                    new Instrument(
+                            InstrumentSymbol.of("AAPL"),
+                            new InstrumentName("Apple Inc."),
+                            InstrumentType.STOCK,
+                            Currency.PLN);
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
-            when(currentPriceProvider.getPrices(any())).thenReturn(Map.of(
-                    InstrumentSymbol.of("AAPL"), new Price(Money.pln("175.00"))));
+            when(currentPriceProvider.getPrices(any()))
+                    .thenReturn(
+                            Map.of(InstrumentSymbol.of("AAPL"), new Price(Money.pln("175.00"))));
             when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
             // When
@@ -120,11 +124,12 @@ class PortfolioQueryUseCaseServiceTest {
         void shouldReturnPortfolioWithoutCurrentValueWhenPricesUnknown() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = new Instrument(
-                    InstrumentSymbol.of("AAPL"),
-                    new InstrumentName("Apple Inc."),
-                    InstrumentType.STOCK,
-                    Currency.PLN);
+            Instrument instrument =
+                    new Instrument(
+                            InstrumentSymbol.of("AAPL"),
+                            new InstrumentName("Apple Inc."),
+                            InstrumentType.STOCK,
+                            Currency.PLN);
             when(positionRepository.findAll()).thenReturn(List.of(position));
             when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
             when(currentPriceProvider.getPrices(any())).thenReturn(Map.of());
@@ -144,9 +149,10 @@ class PortfolioQueryUseCaseServiceTest {
     private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(
-                        new AccountId(1L),
-                        Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))));
+                List.of(
+                        new AccountHolding(
+                                new AccountId(1L),
+                                Quantity.of(qty),
+                                CostBasis.of(Money.pln(costBasis)))));
     }
 }
