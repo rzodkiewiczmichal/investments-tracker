@@ -5,13 +5,10 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
-import com.investments.tracker.domain.model.value.Money;
-import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.infrastructure.persistence.entity.InstrumentJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.entity.InstrumentTypeValue;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -29,14 +26,11 @@ public class InstrumentPersistenceMapper {
     public Instrument toDomain(InstrumentJdbcEntity entity) {
         Objects.requireNonNull(entity, "entity cannot be null");
 
-        Price currentPrice = createPriceFromEntity(entity);
-
         return new Instrument(
                 new InstrumentSymbol(entity.symbol()),
                 new InstrumentName(entity.name()),
                 mapToDomainType(entity.instrumentType()),
-                Currency.valueOf(entity.currency()),
-                currentPrice
+                Currency.valueOf(entity.currency())
         );
     }
 
@@ -54,20 +48,8 @@ public class InstrumentPersistenceMapper {
                 instrument.name().value(),
                 mapToPersistenceType(instrument.type()).name(),
                 instrument.currency().getCode(),
-                instrument.currentPrice() != null ? instrument.currentPrice().money().amount() : null,
-                instrument.currentPrice() != null ? instrument.currentPrice().currency().getCode() : null,
-                instrument.currentPrice() != null ? LocalDateTime.now() : null,
                 version
         );
-    }
-
-    private Price createPriceFromEntity(InstrumentJdbcEntity entity) {
-        if (entity.currentPriceAmount() == null || entity.currentPriceCurrency() == null) {
-            return null;
-        }
-        Currency currency = Currency.valueOf(entity.currentPriceCurrency());
-        Money money = new Money(entity.currentPriceAmount(), currency);
-        return new Price(money);
     }
 
     private InstrumentType mapToDomainType(String instrumentType) {

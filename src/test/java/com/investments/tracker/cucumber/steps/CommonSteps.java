@@ -1,5 +1,6 @@
 package com.investments.tracker.cucumber.steps;
 
+import com.investments.tracker.testutils.StubPriceCache;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +36,11 @@ public class CommonSteps {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private StubPriceCache stubPriceCache;
+
     /**
-     * Clean database before each scenario to ensure test isolation.
+     * Clean database and price cache before each scenario to ensure test isolation.
      */
     @Before
     public void cleanDatabase() {
@@ -45,6 +49,7 @@ public class CommonSteps {
         jdbcTemplate.execute("DELETE FROM positions WHERE true");
         jdbcTemplate.execute("DELETE FROM instruments WHERE true");
         jdbcTemplate.execute("DELETE FROM accounts WHERE true");
+        stubPriceCache.clear();
     }
 
     @Given("I have positions in multiple brokerage accounts")

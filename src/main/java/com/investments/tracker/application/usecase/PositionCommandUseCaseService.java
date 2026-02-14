@@ -60,7 +60,7 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
 
         // Create instrument if it doesn't exist, or validate currency matches
         if (!instrumentRepository.existsBySymbol(symbol)) {
-            Instrument instrument = new Instrument(symbol, instrumentName, instrumentType, currency, null);
+            Instrument instrument = new Instrument(symbol, instrumentName, instrumentType, currency);
             instrumentRepository.save(instrument);
         } else {
             Instrument existing = instrumentRepository.findBySymbol(symbol).orElseThrow();

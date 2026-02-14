@@ -4,7 +4,6 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
-import com.investments.tracker.domain.model.value.Price;
 
 import java.util.Objects;
 
@@ -15,20 +14,16 @@ import java.util.Objects;
  * in a future version with different valuation logic.
  * </p>
  * <p>
- * Instrument is reference data identified by its symbol (natural key).
- * Instruments are shared reference data referenced by Position via InstrumentSymbol.
+ * Instrument is pure reference data identified by its symbol (natural key).
+ * Current prices are managed separately via PriceCache.
  * </p>
  */
 public record Instrument(
         InstrumentSymbol symbol,
         InstrumentName name,
         InstrumentType type,
-        Currency currency,
-        Price currentPrice) {
+        Currency currency) {
 
-    /**
-     * @param currentPrice nullable - price is unknown until fetched from market data provider
-     */
     public Instrument {
         Objects.requireNonNull(symbol, "symbol cannot be null");
         Objects.requireNonNull(name, "name cannot be null");

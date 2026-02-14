@@ -49,10 +49,11 @@ class PositionMapperTest {
         void shouldMapPositionToSummaryDTOWithPrice() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
+            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK);
+            Price price = new Price(Money.pln(new BigDecimal("175.00")));
 
             // When
-            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument, PLN_RATES);
+            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument, price, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -72,10 +73,10 @@ class PositionMapperTest {
         void shouldMapPositionToSummaryDTOWithNullFieldsWhenNoPrice() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = createInstrumentWithoutPrice("AAPL", "Apple Inc.", InstrumentType.STOCK);
+            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK);
 
             // When
-            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument, PLN_RATES);
+            PositionSummaryDTO dto = mapper.toSummaryDTO(position, instrument, null, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -96,11 +97,12 @@ class PositionMapperTest {
         void shouldMapPositionToDetailResponseWithHoldings() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
+            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK);
+            Price price = new Price(Money.pln(new BigDecimal("175.00")));
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames, PLN_RATES);
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, price, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.instrumentSymbol()).isEqualTo("AAPL");
@@ -117,11 +119,12 @@ class PositionMapperTest {
         void shouldUseUnknownAccountWhenAccountNotInMap() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK, "175.00");
+            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK);
+            Price price = new Price(Money.pln(new BigDecimal("175.00")));
             Map<AccountId, String> accountNames = Map.of(); // Empty map
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames, PLN_RATES);
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, price, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.holdings().getFirst().accountName()).isEqualTo("Unknown Account");
@@ -132,11 +135,11 @@ class PositionMapperTest {
         void shouldHaveNullFieldsWhenNoPrice() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument = createInstrumentWithoutPrice("AAPL", "Apple Inc.", InstrumentType.STOCK);
+            Instrument instrument = createInstrument("AAPL", "Apple Inc.", InstrumentType.STOCK);
             Map<AccountId, String> accountNames = Map.of(new AccountId(1L), "My Account");
 
             // When
-            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, accountNames, PLN_RATES);
+            PositionDetailResponse dto = mapper.toDetailResponse(position, instrument, null, accountNames, PLN_RATES);
 
             // Then
             assertThat(dto.currentPrice()).isNull();
@@ -156,21 +159,11 @@ class PositionMapperTest {
                         CostBasis.of(Money.pln(costBasis)))));
     }
 
-    private Instrument createInstrument(String symbol, String name, InstrumentType type, String price) {
+    private Instrument createInstrument(String symbol, String name, InstrumentType type) {
         return new Instrument(
                 new InstrumentSymbol(symbol),
                 new InstrumentName(name),
                 type,
-                Currency.PLN,
-                new Price(Money.pln(new BigDecimal(price))));
-    }
-
-    private Instrument createInstrumentWithoutPrice(String symbol, String name, InstrumentType type) {
-        return new Instrument(
-                new InstrumentSymbol(symbol),
-                new InstrumentName(name),
-                type,
-                Currency.PLN,
-                null);
+                Currency.PLN);
     }
 }

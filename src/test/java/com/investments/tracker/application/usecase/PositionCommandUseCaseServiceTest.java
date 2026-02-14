@@ -89,7 +89,7 @@ class PositionCommandUseCaseServiceTest {
             Position savedPosition = captor.getValue();
             assertThat(savedPosition.symbol().value()).isEqualTo("AAPL");
 
-            // Verify instrument was created with null currentPrice
+            // Verify instrument was created as pure reference data
             ArgumentCaptor<Instrument> instrumentCaptor = ArgumentCaptor.forClass(Instrument.class);
             verify(instrumentRepository).save(instrumentCaptor.capture());
             Instrument savedInstrument = instrumentCaptor.getValue();
@@ -97,7 +97,6 @@ class PositionCommandUseCaseServiceTest {
             assertThat(savedInstrument.name().value()).isEqualTo("Apple Inc.");
             assertThat(savedInstrument.type()).isEqualTo(InstrumentType.STOCK);
             assertThat(savedInstrument.currency()).isEqualTo(Currency.PLN);
-            assertThat(savedInstrument.currentPrice()).isNull();
         }
 
         @Test
@@ -107,7 +106,7 @@ class PositionCommandUseCaseServiceTest {
             Position existingPosition = createPosition("AAPL", 50, "140.00");
             Instrument existingInstrument = new Instrument(
                     InstrumentSymbol.of("AAPL"), new InstrumentName("Apple Inc."),
-                    InstrumentType.STOCK, Currency.PLN, null);
+                    InstrumentType.STOCK, Currency.PLN);
             AccountId accountId = new AccountId(1L);
             when(accountRepository.existsById(accountId)).thenReturn(true);
             when(instrumentRepository.existsBySymbol(any())).thenReturn(true);

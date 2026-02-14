@@ -1,5 +1,9 @@
 package com.investments.tracker.cucumber.steps;
 
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Money;
+import com.investments.tracker.domain.model.value.Price;
+import com.investments.tracker.domain.repository.PriceCache;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -39,6 +43,9 @@ public class PositionSteps {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private PriceCache priceCache;
+
     private ResponseEntity<Map> positionResponse;
     private ResponseEntity<Map> positionsListResponse;
     private Map<String, String> instrumentSymbols = new HashMap<>();
@@ -53,6 +60,7 @@ public class PositionSteps {
         Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Test Account");
         CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, instrument, new BigDecimal(averageCost));
         CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, new BigDecimal(quantity), new BigDecimal(averageCost));
+        priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(averageCost))));
     }
 
     @Given("I own {int} units of {string} with average cost of {int} PLN")
@@ -81,6 +89,7 @@ public class PositionSteps {
         Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Bond Account");
         CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, "Polish Government Bond", new BigDecimal(investedAmount));
         CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, BigDecimal.ONE, new BigDecimal(investedAmount));
+        priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(investedAmount))));
     }
 
     @Given("the current value of these bonds is {int} PLN")
@@ -91,6 +100,7 @@ public class PositionSteps {
                     "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
                     new BigDecimal(currentValue), symbol
             );
+            priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(currentValue))));
         }
     }
 

@@ -42,13 +42,15 @@ public class PositionMapper {
      * Aggregated monetary values (invested amount, current value, P&L) are converted to PLN.
      *
      * @param position the position domain object
-     * @param instrument the instrument providing name, type, and current price
+     * @param instrument the instrument providing name and type
+     * @param currentPrice the current price from PriceCache (nullable)
      * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
      * @return the position summary DTO
      */
     public PositionSummaryDTO toSummaryDTO(Position position, Instrument instrument,
+                                            @Nullable Price currentPrice,
                                             Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
-        PositionCalculations calc = calculateMetrics(position, instrument.currentPrice(), exchangeRatesByCurrency);
+        PositionCalculations calc = calculateMetrics(position, currentPrice, exchangeRatesByCurrency);
 
         return new PositionSummaryDTO(
                 position.symbol().value(),
@@ -67,15 +69,16 @@ public class PositionMapper {
      * Aggregated monetary values (invested amount, current value, P&L) are converted to PLN.
      *
      * @param position the position domain object
-     * @param instrument the instrument providing name, type, and current price
+     * @param instrument the instrument providing name and type
+     * @param currentPrice the current price from PriceCache (nullable)
      * @param accountNames map of account IDs to names for display
      * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
      * @return the position detail response
      */
     public PositionDetailResponse toDetailResponse(Position position, Instrument instrument,
+                                                   @Nullable Price currentPrice,
                                                    Map<AccountId, String> accountNames,
                                                    Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
-        Price currentPrice = instrument.currentPrice();
         PositionCalculations calc = calculateMetrics(position, currentPrice, exchangeRatesByCurrency);
 
         List<AccountHoldingDTO> holdingDTOs = position.holdings().stream()
