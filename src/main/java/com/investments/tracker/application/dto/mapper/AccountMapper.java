@@ -1,12 +1,11 @@
 package com.investments.tracker.application.dto.mapper;
 
-import com.investments.tracker.application.dto.response.AccountDTO;
-import com.investments.tracker.domain.model.Account;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper for Account domain objects to DTOs.
- */
+import com.investments.tracker.application.dto.response.AccountDTO;
+import com.investments.tracker.domain.model.Account;
+
+/** Mapper for Account domain objects to DTOs. */
 @Component
 public class AccountMapper {
 
@@ -18,8 +17,6 @@ public class AccountMapper {
      */
     public AccountDTO toDTO(Account account) {
         return new AccountDTO(
-                account.id().value(),
-                account.name().value(),
-                account.brokerName().value());
+                account.id().value(), account.name().value(), account.brokerName().value());
     }
 }

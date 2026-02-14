@@ -15,9 +15,17 @@ import { Formatters, TagSeverity } from '../../../core/utils';
 @Component({
   selector: 'app-position-details',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, SkeletonModule, MessageModule, DividerModule],
+  imports: [
+    CommonModule,
+    CardModule,
+    ButtonModule,
+    TagModule,
+    SkeletonModule,
+    MessageModule,
+    DividerModule,
+  ],
   templateUrl: './position-details.component.html',
-  styleUrl: './position-details.component.scss'
+  styleUrl: './position-details.component.scss',
 })
 export class PositionDetailsComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -43,7 +51,8 @@ export class PositionDetailsComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.positionService.getPosition(id)
+    this.positionService
+      .getPosition(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (position) => {
@@ -53,7 +62,7 @@ export class PositionDetailsComponent implements OnInit {
         error: (err: ApiError) => {
           this.error.set(err.message);
           this.loading.set(false);
-        }
+        },
       });
   }
 

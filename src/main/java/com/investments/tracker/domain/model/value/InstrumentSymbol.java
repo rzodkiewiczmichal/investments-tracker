@@ -1,35 +1,27 @@
 package com.investments.tracker.domain.model.value;
 
-import com.investments.tracker.domain.exception.InvalidSymbolException;
-
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import com.investments.tracker.domain.exception.InvalidSymbolException;
+
 /**
  * Value object representing an instrument identifier.
- * <p>
- * Can be either a ticker symbol (e.g., "AAPL", "CDR") or an ISIN
- * (e.g., "US0378331005", "PLPKO0000016").
- * </p>
- * <p>
- * Used as natural key for Position and Instrument entities.
- * </p>
+ *
+ * <p>Can be either a ticker symbol (e.g., "AAPL", "CDR") or an ISIN (e.g., "US0378331005",
+ * "PLPKO0000016").
+ *
+ * <p>Used as natural key for Position and Instrument entities.
  */
 public record InstrumentSymbol(String value) {
 
-    /**
-     * Pattern for ISIN validation (2 letters + 9 alphanumeric + 1 check digit).
-     */
+    /** Pattern for ISIN validation (2 letters + 9 alphanumeric + 1 check digit). */
     private static final Pattern ISIN_PATTERN = Pattern.compile("^[A-Z]{2}[A-Z0-9]{9}[0-9]$");
 
-    /**
-     * Pattern for ticker symbol validation (1-10 uppercase letters and optionally digits).
-     */
+    /** Pattern for ticker symbol validation (1-10 uppercase letters and optionally digits). */
     private static final Pattern TICKER_PATTERN = Pattern.compile("^[A-Z0-9]{1,10}$");
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public InstrumentSymbol {
         Objects.requireNonNull(value, "value cannot be null");
         if (value.isBlank()) {

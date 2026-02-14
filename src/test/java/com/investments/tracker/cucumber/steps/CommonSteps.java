@@ -1,43 +1,39 @@
 package com.investments.tracker.cucumber.steps;
 
-import io.cucumber.java.Before;
-import io.cucumber.java.en.Given;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.investments.tracker.testutils.StubPriceCache;
+
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+
 /**
  * Common Cucumber step definitions shared across all features.
- * <p>
- * Handles:
- * - Background steps that appear in multiple features
- * - Database cleanup before scenarios
- * - Common setup operations
- * </p>
- * <p>
- * <b>Why some Given steps are empty:</b><br>
- * Cucumber requires step definitions for ALL steps in feature files, including
- * Background steps. These "context-setting" steps (e.g., "Given I have positions
- * in multiple accounts") describe the precondition state but don't perform actions.
- * The actual data setup happens in scenario-specific steps. These empty implementations
- * satisfy Cucumber's requirement while keeping the feature files readable.
- * </p>
+ *
+ * <p>Handles: - Background steps that appear in multiple features - Database cleanup before
+ * scenarios - Common setup operations
+ *
+ * <p><b>Why some Given steps are empty:</b><br>
+ * Cucumber requires step definitions for ALL steps in feature files, including Background steps.
+ * These "context-setting" steps (e.g., "Given I have positions in multiple accounts") describe the
+ * precondition state but don't perform actions. The actual data setup happens in scenario-specific
+ * steps. These empty implementations satisfy Cucumber's requirement while keeping the feature files
+ * readable.
  */
 public class CommonSteps {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Autowired private TestRestTemplate restTemplate;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    /**
-     * Clean database before each scenario to ensure test isolation.
-     */
+    @Autowired private StubPriceCache stubPriceCache;
+
+    /** Clean database and price cache before each scenario to ensure test isolation. */
     @Before
     public void cleanDatabase() {
         // Clean in reverse order of foreign key dependencies
@@ -45,6 +41,7 @@ public class CommonSteps {
         jdbcTemplate.execute("DELETE FROM positions WHERE true");
         jdbcTemplate.execute("DELETE FROM instruments WHERE true");
         jdbcTemplate.execute("DELETE FROM accounts WHERE true");
+        stubPriceCache.clear();
     }
 
     @Given("I have positions in multiple brokerage accounts")

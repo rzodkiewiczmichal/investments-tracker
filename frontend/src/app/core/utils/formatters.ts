@@ -14,7 +14,7 @@ export const Formatters = {
       style: 'currency',
       currency: 'PLN',
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(amount);
   },
 
@@ -33,7 +33,7 @@ export const Formatters = {
   formatQuantity(quantity: number): string {
     return new Intl.NumberFormat('pl-PL', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 8
+      maximumFractionDigits: 8,
     }).format(quantity);
   },
 
@@ -43,7 +43,7 @@ export const Formatters = {
   formatDate(dateString: string): string {
     return new Intl.DateTimeFormat('pl-PL', {
       dateStyle: 'medium',
-      timeStyle: 'short'
+      timeStyle: 'short',
     }).format(new Date(dateString));
   },
 
@@ -62,10 +62,14 @@ export const Formatters = {
    */
   getInstrumentTypeSeverity(type: string): TagSeverity {
     switch (type) {
-      case 'STOCK': return 'info';
-      case 'ETF': return 'success';
-      case 'BOND': return 'warn';
-      default: return 'secondary';
+      case 'STOCK':
+        return 'info';
+      case 'ETF':
+        return 'success';
+      case 'BOND':
+        return 'warn';
+      default:
+        return 'secondary';
     }
-  }
+  },
 };

@@ -1,5 +1,22 @@
 package com.investments.tracker.application.usecase;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.domain.model.AccountHolding;
 import com.investments.tracker.domain.model.Position;
@@ -9,29 +26,12 @@ import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.PositionRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 @DisplayName("PositionQueryUseCaseService")
 @ExtendWith(MockitoExtension.class)
 class PositionQueryUseCaseServiceTest {
 
-    @Mock
-    private PositionRepository positionRepository;
+    @Mock private PositionRepository positionRepository;
 
     private PositionQueryUseCaseService positionQueryUseCaseService;
 
@@ -100,7 +100,10 @@ class PositionQueryUseCaseServiceTest {
             when(positionRepository.findBySymbol(any())).thenReturn(Optional.empty());
 
             // When/Then
-            assertThatThrownBy(() -> positionQueryUseCaseService.getPosition(InstrumentSymbol.of("UNKNOWN")))
+            assertThatThrownBy(
+                            () ->
+                                    positionQueryUseCaseService.getPosition(
+                                            InstrumentSymbol.of("UNKNOWN")))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("Position")
                     .hasMessageContaining("UNKNOWN");
@@ -110,9 +113,10 @@ class PositionQueryUseCaseServiceTest {
     private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(
-                        new AccountId(1L),
-                        Quantity.of(qty),
-                        CostBasis.of(Money.pln(costBasis)))));
+                List.of(
+                        new AccountHolding(
+                                new AccountId(1L),
+                                Quantity.of(qty),
+                                CostBasis.of(Money.pln(costBasis)))));
     }
 }

@@ -1,13 +1,15 @@
 package com.investments.tracker.domain.model.value;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.investments.tracker.domain.exception.DomainException;
 
 @DisplayName("Money value object")
 class MoneyTest {
@@ -72,7 +74,7 @@ class MoneyTest {
         @DisplayName("throws exception for amount with too many decimal places")
         void throwsForTooManyDecimalPlaces() {
             assertThatThrownBy(() -> new Money(new BigDecimal("100.12345"), Currency.PLN))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(DomainException.class)
                     .hasMessageContaining("cannot exceed 4 decimal places");
         }
     }

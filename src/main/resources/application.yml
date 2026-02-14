@@ -15,6 +15,12 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
+  # Redis Configuration (Cache Layer - ADR-032)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   # Flyway Database Migration
   flyway:
     enabled: true

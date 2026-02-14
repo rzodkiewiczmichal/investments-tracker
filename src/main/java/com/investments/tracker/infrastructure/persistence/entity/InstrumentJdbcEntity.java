@@ -5,20 +5,11 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
-/**
- * Spring Data JDBC entity for the instruments table.
- */
+/** Spring Data JDBC entity for the instruments table. */
 @Table("instruments")
 public record InstrumentJdbcEntity(
         @Id String symbol,
         String name,
         @Column("instrument_type") String instrumentType,
         String currency,
-        @Column("current_price_amount") BigDecimal currentPriceAmount,
-        @Column("current_price_currency") String currentPriceCurrency,
-        @Column("price_updated_at") LocalDateTime priceUpdatedAt,
-        @Version Long version) {
-}
+        @Version Long version) {}

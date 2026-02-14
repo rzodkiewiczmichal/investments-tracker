@@ -1,33 +1,26 @@
 package com.investments.tracker.domain.model.value;
 
-import com.investments.tracker.domain.exception.InvalidQuantityException;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
 
+import com.investments.tracker.domain.exception.InvalidQuantityException;
+
 /**
  * Value object representing a quantity of shares/units.
- * <p>
- * Quantity must be greater than zero and uses DECIMAL(19,8) precision
- * to support fractional shares as per ADR-006.
- * </p>
+ *
+ * <p>Quantity must be greater than zero and uses DECIMAL(19,8) precision to support fractional
+ * shares as per ADR-006.
  */
 public record Quantity(BigDecimal value) {
 
-    /**
-     * Scale for quantity values (8 decimal places for fractional shares).
-     */
+    /** Scale for quantity values (8 decimal places for fractional shares). */
     public static final int SCALE = 8;
 
-    /**
-     * Rounding mode for quantity calculations.
-     */
+    /** Rounding mode for quantity calculations. */
     public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_EVEN;
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public Quantity {
         Objects.requireNonNull(value, "Quantity value cannot be null");
         if (value.compareTo(BigDecimal.ZERO) < 0) {

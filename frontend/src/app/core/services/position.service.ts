@@ -5,7 +5,7 @@ import { PositionsResponse, PositionDetail, AddPositionCommand } from '../models
 import { API_BASE_URL } from './api.config';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PositionService {
   private readonly http = inject(HttpClient);

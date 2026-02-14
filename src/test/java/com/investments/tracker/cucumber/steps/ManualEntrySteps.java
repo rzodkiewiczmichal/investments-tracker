@@ -1,9 +1,12 @@
 package com.investments.tracker.cucumber.steps;
 
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -13,34 +16,26 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 /**
  * Cucumber step definitions for Manual Entry feature.
- * <p>
- * Tests manual position entry functionality including:
- * - Stock position entry
- * - ETF position entry
- * - Validation error handling
- * </p>
+ *
+ * <p>Tests manual position entry functionality including: - Stock position entry - ETF position
+ * entry - Validation error handling
  *
  * @see <a href="requirements/functional/features/manual-entry.feature">Manual Entry Feature</a>
  */
 public class ManualEntrySteps {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Autowired private TestRestTemplate restTemplate;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private ResponseEntity<Map> positionResponse;
     private ResponseEntity<Map> errorResponse;
@@ -216,8 +211,11 @@ public class ManualEntrySteps {
     @Then("a new position for {string} should be created")
     public void aNewPositionForShouldBeCreated(String instrumentName) {
         assertThat(positionResponse.getStatusCode().is2xxSuccessful())
-                .as("Expected successful response but got: " + positionResponse.getStatusCode() +
-                        ", body: " + positionResponse.getBody())
+                .as(
+                        "Expected successful response but got: "
+                                + positionResponse.getStatusCode()
+                                + ", body: "
+                                + positionResponse.getBody())
                 .isTrue();
         assertThat(positionResponse.getBody()).isNotNull();
         // The response uses instrumentSymbol - use the same symbol generation as in setup
@@ -227,10 +225,13 @@ public class ManualEntrySteps {
     }
 
     @Then("the position should have {int} shares at {int} PLN average cost")
-    public void thePositionShouldHaveSharesAtPLNAverageCost(Integer expectedQuantity, Integer expectedCost) {
+    public void thePositionShouldHaveSharesAtPLNAverageCost(
+            Integer expectedQuantity, Integer expectedCost) {
         assertThat(positionResponse.getBody()).isNotNull();
         Object quantity = positionResponse.getBody().get("quantity");
-        Object averageCost = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "averageCost", "amount");
+        Object averageCost =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "averageCost", "amount");
 
         assertThat(new BigDecimal(quantity.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedQuantity));
@@ -239,7 +240,8 @@ public class ManualEntrySteps {
     }
 
     @Then("the position should have {int} units at {int} PLN average cost")
-    public void thePositionShouldHaveUnitsAtPLNAverageCost(Integer expectedQuantity, Integer expectedCost) {
+    public void thePositionShouldHaveUnitsAtPLNAverageCost(
+            Integer expectedQuantity, Integer expectedCost) {
         // Same as shares, just different terminology for ETFs
         thePositionShouldHaveSharesAtPLNAverageCost(expectedQuantity, expectedCost);
     }
@@ -268,7 +270,9 @@ public class ManualEntrySteps {
     @Then("the position should show invested amount of {int} PLN")
     public void thePositionShouldShowInvestedAmountOfPLN(Integer expectedAmount) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object investedAmount = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "investedAmount", "amount");
+        Object investedAmount =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "investedAmount", "amount");
         assertThat(new BigDecimal(investedAmount.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedAmount));
     }
@@ -276,7 +280,9 @@ public class ManualEntrySteps {
     @Then("the position should show current value of {int} PLN")
     public void thePositionShouldShowCurrentValueOfPLN(Integer expectedValue) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object currentValue = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "currentValue", "amount");
+        Object currentValue =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "currentValue", "amount");
         assertThat(new BigDecimal(currentValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedValue));
     }
@@ -320,11 +326,9 @@ public class ManualEntrySteps {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(positionData, headers);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                "http://localhost:" + port + "/api/v1/positions",
-                request,
-                Map.class
-        );
+        ResponseEntity<Map> response =
+                restTemplate.postForEntity(
+                        "http://localhost:" + port + "/api/v1/positions", request, Map.class);
 
         if (expectingError) {
             errorResponse = response;

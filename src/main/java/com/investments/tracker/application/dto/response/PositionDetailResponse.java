@@ -3,9 +3,7 @@ package com.investments.tracker.application.dto.response;
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Detailed response for a single position.
- */
+/** Detailed response for a single position. */
 public record PositionDetailResponse(
         String instrumentSymbol,
         String instrumentName,
@@ -17,5 +15,4 @@ public record PositionDetailResponse(
         MoneyDTO investedAmount,
         MoneyDTO profitLoss,
         BigDecimal returnPercentage,
-        List<AccountHoldingDTO> holdings) {
-}
+        List<AccountHoldingDTO> holdings) {}

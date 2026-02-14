@@ -4,9 +4,7 @@ import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountName;
 import com.investments.tracker.domain.model.value.BrokerName;
 
-/**
- * Use case for account commands (create).
- */
+/** Use case for account commands (create). */
 public interface AccountCommandUseCase {
 
     /**
@@ -15,7 +13,8 @@ public interface AccountCommandUseCase {
      * @param name the account name
      * @param brokerName the broker name
      * @return the created account
-     * @throws com.investments.tracker.application.exception.ResourceAlreadyExistsException if account name already exists
+     * @throws com.investments.tracker.application.exception.ResourceAlreadyExistsException if
+     *     account name already exists
      */
     Account createAccount(AccountName name, BrokerName brokerName);
 }

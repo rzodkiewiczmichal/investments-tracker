@@ -4,13 +4,12 @@ import java.math.BigDecimal;
 
 /**
  * Test data builders for domain objects.
- * <p>
- * Provides fluent builders and factory methods for creating test data.
- * Use these builders in unit tests and integration tests to create
- * consistent, valid test data.
- * </p>
- * <p>
- * Example usage:
+ *
+ * <p>Provides fluent builders and factory methods for creating test data. Use these builders in
+ * unit tests and integration tests to create consistent, valid test data.
+ *
+ * <p>Example usage:
+ *
  * <pre>
  * PositionData position = TestDataBuilder.position()
  *     .instrumentSymbol("MSFT")
@@ -18,9 +17,9 @@ import java.math.BigDecimal;
  *     .avgCostBasis("1200.00")
  *     .build();
  * </pre>
- * </p>
  *
- * @see <a href="../../docs/adr/ADR-013-mock-vs-real-dependencies.md">ADR-013: Mock vs Real Dependencies</a>
+ * @see <a href="../../docs/adr/ADR-013-mock-vs-real-dependencies.md">ADR-013: Mock vs Real
+ *     Dependencies</a>
  */
 public final class TestDataBuilder {
 
@@ -30,40 +29,29 @@ public final class TestDataBuilder {
 
     // --- Factory Methods ---
 
-    /**
-     * Creates a default account data builder.
-     */
+    /** Creates a default account data builder. */
     public static AccountDataBuilder account() {
         return new AccountDataBuilder();
     }
 
-    /**
-     * Creates a default instrument data builder.
-     */
+    /** Creates a default instrument data builder. */
     public static InstrumentDataBuilder instrument() {
         return new InstrumentDataBuilder();
     }
 
-    /**
-     * Creates a default position data builder.
-     */
+    /** Creates a default position data builder. */
     public static PositionDataBuilder position() {
         return new PositionDataBuilder();
     }
 
-    /**
-     * Creates a default account holding data builder.
-     */
+    /** Creates a default account holding data builder. */
     public static AccountHoldingDataBuilder accountHolding() {
         return new AccountHoldingDataBuilder();
     }
 
     // --- Builders ---
 
-    /**
-     * Builder for account test data.
-     * Schema: accounts(id, name, broker_name, account_type, ...)
-     */
+    /** Builder for account test data. Schema: accounts(id, name, broker_name, account_type, ...) */
     public static class AccountDataBuilder {
         private String name = "Test Account";
         private String brokerName = "Test Broker";
@@ -100,15 +88,14 @@ public final class TestDataBuilder {
     }
 
     /**
-     * Builder for instrument test data.
-     * Schema: instruments(symbol, name, instrument_type, current_price_amount, ...)
+     * Builder for instrument test data. Schema: instruments(symbol, name, instrument_type,
+     * currency, ...)
      */
     public static class InstrumentDataBuilder {
         private String symbol = "AAPL";
         private String name = "Apple Inc.";
         private String instrumentType = "STOCK";
         private String currency = "PLN";
-        private BigDecimal currentPrice = null;
 
         public InstrumentDataBuilder symbol(String symbol) {
             this.symbol = symbol;
@@ -145,24 +132,14 @@ public final class TestDataBuilder {
             return this;
         }
 
-        public InstrumentDataBuilder currentPrice(String price) {
-            this.currentPrice = new BigDecimal(price);
-            return this;
-        }
-
-        public InstrumentDataBuilder currentPrice(BigDecimal price) {
-            this.currentPrice = price;
-            return this;
-        }
-
         public InstrumentData build() {
-            return new InstrumentData(symbol, name, instrumentType, currency, currentPrice);
+            return new InstrumentData(symbol, name, instrumentType, currency);
         }
     }
 
     /**
-     * Builder for position test data.
-     * Schema: positions(instrument_symbol, total_quantity, avg_cost_basis_amount, ...)
+     * Builder for position test data. Schema: positions(instrument_symbol, total_quantity,
+     * avg_cost_basis_amount, ...)
      */
     public static class PositionDataBuilder {
         private String instrumentSymbol = "AAPL";
@@ -200,8 +177,8 @@ public final class TestDataBuilder {
     }
 
     /**
-     * Builder for account holding test data.
-     * Schema: account_holdings(instrument_symbol, account_id, quantity, cost_basis_amount, ...)
+     * Builder for account holding test data. Schema: account_holdings(instrument_symbol,
+     * account_id, quantity, cost_basis_amount, ...)
      */
     public static class AccountHoldingDataBuilder {
         private String instrumentSymbol = "AAPL";
@@ -246,34 +223,16 @@ public final class TestDataBuilder {
 
     // --- Data Records ---
 
-    /**
-     * Data record for account test data.
-     */
-    public record AccountData(
-            String name,
-            String brokerName,
-            String accountType
-    ) {}
+    /** Data record for account test data. */
+    public record AccountData(String name, String brokerName, String accountType) {}
 
-    /**
-     * Data record for instrument test data.
-     */
+    /** Data record for instrument test data. */
     public record InstrumentData(
-            String symbol,
-            String name,
-            String instrumentType,
-            String currency,
-            BigDecimal currentPrice
-    ) {}
+            String symbol, String name, String instrumentType, String currency) {}
 
-    /**
-     * Data record for position test data.
-     */
+    /** Data record for position test data. */
     public record PositionData(
-            String instrumentSymbol,
-            BigDecimal totalQuantity,
-            BigDecimal avgCostBasis
-    ) {
+            String instrumentSymbol, BigDecimal totalQuantity, BigDecimal avgCostBasis) {
         public BigDecimal investedAmount() {
             return totalQuantity.multiply(avgCostBasis);
         }
@@ -287,15 +246,9 @@ public final class TestDataBuilder {
         }
     }
 
-    /**
-     * Data record for account holding test data.
-     */
+    /** Data record for account holding test data. */
     public record AccountHoldingData(
-            String instrumentSymbol,
-            Long accountId,
-            BigDecimal quantity,
-            BigDecimal costBasis
-    ) {
+            String instrumentSymbol, Long accountId, BigDecimal quantity, BigDecimal costBasis) {
         public BigDecimal investedAmount() {
             return quantity.multiply(costBasis);
         }

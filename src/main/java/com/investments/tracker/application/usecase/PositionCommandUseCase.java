@@ -9,14 +9,12 @@ import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Quantity;
 
-/**
- * Use case for position commands (create, update).
- */
+/** Use case for position commands (create, update). */
 public interface PositionCommandUseCase {
 
     /**
-     * Creates a new position or adds to existing position.
-     * Creates the instrument if it doesn't exist (with no current price).
+     * Creates a new position or adds to existing position. Creates the instrument if it doesn't
+     * exist (with no current price).
      *
      * @param symbol the instrument symbol
      * @param instrumentName the instrument name (for creation)
@@ -26,11 +24,17 @@ public interface PositionCommandUseCase {
      * @param quantity the quantity to add
      * @param costBasis the cost basis for the new shares
      * @return the created/updated position
-     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if account not found
+     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if account
+     *     not found
      */
-    Position addPosition(InstrumentSymbol symbol, InstrumentName instrumentName,
-                         InstrumentType instrumentType, Currency currency,
-                         AccountId accountId, Quantity quantity, CostBasis costBasis);
+    Position addPosition(
+            InstrumentSymbol symbol,
+            InstrumentName instrumentName,
+            InstrumentType instrumentType,
+            Currency currency,
+            AccountId accountId,
+            Quantity quantity,
+            CostBasis costBasis);
 
     /**
      * Updates an existing position (adds shares).
@@ -40,8 +44,9 @@ public interface PositionCommandUseCase {
      * @param quantity the quantity to add
      * @param costBasis the cost basis for the new shares
      * @return the updated position
-     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position or account not found
+     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position
+     *     or account not found
      */
-    Position updatePosition(InstrumentSymbol symbol, AccountId accountId,
-                            Quantity quantity, CostBasis costBasis);
+    Position updatePosition(
+            InstrumentSymbol symbol, AccountId accountId, Quantity quantity, CostBasis costBasis);
 }

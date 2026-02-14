@@ -6,7 +6,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter([])]
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
@@ -25,7 +25,7 @@ describe('AppComponent', () => {
   it('should have Portfolio menu item', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    const portfolioItem = app.menuItems.find(item => item.label === 'Portfolio');
+    const portfolioItem = app.menuItems.find((item) => item.label === 'Portfolio');
     expect(portfolioItem).toBeTruthy();
     expect(portfolioItem?.routerLink).toEqual('/portfolio');
   });

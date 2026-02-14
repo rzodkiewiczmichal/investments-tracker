@@ -2,7 +2,7 @@
 set -euo pipefail
 
 COMPOSE_CMD="docker compose"
-CONTAINERS=(investments-tracker-postgres investments-tracker-tempo investments-tracker-grafana)
+CONTAINERS=(investments-tracker-postgres investments-tracker-redis investments-tracker-tempo investments-tracker-grafana)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_PID_FILE="$SCRIPT_DIR/.backend.pid"
 FRONTEND_PID_FILE="$SCRIPT_DIR/.frontend.pid"
@@ -14,7 +14,7 @@ print_usage() {
     echo "  start     Start infrastructure, backend, and frontend (default)"
     echo "  stop      Stop everything (app processes + Docker containers)"
     echo "  restart   Stop and start everything"
-    echo "  infra     Start only infrastructure (PostgreSQL, Tempo, Grafana)"
+    echo "  infra     Start only infrastructure (PostgreSQL, Redis, Tempo, Grafana)"
     echo ""
     echo "Services:"
     echo "  Frontend      http://localhost:4200"
@@ -22,6 +22,7 @@ print_usage() {
     echo "  Grafana       http://localhost:3000"
     echo "  Tempo UI      http://localhost:3200"
     echo "  PostgreSQL    localhost:5432"
+    echo "  Redis         localhost:6379"
 }
 
 remove_stale_containers() {
@@ -53,7 +54,7 @@ start_infra() {
     $COMPOSE_CMD down 2>/dev/null || true
     remove_stale_containers
 
-    echo "Starting infrastructure (PostgreSQL, Tempo, Grafana)..."
+    echo "Starting infrastructure (PostgreSQL, Redis, Tempo, Grafana)..."
     $COMPOSE_CMD up -d
 
     echo "Waiting for PostgreSQL to be ready..."

@@ -16,9 +16,17 @@ import { Formatters, TagSeverity } from '../../../core/utils';
 @Component({
   selector: 'app-portfolio-view',
   standalone: true,
-  imports: [CommonModule, CardModule, TableModule, ButtonModule, TagModule, SkeletonModule, MessageModule],
+  imports: [
+    CommonModule,
+    CardModule,
+    TableModule,
+    ButtonModule,
+    TagModule,
+    SkeletonModule,
+    MessageModule,
+  ],
   templateUrl: './portfolio-view.component.html',
-  styleUrl: './portfolio-view.component.scss'
+  styleUrl: './portfolio-view.component.scss',
 })
 export class PortfolioViewComponent implements OnInit {
   private readonly portfolioService = inject(PortfolioService);
@@ -41,7 +49,7 @@ export class PortfolioViewComponent implements OnInit {
 
     forkJoin({
       portfolio: this.portfolioService.getPortfolioSummary(),
-      positions: this.positionService.listPositions()
+      positions: this.positionService.listPositions(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -53,7 +61,7 @@ export class PortfolioViewComponent implements OnInit {
         error: (err: ApiError) => {
           this.error.set(err.message);
           this.loading.set(false);
-        }
+        },
       });
   }
 

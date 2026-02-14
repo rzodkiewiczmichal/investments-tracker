@@ -1,13 +1,11 @@
 package com.investments.tracker.application.usecase;
 
+import java.util.Collection;
+
 import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
 
-import java.util.Collection;
-
-/**
- * Use case for querying accounts.
- */
+/** Use case for querying accounts. */
 public interface AccountQueryUseCase {
 
     /**
@@ -22,7 +20,8 @@ public interface AccountQueryUseCase {
      *
      * @param id the account ID
      * @return the account
-     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if account not found
+     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if account
+     *     not found
      */
     Account getAccount(AccountId id);
 }

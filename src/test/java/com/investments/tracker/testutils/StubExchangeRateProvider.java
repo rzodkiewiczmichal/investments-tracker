@@ -1,18 +1,19 @@
 package com.investments.tracker.testutils;
 
-import com.investments.tracker.domain.model.value.Currency;
-import com.investments.tracker.domain.model.value.ExchangeRate;
-import com.investments.tracker.domain.repository.ExchangeRateProvider;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import com.investments.tracker.domain.model.value.Currency;
+import com.investments.tracker.domain.model.value.ExchangeRate;
+import com.investments.tracker.domain.repository.ExchangeRateProvider;
+
 /**
- * Stub implementation of ExchangeRateProvider for integration tests.
- * Returns 1:1 rates to PLN for all currencies, preserving existing test behavior.
+ * Stub implementation of ExchangeRateProvider for integration tests. Returns 1:1 rates to PLN for
+ * all currencies, preserving existing test behavior.
  */
 @Component
 @Primary

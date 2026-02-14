@@ -2,15 +2,15 @@ package com.investments.tracker.domain.model.value;
 
 import java.util.Objects;
 
-/**
- * Value object representing an instrument name.
- */
+import com.investments.tracker.domain.exception.DomainException;
+
+/** Value object representing an instrument name. */
 public record InstrumentName(String value) {
 
     public InstrumentName {
         Objects.requireNonNull(value, "Instrument name cannot be null");
         if (value.isBlank()) {
-            throw new IllegalArgumentException("Instrument name cannot be blank");
+            throw new DomainException("Instrument name cannot be blank");
         }
         value = value.trim();
     }

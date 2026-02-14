@@ -1,8 +1,6 @@
 package com.investments.tracker.domain.model.value;
 
-/**
- * Supported currencies for the Investment Tracker.
- */
+/** Supported currencies for the Investment Tracker. */
 public enum Currency {
     PLN("PLN", "Polish Zloty", 2),
     EUR("EUR", "Euro", 2),

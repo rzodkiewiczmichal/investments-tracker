@@ -1,42 +1,44 @@
 package com.investments.tracker.cucumber.steps;
 
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Map;
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Money;
+import com.investments.tracker.domain.model.value.Price;
+import com.investments.tracker.domain.repository.PriceCache;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 /**
  * Cucumber step definitions for Portfolio Viewing feature.
- * <p>
- * Tests portfolio summary functionality including:
- * - Total current value
- * - Total invested amount
- * - P&L (profit/loss)
- * - P&L percentage
- * </p>
  *
- * @see <a href="requirements/functional/features/portfolio-viewing.feature">Portfolio Viewing Feature</a>
+ * <p>Tests portfolio summary functionality including: - Total current value - Total invested amount
+ * - P&L (profit/loss) - P&L percentage
+ *
+ * @see <a href="requirements/functional/features/portfolio-viewing.feature">Portfolio Viewing
+ *     Feature</a>
  */
 public class PortfolioSteps {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Autowired private TestRestTemplate restTemplate;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
+
+    @Autowired private PriceCache priceCache;
 
     private ResponseEntity<Map> portfolioResponse;
     private BigDecimal totalInvestedAmount;
@@ -48,8 +50,10 @@ public class PortfolioSteps {
     public void iHavePositionsWithoutCurrentPrices() {
         Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "No Price Account");
         String symbol = "NOPRICE";
-        CucumberTestHelper.ensureInstrumentExistsWithoutPrice(jdbcTemplate, symbol, "No Price Stock");
-        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, new BigDecimal("50"), new BigDecimal("100"));
+        CucumberTestHelper.ensureInstrumentExistsWithoutPrice(
+                jdbcTemplate, symbol, "No Price Stock");
+        CucumberTestHelper.createPosition(
+                jdbcTemplate, symbol, accountId, new BigDecimal("50"), new BigDecimal("100"));
     }
 
     @Given("my total invested amount is {int} PLN")
@@ -66,39 +70,43 @@ public class PortfolioSteps {
         BigDecimal costPerShare = totalInvestedAmount.divide(quantity, 4, RoundingMode.HALF_EVEN);
         BigDecimal pricePerShare = totalCurrentValue.divide(quantity, 4, RoundingMode.HALF_EVEN);
 
-        Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Portfolio Test Account");
+        Long accountId =
+                CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Portfolio Test Account");
         String symbol = "PTEST";
-        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, "Portfolio Test Stock", pricePerShare);
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, symbol, "Portfolio Test Stock", pricePerShare);
         CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, quantity, costPerShare);
+        priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(pricePerShare)));
     }
 
     @Given("I own {int} shares of {string} in account {string} bought at {int} PLN")
-    public void iOwnSharesOfInAccountBoughtAtPLN(Integer quantity, String instrument, String account, Integer price) {
+    public void iOwnSharesOfInAccountBoughtAtPLN(
+            Integer quantity, String instrument, String account, Integer price) {
         Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, account);
         String symbol = CucumberTestHelper.generateValidSymbol(instrument);
 
-        // Ensure instrument exists (price will be set by theCurrentPriceOfIsPLN step)
-        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, instrument, new BigDecimal(price));
-        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, new BigDecimal(quantity), new BigDecimal(price));
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, symbol, instrument, new BigDecimal(price));
+        CucumberTestHelper.createPosition(
+                jdbcTemplate, symbol, accountId, new BigDecimal(quantity), new BigDecimal(price));
+        priceCache.putPrice(
+                InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(price))));
     }
 
     @Given("the current price of {string} is {int} PLN")
     public void theCurrentPriceOfIsPLN(String instrument, Integer price) {
         String symbol = CucumberTestHelper.generateValidSymbol(instrument);
-        jdbcTemplate.update(
-                "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
-                new BigDecimal(price), symbol
-        );
+        priceCache.putPrice(
+                InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(price))));
     }
 
     // --- When Steps ---
 
     @When("I view my portfolio")
     public void iViewMyPortfolio() {
-        portfolioResponse = restTemplate.getForEntity(
-                "http://localhost:" + port + "/api/v1/portfolio",
-                Map.class
-        );
+        portfolioResponse =
+                restTemplate.getForEntity(
+                        "http://localhost:" + port + "/api/v1/portfolio", Map.class);
     }
 
     // --- Then Steps ---
@@ -131,28 +139,36 @@ public class PortfolioSteps {
 
     @Then("I should see total current value of {int} PLN")
     public void iShouldSeeTotalCurrentValueOfPLN(Integer expectedValue) {
-        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalCurrentValue", "amount");
+        Object actualValue =
+                CucumberTestHelper.getNestedValue(
+                        portfolioResponse.getBody(), "totalCurrentValue", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedValue));
     }
 
     @Then("I should see total invested amount of {int} PLN")
     public void iShouldSeeTotalInvestedAmountOfPLN(Integer expectedAmount) {
-        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalInvestedAmount", "amount");
+        Object actualValue =
+                CucumberTestHelper.getNestedValue(
+                        portfolioResponse.getBody(), "totalInvestedAmount", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedAmount));
     }
 
     @Then("I should see P&L of +{int} PLN")
     public void iShouldSeePLOfPlusXPLN(Integer expectedPL) {
-        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
+        Object actualValue =
+                CucumberTestHelper.getNestedValue(
+                        portfolioResponse.getBody(), "totalProfitLoss", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedPL));
     }
 
     @Then("I should see P&L of -{int} PLN")
     public void iShouldSeePLOfMinusXPLN(Integer expectedPL) {
-        Object actualValue = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
+        Object actualValue =
+                CucumberTestHelper.getNestedValue(
+                        portfolioResponse.getBody(), "totalProfitLoss", "amount");
         assertThat(new BigDecimal(actualValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(-expectedPL));
     }
@@ -181,8 +197,11 @@ public class PortfolioSteps {
     @Then("I should not see total P&L")
     public void iShouldNotSeeTotalPL() {
         assertThat(portfolioResponse.getStatusCode().is2xxSuccessful()).isTrue();
-        Object totalProfitLoss = CucumberTestHelper.getNestedValue(portfolioResponse.getBody(), "totalProfitLoss", "amount");
-        // When prices are unknown, totalProfitLoss should be zero (default) and totalReturnPercentage should be zero
+        Object totalProfitLoss =
+                CucumberTestHelper.getNestedValue(
+                        portfolioResponse.getBody(), "totalProfitLoss", "amount");
+        // When prices are unknown, totalProfitLoss should be zero (default) and
+        // totalReturnPercentage should be zero
         assertThat(new BigDecimal(totalProfitLoss.toString()))
                 .isEqualByComparingTo(BigDecimal.ZERO);
     }

@@ -1,18 +1,17 @@
 package com.investments.tracker.application.dto.mapper;
 
+import java.math.BigDecimal;
+
+import org.springframework.stereotype.Component;
+
 import com.investments.tracker.application.dto.response.MoneyDTO;
 import com.investments.tracker.application.dto.response.PortfolioSummaryResponse;
 import com.investments.tracker.domain.model.Portfolio;
 import com.investments.tracker.domain.model.PortfolioMetrics;
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.Money;
-import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
-/**
- * Mapper for Portfolio domain objects to DTOs.
- */
+/** Mapper for Portfolio domain objects to DTOs. */
 @Component
 public class PortfolioMapper {
 
@@ -27,22 +26,26 @@ public class PortfolioMapper {
     public PortfolioSummaryResponse toSummaryResponse(Portfolio portfolio) {
         PortfolioMetrics metrics = portfolio.metrics();
 
-        MoneyDTO totalCurrentValue = metrics.totalCurrentValue() != null
-                ? toMoneyDTO(metrics.totalCurrentValue().money())
-                : null;
+        MoneyDTO totalCurrentValue =
+                metrics.totalCurrentValue() != null
+                        ? toMoneyDTO(metrics.totalCurrentValue().money())
+                        : null;
 
         // PortfolioMetrics allows null for empty portfolios or unknown prices (by design)
-        MoneyDTO totalInvestedAmount = metrics.totalInvestedAmount() != null
-                ? toMoneyDTO(metrics.totalInvestedAmount().money())
-                : new MoneyDTO(BigDecimal.ZERO, DEFAULT_CURRENCY);
+        MoneyDTO totalInvestedAmount =
+                metrics.totalInvestedAmount() != null
+                        ? toMoneyDTO(metrics.totalInvestedAmount().money())
+                        : new MoneyDTO(BigDecimal.ZERO, DEFAULT_CURRENCY);
 
-        MoneyDTO totalProfitLoss = metrics.profitAndLoss() != null
-                ? toMoneyDTO(metrics.profitAndLoss().amount())
-                : new MoneyDTO(BigDecimal.ZERO, DEFAULT_CURRENCY);
+        MoneyDTO totalProfitLoss =
+                metrics.profitAndLoss() != null
+                        ? toMoneyDTO(metrics.profitAndLoss().amount())
+                        : new MoneyDTO(BigDecimal.ZERO, DEFAULT_CURRENCY);
 
-        BigDecimal returnPercentage = metrics.profitAndLoss() != null
-                ? metrics.profitAndLoss().percentage().value()
-                : BigDecimal.ZERO;
+        BigDecimal returnPercentage =
+                metrics.profitAndLoss() != null
+                        ? metrics.profitAndLoss().percentage().value()
+                        : BigDecimal.ZERO;
 
         String message = metrics.totalPositions() == 0 ? "No positions yet" : null;
 

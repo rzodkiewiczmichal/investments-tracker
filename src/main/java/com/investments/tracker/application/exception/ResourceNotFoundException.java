@@ -1,9 +1,6 @@
 package com.investments.tracker.application.exception;
 
-/**
- * Exception thrown when a requested resource is not found.
- * Maps to HTTP 404 Not Found.
- */
+/** Exception thrown when a requested resource is not found. Maps to HTTP 404 Not Found. */
 public class ResourceNotFoundException extends RuntimeException {
 
     private final String resourceType;

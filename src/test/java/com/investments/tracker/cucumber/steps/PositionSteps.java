@@ -1,13 +1,6 @@
 package com.investments.tracker.cucumber.steps;
 
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -15,29 +8,39 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Money;
+import com.investments.tracker.domain.model.value.Price;
+import com.investments.tracker.domain.repository.PriceCache;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 /**
  * Cucumber step definitions for Position Details feature.
- * <p>
- * Tests position detail functionality including:
- * - Individual position metrics
- * - Position listing
- * - P&L calculations
- * </p>
  *
- * @see <a href="requirements/functional/features/position-details.feature">Position Details Feature</a>
+ * <p>Tests position detail functionality including: - Individual position metrics - Position
+ * listing - P&L calculations
+ *
+ * @see <a href="requirements/functional/features/position-details.feature">Position Details
+ *     Feature</a>
  */
 public class PositionSteps {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Autowired private TestRestTemplate restTemplate;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
+
+    @Autowired private PriceCache priceCache;
 
     private ResponseEntity<Map> positionResponse;
     private ResponseEntity<Map> positionsListResponse;
@@ -46,17 +49,27 @@ public class PositionSteps {
     // --- Given Steps ---
 
     @Given("I own {int} shares of {string} with average cost of {int} PLN")
-    public void iOwnSharesOfWithAverageCostOfPLN(Integer quantity, String instrument, Integer averageCost) {
+    public void iOwnSharesOfWithAverageCostOfPLN(
+            Integer quantity, String instrument, Integer averageCost) {
         String symbol = CucumberTestHelper.generateValidSymbol(instrument);
         instrumentSymbols.put(instrument, symbol);
 
         Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Test Account");
-        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, instrument, new BigDecimal(averageCost));
-        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, new BigDecimal(quantity), new BigDecimal(averageCost));
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, symbol, instrument, new BigDecimal(averageCost));
+        CucumberTestHelper.createPosition(
+                jdbcTemplate,
+                symbol,
+                accountId,
+                new BigDecimal(quantity),
+                new BigDecimal(averageCost));
+        priceCache.putPrice(
+                InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(averageCost))));
     }
 
     @Given("I own {int} units of {string} with average cost of {int} PLN")
-    public void iOwnUnitsOfWithAverageCostOfPLN(Integer quantity, String instrument, Integer averageCost) {
+    public void iOwnUnitsOfWithAverageCostOfPLN(
+            Integer quantity, String instrument, Integer averageCost) {
         // Same as shares, just for ETFs
         iOwnSharesOfWithAverageCostOfPLN(quantity, instrument, averageCost);
     }
@@ -79,18 +92,21 @@ public class PositionSteps {
         instrumentSymbols.put("Polish Government Bond", symbol);
 
         Long accountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Bond Account");
-        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, "Polish Government Bond", new BigDecimal(investedAmount));
-        CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, BigDecimal.ONE, new BigDecimal(investedAmount));
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, symbol, "Polish Government Bond", new BigDecimal(investedAmount));
+        CucumberTestHelper.createPosition(
+                jdbcTemplate, symbol, accountId, BigDecimal.ONE, new BigDecimal(investedAmount));
+        priceCache.putPrice(
+                InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(investedAmount))));
     }
 
     @Given("the current value of these bonds is {int} PLN")
     public void theCurrentValueOfTheseBondsIsPLN(Integer currentValue) {
         String symbol = instrumentSymbols.get("Polish Government Bond");
         if (symbol != null) {
-            jdbcTemplate.update(
-                    "UPDATE instruments SET current_price_amount = ?, price_updated_at = CURRENT_TIMESTAMP WHERE symbol = ?",
-                    new BigDecimal(currentValue), symbol
-            );
+            priceCache.putPrice(
+                    InstrumentSymbol.of(symbol),
+                    new Price(Money.pln(new BigDecimal(currentValue))));
         }
     }
 
@@ -98,11 +114,12 @@ public class PositionSteps {
 
     @When("I view the position details for {string}")
     public void iViewThePositionDetailsFor(String instrument) {
-        String symbol = instrumentSymbols.getOrDefault(instrument, CucumberTestHelper.generateValidSymbol(instrument));
-        positionResponse = restTemplate.getForEntity(
-                "http://localhost:" + port + "/api/v1/positions/" + symbol,
-                Map.class
-        );
+        String symbol =
+                instrumentSymbols.getOrDefault(
+                        instrument, CucumberTestHelper.generateValidSymbol(instrument));
+        positionResponse =
+                restTemplate.getForEntity(
+                        "http://localhost:" + port + "/api/v1/positions/" + symbol, Map.class);
     }
 
     @When("I view the position details for Polish government bonds")
@@ -112,10 +129,9 @@ public class PositionSteps {
 
     @When("I view the positions list")
     public void iViewThePositionsList() {
-        positionsListResponse = restTemplate.getForEntity(
-                "http://localhost:" + port + "/api/v1/positions",
-                Map.class
-        );
+        positionsListResponse =
+                restTemplate.getForEntity(
+                        "http://localhost:" + port + "/api/v1/positions", Map.class);
     }
 
     // --- Then Steps ---
@@ -123,7 +139,11 @@ public class PositionSteps {
     @Then("I should see quantity of {int} shares")
     public void iShouldSeeQuantityOfShares(Integer expectedQuantity) {
         assertThat(positionResponse.getStatusCode().is2xxSuccessful())
-                .as("Expected successful response but got: " + positionResponse.getStatusCode() + ", body: " + positionResponse.getBody())
+                .as(
+                        "Expected successful response but got: "
+                                + positionResponse.getStatusCode()
+                                + ", body: "
+                                + positionResponse.getBody())
                 .isTrue();
         assertThat(positionResponse.getBody()).isNotNull();
         Object quantity = positionResponse.getBody().get("quantity");
@@ -139,7 +159,9 @@ public class PositionSteps {
     @Then("I should see average cost basis of {int} PLN")
     public void iShouldSeeAverageCostBasisOfPLN(Integer expectedCost) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object averageCost = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "averageCost", "amount");
+        Object averageCost =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "averageCost", "amount");
         assertThat(new BigDecimal(averageCost.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedCost));
     }
@@ -147,7 +169,9 @@ public class PositionSteps {
     @Then("I should see invested amount of {int} PLN")
     public void iShouldSeeInvestedAmountOfPLN(Integer expectedAmount) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object investedAmount = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "investedAmount", "amount");
+        Object investedAmount =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "investedAmount", "amount");
         assertThat(new BigDecimal(investedAmount.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedAmount));
     }
@@ -155,7 +179,9 @@ public class PositionSteps {
     @Then("I should see current value of {int} PLN")
     public void iShouldSeeCurrentValueOfPLN(Integer expectedValue) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object currentValue = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "currentValue", "amount");
+        Object currentValue =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "currentValue", "amount");
         assertThat(new BigDecimal(currentValue.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedValue));
     }
@@ -163,7 +189,9 @@ public class PositionSteps {
     @Then("I should see position P&L of +{int} PLN")
     public void iShouldSeePositionPLOfPlusPLN(Integer expectedPL) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object profitLoss = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "profitLoss", "amount");
+        Object profitLoss =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "profitLoss", "amount");
         assertThat(new BigDecimal(profitLoss.toString()))
                 .isEqualByComparingTo(new BigDecimal(expectedPL));
     }
@@ -171,7 +199,9 @@ public class PositionSteps {
     @Then("I should see position P&L of -{int} PLN")
     public void iShouldSeePositionPLOfMinusPLN(Integer expectedPL) {
         assertThat(positionResponse.getBody()).isNotNull();
-        Object profitLoss = CucumberTestHelper.getNestedValue(positionResponse.getBody(), "profitLoss", "amount");
+        Object profitLoss =
+                CucumberTestHelper.getNestedValue(
+                        positionResponse.getBody(), "profitLoss", "amount");
         assertThat(new BigDecimal(profitLoss.toString()))
                 .isEqualByComparingTo(new BigDecimal(-expectedPL));
     }
@@ -180,7 +210,9 @@ public class PositionSteps {
     public void iShouldSeePositionPLPercentageOfPlus(Double expectedPercentage) {
         assertThat(positionResponse.getBody()).isNotNull();
         Object profitLossPercentage = positionResponse.getBody().get("returnPercentage");
-        assertThat(new BigDecimal(profitLossPercentage.toString()).setScale(2, RoundingMode.HALF_EVEN))
+        assertThat(
+                        new BigDecimal(profitLossPercentage.toString())
+                                .setScale(2, RoundingMode.HALF_EVEN))
                 .isEqualByComparingTo(BigDecimal.valueOf(expectedPercentage));
     }
 
@@ -188,7 +220,9 @@ public class PositionSteps {
     public void iShouldSeePositionPLPercentageOfMinus(Double expectedPercentage) {
         assertThat(positionResponse.getBody()).isNotNull();
         Object profitLossPercentage = positionResponse.getBody().get("returnPercentage");
-        assertThat(new BigDecimal(profitLossPercentage.toString()).setScale(2, RoundingMode.HALF_EVEN))
+        assertThat(
+                        new BigDecimal(profitLossPercentage.toString())
+                                .setScale(2, RoundingMode.HALF_EVEN))
                 .isEqualByComparingTo(BigDecimal.valueOf(-expectedPercentage));
     }
 
@@ -211,7 +245,8 @@ public class PositionSteps {
     public void eachPositionShouldShowInstrumentName() {
         assertThat(positionsListResponse.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> positions = (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
+        List<Map<String, Object>> positions =
+                (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
         for (Map<String, Object> position : positions) {
             assertThat(position).containsKey("instrumentName");
         }
@@ -221,7 +256,8 @@ public class PositionSteps {
     public void eachPositionShouldShowCurrentValue() {
         assertThat(positionsListResponse.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> positions = (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
+        List<Map<String, Object>> positions =
+                (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
         for (Map<String, Object> position : positions) {
             assertThat(position).containsKey("currentValue");
         }
@@ -231,7 +267,8 @@ public class PositionSteps {
     public void eachPositionShouldShowPLPercentage() {
         assertThat(positionsListResponse.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> positions = (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
+        List<Map<String, Object>> positions =
+                (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
         for (Map<String, Object> position : positions) {
             assertThat(position).containsKey("returnPercentage");
         }
@@ -241,14 +278,17 @@ public class PositionSteps {
     public void positionsShouldBeSortedByCurrentValueDescending() {
         assertThat(positionsListResponse.getBody()).isNotNull();
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> positions = (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
+        List<Map<String, Object>> positions =
+                (List<Map<String, Object>>) positionsListResponse.getBody().get("positions");
 
         if (positions.size() > 1) {
             for (int i = 0; i < positions.size() - 1; i++) {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> currentValue = (Map<String, Object>) positions.get(i).get("currentValue");
+                Map<String, Object> currentValue =
+                        (Map<String, Object>) positions.get(i).get("currentValue");
                 @SuppressWarnings("unchecked")
-                Map<String, Object> nextValue = (Map<String, Object>) positions.get(i + 1).get("currentValue");
+                Map<String, Object> nextValue =
+                        (Map<String, Object>) positions.get(i + 1).get("currentValue");
                 BigDecimal current = new BigDecimal(currentValue.get("amount").toString());
                 BigDecimal next = new BigDecimal(nextValue.get("amount").toString());
                 assertThat(current).isGreaterThanOrEqualTo(next);

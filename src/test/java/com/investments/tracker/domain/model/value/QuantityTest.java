@@ -1,14 +1,15 @@
 package com.investments.tracker.domain.model.value;
 
-import com.investments.tracker.domain.exception.InvalidQuantityException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.investments.tracker.domain.exception.InvalidQuantityException;
 
 @DisplayName("Quantity value object")
 class QuantityTest {
@@ -44,8 +45,7 @@ class QuantityTest {
         @Test
         @DisplayName("throws exception for null value")
         void throwsForNullValue() {
-            assertThatThrownBy(() -> new Quantity(null))
-                    .isInstanceOf(NullPointerException.class);
+            assertThatThrownBy(() -> new Quantity(null)).isInstanceOf(NullPointerException.class);
         }
 
         @Test
