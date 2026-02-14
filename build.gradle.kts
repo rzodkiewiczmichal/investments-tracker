@@ -3,6 +3,7 @@ plugins {
     jacoco
     id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management") version "1.1.7"
+    id("com.diffplug.spotless") version "7.0.2"
 }
 
 group = "com.investments"
@@ -79,6 +80,17 @@ dependencyManagement {
     }
 }
 
+spotless {
+    java {
+        target("src/**/*.java")
+        googleJavaFormat("1.25.2").aosp()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+        importOrder("java", "javax", "jakarta", "org", "com", "")
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
     testLogging {
@@ -111,7 +123,8 @@ jacoco {
 }
 
 tasks.jacocoTestReport {
-    dependsOn(tasks.test)
+    dependsOn(tasks.test, tasks.named("integrationTest"), tasks.named("cucumberTest"))
+    executionData.setFrom(fileTree(layout.buildDirectory).include("jacoco/*.exec"))
     reports {
         xml.required.set(true)
         html.required.set(true)
@@ -133,6 +146,19 @@ tasks.jacocoTestReport {
 
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
+    executionData.setFrom(fileTree(layout.buildDirectory).include("jacoco/*.exec"))
+    classDirectories.setFrom(
+        files(tasks.jacocoTestReport.get().classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/InvestmentTrackerApplication.class",
+                    "**/dto/**",
+                    "**/config/**",
+                    "**/*JdbcEntity.class"
+                )
+            }
+        })
+    )
     violationRules {
         rule {
             limit {
@@ -189,4 +215,5 @@ tasks.register<Test>("cucumberTest") {
 // Add integrationTest and cucumberTest to check task
 tasks.named("check") {
     dependsOn(tasks.named("integrationTest"))
+    dependsOn(tasks.named("cucumberTest"))
 }

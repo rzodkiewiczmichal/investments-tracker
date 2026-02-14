@@ -1,10 +1,10 @@
 package com.investments.tracker.domain.model.value;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("ProfitAndLoss value object")
 class ProfitAndLossTest {

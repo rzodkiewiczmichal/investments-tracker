@@ -1,5 +1,13 @@
 package com.investments.tracker.domain.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.CurrentValue;
@@ -8,13 +16,6 @@ import com.investments.tracker.domain.model.value.InvestedAmount;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.ProfitAndLoss;
 import com.investments.tracker.domain.model.value.Quantity;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Portfolio aggregate")
 class PortfolioTest {
@@ -45,13 +46,14 @@ class PortfolioTest {
         void createsFromPositionsAndMetrics() {
             Position p1 = createPosition("AAPL", 100, "500");
             Position p2 = createPosition("MSFT", 50, "300");
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("65000")),
-                    new CurrentValue(Money.pln("71000")),
-                    ProfitAndLoss.calculate(
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(
+                            new InvestedAmount(Money.pln("65000")),
                             new CurrentValue(Money.pln("71000")),
-                            new InvestedAmount(Money.pln("65000"))),
-                    2);
+                            ProfitAndLoss.calculate(
+                                    new CurrentValue(Money.pln("71000")),
+                                    new InvestedAmount(Money.pln("65000"))),
+                            2);
 
             Portfolio portfolio = new Portfolio(List.of(p1, p2), metrics);
 
@@ -62,12 +64,10 @@ class PortfolioTest {
         @Test
         @DisplayName("returns invested amount")
         void returnsInvestedAmount() {
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("65000")),
-                    null,
-                    null,
-                    1);
-            Portfolio portfolio = new Portfolio(List.of(createPosition("AAPL", 100, "500")), metrics);
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(new InvestedAmount(Money.pln("65000")), null, null, 1);
+            Portfolio portfolio =
+                    new Portfolio(List.of(createPosition("AAPL", 100, "500")), metrics);
 
             assertThat(portfolio.getTotalInvestedAmount()).isPresent();
             assertThat(portfolio.getTotalInvestedAmount().get().money().amount())
@@ -77,12 +77,10 @@ class PortfolioTest {
         @Test
         @DisplayName("returns empty current value when prices are unknown")
         void returnsEmptyCurrentValueWhenPricesUnknown() {
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("65000")),
-                    null,
-                    null,
-                    1);
-            Portfolio portfolio = new Portfolio(List.of(createPosition("AAPL", 100, "500")), metrics);
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(new InvestedAmount(Money.pln("65000")), null, null, 1);
+            Portfolio portfolio =
+                    new Portfolio(List.of(createPosition("AAPL", 100, "500")), metrics);
 
             assertThat(portfolio.getTotalCurrentValue()).isEmpty();
             assertThat(portfolio.getTotalProfitAndLoss()).isEmpty();
@@ -118,13 +116,14 @@ class PortfolioTest {
         @Test
         @DisplayName("formats summary with all metrics available")
         void formatsSummaryWithAllMetrics() {
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("50000")),
-                    new CurrentValue(Money.pln("55000")),
-                    ProfitAndLoss.calculate(
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(
+                            new InvestedAmount(Money.pln("50000")),
                             new CurrentValue(Money.pln("55000")),
-                            new InvestedAmount(Money.pln("50000"))),
-                    1);
+                            ProfitAndLoss.calculate(
+                                    new CurrentValue(Money.pln("55000")),
+                                    new InvestedAmount(Money.pln("50000"))),
+                            1);
 
             String summary = metrics.formatSummary();
 
@@ -137,11 +136,8 @@ class PortfolioTest {
         @Test
         @DisplayName("formats summary without current value when prices unknown")
         void formatsSummaryWithoutCurrentValue() {
-            PortfolioMetrics metrics = new PortfolioMetrics(
-                    new InvestedAmount(Money.pln("50000")),
-                    null,
-                    null,
-                    1);
+            PortfolioMetrics metrics =
+                    new PortfolioMetrics(new InvestedAmount(Money.pln("50000")), null, null, 1);
 
             String summary = metrics.formatSummary();
 
@@ -155,6 +151,8 @@ class PortfolioTest {
     private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))));
+                List.of(
+                        new AccountHolding(
+                                new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))));
     }
 }

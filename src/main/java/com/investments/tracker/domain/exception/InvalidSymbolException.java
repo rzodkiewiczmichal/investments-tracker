@@ -2,10 +2,9 @@ package com.investments.tracker.domain.exception;
 
 /**
  * Exception thrown when an instrument symbol value is invalid.
- * <p>
- * A symbol is invalid if it is blank, null, or does not match
- * either a ticker (1-10 uppercase alphanumeric) or ISIN format.
- * </p>
+ *
+ * <p>A symbol is invalid if it is blank, null, or does not match either a ticker (1-10 uppercase
+ * alphanumeric) or ISIN format.
  */
 public class InvalidSymbolException extends DomainException {
 

@@ -1,5 +1,26 @@
 package com.investments.tracker.infrastructure.web.controller;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.investments.tracker.application.dto.mapper.PositionMapper;
 import com.investments.tracker.application.dto.request.AddPositionRequest;
 import com.investments.tracker.application.dto.request.UpdatePositionRequest;
@@ -26,29 +47,8 @@ import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.ExchangeRateProvider;
 import com.investments.tracker.domain.repository.PriceCache;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-/**
- * REST controller for position operations.
- */
+/** REST controller for position operations. */
 @RestController
 @RequestMapping("/api/v1/positions")
 public class PositionController {
@@ -86,33 +86,42 @@ public class PositionController {
     @GetMapping
     public PositionListResponse listPositions() {
         Collection<Position> positions = positionQueryUseCase.listPositions();
-        Map<InstrumentSymbol, Instrument> instrumentMap = instrumentQueryUseCase.listInstruments()
-                .stream()
-                .collect(Collectors.toMap(Instrument::symbol, Function.identity()));
+        Map<InstrumentSymbol, Instrument> instrumentMap =
+                instrumentQueryUseCase.listInstruments().stream()
+                        .collect(Collectors.toMap(Instrument::symbol, Function.identity()));
 
-        Map<InstrumentSymbol, Price> prices = priceCache.getPrices(
-                positions.stream().map(Position::symbol).toList());
+        Map<InstrumentSymbol, Price> prices =
+                priceCache.getPrices(positions.stream().map(Position::symbol).toList());
 
-        Set<Currency> currencies = positions.stream()
-                .flatMap(p -> p.holdings().stream())
-                .map(h -> h.costBasis().currency())
-                .collect(Collectors.toSet());
-        Map<Currency, ExchangeRate> exchangeRates = exchangeRateProvider.getExchangeRatesToPln(currencies);
+        Set<Currency> currencies =
+                positions.stream()
+                        .flatMap(p -> p.holdings().stream())
+                        .map(h -> h.costBasis().currency())
+                        .collect(Collectors.toSet());
+        Map<Currency, ExchangeRate> exchangeRates =
+                exchangeRateProvider.getExchangeRatesToPln(currencies);
 
-        List<PositionSummaryDTO> summaries = positions.stream()
-                .map(position -> {
-                    Instrument instrument = instrumentMap.get(position.symbol());
-                    if (instrument == null) {
-                        throw new ResourceNotFoundException(
-                                "Instrument", "symbol", position.symbol().value());
-                    }
-                    Price price = prices.get(position.symbol());
-                    return positionMapper.toSummaryDTO(position, instrument, price, exchangeRates);
-                })
-                .sorted(Comparator.comparing(
-                        (PositionSummaryDTO dto) -> dto.currentValue() != null ? dto.currentValue().amount() : null,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .toList();
+        List<PositionSummaryDTO> summaries =
+                positions.stream()
+                        .map(
+                                position -> {
+                                    Instrument instrument = instrumentMap.get(position.symbol());
+                                    if (instrument == null) {
+                                        throw new ResourceNotFoundException(
+                                                "Instrument", "symbol", position.symbol().value());
+                                    }
+                                    Price price = prices.get(position.symbol());
+                                    return positionMapper.toSummaryDTO(
+                                            position, instrument, price, exchangeRates);
+                                })
+                        .sorted(
+                                Comparator.comparing(
+                                        (PositionSummaryDTO dto) ->
+                                                dto.currentValue() != null
+                                                        ? dto.currentValue().amount()
+                                                        : null,
+                                        Comparator.nullsLast(Comparator.reverseOrder())))
+                        .toList();
 
         return new PositionListResponse(summaries, summaries.size());
     }
@@ -131,7 +140,8 @@ public class PositionController {
         Price currentPrice = priceCache.getPrice(instrumentSymbol).orElse(null);
         Map<AccountId, String> accountNames = getAccountNames(position);
         Map<Currency, ExchangeRate> exchangeRates = getExchangeRates(position);
-        return positionMapper.toDetailResponse(position, instrument, currentPrice, accountNames, exchangeRates);
+        return positionMapper.toDetailResponse(
+                position, instrument, currentPrice, accountNames, exchangeRates);
     }
 
     /**
@@ -145,19 +155,21 @@ public class PositionController {
     public PositionDetailResponse addPosition(@Valid @RequestBody AddPositionRequest request) {
         InstrumentSymbol instrumentSymbol = new InstrumentSymbol(request.instrumentSymbol());
         Currency currency = Currency.valueOf(request.currency());
-        Position position = positionCommandUseCase.addPosition(
-                instrumentSymbol,
-                new InstrumentName(request.instrumentName()),
-                InstrumentType.valueOf(request.instrumentType()),
-                currency,
-                new AccountId(request.accountId()),
-                new Quantity(request.quantity()),
-                CostBasis.of(new Money(request.averageCost(), currency)));
+        Position position =
+                positionCommandUseCase.addPosition(
+                        instrumentSymbol,
+                        new InstrumentName(request.instrumentName()),
+                        InstrumentType.valueOf(request.instrumentType()),
+                        currency,
+                        new AccountId(request.accountId()),
+                        new Quantity(request.quantity()),
+                        CostBasis.of(new Money(request.averageCost(), currency)));
         Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         Price currentPrice = priceCache.getPrice(instrumentSymbol).orElse(null);
         Map<AccountId, String> accountNames = getAccountNames(position);
         Map<Currency, ExchangeRate> exchangeRates = getExchangeRates(position);
-        return positionMapper.toDetailResponse(position, instrument, currentPrice, accountNames, exchangeRates);
+        return positionMapper.toDetailResponse(
+                position, instrument, currentPrice, accountNames, exchangeRates);
     }
 
     /**
@@ -169,28 +181,28 @@ public class PositionController {
      */
     @PutMapping("/{symbol}")
     public PositionDetailResponse updatePosition(
-            @PathVariable String symbol,
-            @Valid @RequestBody UpdatePositionRequest request) {
+            @PathVariable String symbol, @Valid @RequestBody UpdatePositionRequest request) {
         InstrumentSymbol instrumentSymbol = new InstrumentSymbol(symbol);
         Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
-        Position position = positionCommandUseCase.updatePosition(
-                instrumentSymbol,
-                new AccountId(request.accountId()),
-                new Quantity(request.quantity()),
-                CostBasis.of(new Money(request.averageCost(), instrument.currency())));
+        Position position =
+                positionCommandUseCase.updatePosition(
+                        instrumentSymbol,
+                        new AccountId(request.accountId()),
+                        new Quantity(request.quantity()),
+                        CostBasis.of(new Money(request.averageCost(), instrument.currency())));
         Price currentPrice = priceCache.getPrice(instrumentSymbol).orElse(null);
         Map<AccountId, String> accountNames = getAccountNames(position);
         Map<Currency, ExchangeRate> exchangeRates = getExchangeRates(position);
-        return positionMapper.toDetailResponse(position, instrument, currentPrice, accountNames, exchangeRates);
+        return positionMapper.toDetailResponse(
+                position, instrument, currentPrice, accountNames, exchangeRates);
     }
 
-    /**
-     * Gets exchange rates to PLN for all currencies in a position's holdings.
-     */
+    /** Gets exchange rates to PLN for all currencies in a position's holdings. */
     private Map<Currency, ExchangeRate> getExchangeRates(Position position) {
-        Set<Currency> currencies = position.holdings().stream()
-                .map(h -> h.costBasis().currency())
-                .collect(Collectors.toSet());
+        Set<Currency> currencies =
+                position.holdings().stream()
+                        .map(h -> h.costBasis().currency())
+                        .collect(Collectors.toSet());
         return exchangeRateProvider.getExchangeRatesToPln(currencies);
     }
 

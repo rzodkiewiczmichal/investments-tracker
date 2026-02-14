@@ -1,17 +1,15 @@
 package com.investments.tracker.domain.model.value;
 
-import com.investments.tracker.domain.exception.DomainException;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import com.investments.tracker.domain.exception.DomainException;
+
 /**
  * Value object representing an exchange rate between two currencies.
- * <p>
- * Immutable representation of how much 1 unit of the source currency
- * is worth in the target currency.
- * Example: ExchangeRate(GBP, PLN, 5.2500) means 1 GBP = 5.25 PLN.
- * </p>
+ *
+ * <p>Immutable representation of how much 1 unit of the source currency is worth in the target
+ * currency. Example: ExchangeRate(GBP, PLN, 5.2500) means 1 GBP = 5.25 PLN.
  */
 public record ExchangeRate(Currency from, Currency to, BigDecimal rate) {
 

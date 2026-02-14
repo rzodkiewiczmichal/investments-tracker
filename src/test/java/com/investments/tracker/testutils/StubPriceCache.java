@@ -1,22 +1,22 @@
 package com.investments.tracker.testutils;
 
-import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.domain.repository.PriceCache;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
+
+import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Price;
+import com.investments.tracker.domain.repository.PriceCache;
+
 /**
  * In-memory stub implementation of PriceCache for integration and BDD tests.
- * <p>
- * Marked as {@code @Primary} to override any Redis-backed PriceCache adapter
- * in the Spring test context. Returns empty prices by default (no prices cached).
- * Tests can pre-populate prices via {@link #putPrice}.
- * </p>
+ *
+ * <p>Marked as {@code @Primary} to override any Redis-backed PriceCache adapter in the Spring test
+ * context. Returns empty prices by default (no prices cached). Tests can pre-populate prices via
+ * {@link #putPrice}.
  */
 @Component
 @Primary

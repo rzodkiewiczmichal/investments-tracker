@@ -1,5 +1,12 @@
 package com.investments.tracker.application.dto.mapper;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
+
 import com.investments.tracker.application.dto.response.AccountHoldingDTO;
 import com.investments.tracker.application.dto.response.MoneyDTO;
 import com.investments.tracker.application.dto.response.PositionDetailResponse;
@@ -18,16 +25,8 @@ import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.ProfitAndLoss;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.service.PositionCalculationService;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-/**
- * Mapper for Position domain objects to DTOs.
- */
+/** Mapper for Position domain objects to DTOs. */
 @Component
 public class PositionMapper {
 
@@ -38,8 +37,8 @@ public class PositionMapper {
     }
 
     /**
-     * Maps a Position to PositionSummaryDTO, enriched with Instrument data.
-     * Aggregated monetary values (invested amount, current value, P&L) are converted to PLN.
+     * Maps a Position to PositionSummaryDTO, enriched with Instrument data. Aggregated monetary
+     * values (invested amount, current value, P&L) are converted to PLN.
      *
      * @param position the position domain object
      * @param instrument the instrument providing name and type
@@ -47,10 +46,13 @@ public class PositionMapper {
      * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
      * @return the position summary DTO
      */
-    public PositionSummaryDTO toSummaryDTO(Position position, Instrument instrument,
-                                            @Nullable Price currentPrice,
-                                            Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
-        PositionCalculations calc = calculateMetrics(position, currentPrice, exchangeRatesByCurrency);
+    public PositionSummaryDTO toSummaryDTO(
+            Position position,
+            Instrument instrument,
+            @Nullable Price currentPrice,
+            Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
+        PositionCalculations calc =
+                calculateMetrics(position, currentPrice, exchangeRatesByCurrency);
 
         return new PositionSummaryDTO(
                 position.symbol().value(),
@@ -65,8 +67,8 @@ public class PositionMapper {
     }
 
     /**
-     * Maps a Position to PositionDetailResponse, enriched with Instrument data.
-     * Aggregated monetary values (invested amount, current value, P&L) are converted to PLN.
+     * Maps a Position to PositionDetailResponse, enriched with Instrument data. Aggregated monetary
+     * values (invested amount, current value, P&L) are converted to PLN.
      *
      * @param position the position domain object
      * @param instrument the instrument providing name and type
@@ -75,15 +77,19 @@ public class PositionMapper {
      * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
      * @return the position detail response
      */
-    public PositionDetailResponse toDetailResponse(Position position, Instrument instrument,
-                                                   @Nullable Price currentPrice,
-                                                   Map<AccountId, String> accountNames,
-                                                   Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
-        PositionCalculations calc = calculateMetrics(position, currentPrice, exchangeRatesByCurrency);
+    public PositionDetailResponse toDetailResponse(
+            Position position,
+            Instrument instrument,
+            @Nullable Price currentPrice,
+            Map<AccountId, String> accountNames,
+            Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
+        PositionCalculations calc =
+                calculateMetrics(position, currentPrice, exchangeRatesByCurrency);
 
-        List<AccountHoldingDTO> holdingDTOs = position.holdings().stream()
-                .map(holding -> toAccountHoldingDTO(holding, accountNames))
-                .toList();
+        List<AccountHoldingDTO> holdingDTOs =
+                position.holdings().stream()
+                        .map(holding -> toAccountHoldingDTO(holding, accountNames))
+                        .toList();
 
         return new PositionDetailResponse(
                 position.symbol().value(),
@@ -99,32 +105,40 @@ public class PositionMapper {
                 holdingDTOs);
     }
 
-    private PositionCalculations calculateMetrics(Position position, @Nullable Price currentPrice,
-                                                   Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
+    private PositionCalculations calculateMetrics(
+            Position position,
+            @Nullable Price currentPrice,
+            Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
         Quantity totalQuantity = position.calculateTotalQuantity();
         CostBasis avgCostBasis = position.calculateWeightedAverageCostBasis();
         InvestedAmount nativeInvested = position.calculateInvestedAmount();
 
         Currency nativeCurrency = nativeInvested.currency();
         ExchangeRate exchangeRate = exchangeRatesByCurrency.get(nativeCurrency);
-        Objects.requireNonNull(exchangeRate,
-                "Missing exchange rate for currency: " + nativeCurrency);
+        Objects.requireNonNull(
+                exchangeRate, "Missing exchange rate for currency: " + nativeCurrency);
 
-        InvestedAmount investedAmount = new InvestedAmount(nativeInvested.money().convertTo(exchangeRate));
+        InvestedAmount investedAmount =
+                new InvestedAmount(nativeInvested.money().convertTo(exchangeRate));
 
         CurrentValue currentValue = null;
         ProfitAndLoss profitAndLoss = null;
 
         if (currentPrice != null) {
-            currentValue = positionCalculationService.calculateCurrentValue(position, currentPrice, exchangeRate);
-            profitAndLoss = positionCalculationService.calculateProfitAndLoss(position, currentPrice, exchangeRate);
+            currentValue =
+                    positionCalculationService.calculateCurrentValue(
+                            position, currentPrice, exchangeRate);
+            profitAndLoss =
+                    positionCalculationService.calculateProfitAndLoss(
+                            position, currentPrice, exchangeRate);
         }
 
         return new PositionCalculations(
                 totalQuantity, avgCostBasis, currentValue, investedAmount, profitAndLoss);
     }
 
-    private AccountHoldingDTO toAccountHoldingDTO(AccountHolding holding, Map<AccountId, String> accountNames) {
+    private AccountHoldingDTO toAccountHoldingDTO(
+            AccountHolding holding, Map<AccountId, String> accountNames) {
         String accountName = accountNames.getOrDefault(holding.accountId(), "Unknown Account");
 
         return new AccountHoldingDTO(
@@ -144,6 +158,5 @@ public class PositionMapper {
             CostBasis avgCostBasis,
             @Nullable CurrentValue currentValue,
             InvestedAmount investedAmount,
-            @Nullable ProfitAndLoss profitAndLoss) {
-    }
+            @Nullable ProfitAndLoss profitAndLoss) {}
 }

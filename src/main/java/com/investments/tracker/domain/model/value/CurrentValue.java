@@ -2,21 +2,20 @@ package com.investments.tracker.domain.model.value;
 
 import java.util.Objects;
 
+import com.investments.tracker.domain.exception.DomainException;
+
 /**
  * Value object representing the current market value.
- * <p>
- * Calculated as Quantity × Current Price. Typically positive for positions with holdings.
- * </p>
+ *
+ * <p>Calculated as Quantity × Current Price. Typically positive for positions with holdings.
  */
 public record CurrentValue(Money money) {
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public CurrentValue {
         Objects.requireNonNull(money, "Current value money cannot be null");
         if (money.isNegative()) {
-            throw new IllegalArgumentException("Current value cannot be negative, got: " + money.amount());
+            throw new DomainException("Current value cannot be negative, got: " + money.amount());
         }
     }
 

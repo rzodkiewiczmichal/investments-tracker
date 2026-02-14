@@ -1,22 +1,14 @@
 package com.investments.tracker.domain.model.value;
 
-/**
- * Types of financial instruments supported by the Investment Tracker.
- */
+/** Types of financial instruments supported by the Investment Tracker. */
 public enum InstrumentType {
-    /**
-     * Individual stock (equity).
-     */
+    /** Individual stock (equity). */
     STOCK("Stock"),
 
-    /**
-     * Exchange-Traded Fund (can be stock ETF or bond ETF).
-     */
+    /** Exchange-Traded Fund (can be stock ETF or bond ETF). */
     ETF("ETF"),
 
-    /**
-     * Polish government bond.
-     */
+    /** Polish government bond. */
     BOND("Bond");
 
     private final String displayName;

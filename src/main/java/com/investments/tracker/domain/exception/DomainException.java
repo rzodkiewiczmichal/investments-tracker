@@ -2,10 +2,8 @@ package com.investments.tracker.domain.exception;
 
 /**
  * Base exception for all domain-specific exceptions.
- * <p>
- * Domain exceptions represent business rule violations or
- * invalid domain operations.
- * </p>
+ *
+ * <p>Domain exceptions represent business rule violations or invalid domain operations.
  */
 public class DomainException extends RuntimeException {
 

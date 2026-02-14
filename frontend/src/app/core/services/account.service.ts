@@ -5,7 +5,7 @@ import { Account, AccountsResponse, CreateAccountRequest } from '../models';
 import { API_BASE_URL } from './api.config';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AccountService {
   private readonly http = inject(HttpClient);

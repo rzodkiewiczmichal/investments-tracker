@@ -2,9 +2,8 @@ package com.investments.tracker.domain.exception;
 
 /**
  * Exception thrown when a quantity value is invalid.
- * <p>
- * A quantity is invalid if it is negative, zero, or non-numeric.
- * </p>
+ *
+ * <p>A quantity is invalid if it is negative, zero, or non-numeric.
  */
 public class InvalidQuantityException extends DomainException {
 

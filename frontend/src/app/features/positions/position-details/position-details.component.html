@@ -1,11 +1,21 @@
 <div class="position-details">
   <div class="page-header">
-    <p-button label="Back to Portfolio" icon="pi pi-arrow-left" [text]="true" (onClick)="goBack()" />
+    <p-button
+      label="Back to Portfolio"
+      icon="pi pi-arrow-left"
+      [text]="true"
+      (onClick)="goBack()"
+    />
   </div>
 
   @if (error()) {
     <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
-    <p-button label="Back to Portfolio" icon="pi pi-arrow-left" severity="secondary" (onClick)="goBack()" />
+    <p-button
+      label="Back to Portfolio"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      (onClick)="goBack()"
+    />
   }
 
   @if (loading()) {
@@ -16,7 +26,7 @@
       </div>
       <p-divider />
       <div class="metrics-grid">
-        @for (i of [1,2,3,4]; track i) {
+        @for (i of [1, 2, 3, 4]; track i) {
           <div class="metric-skeleton">
             <p-skeleton width="60%" height="1rem" styleClass="mb-2" />
             <p-skeleton width="80%" height="2rem" />
@@ -33,7 +43,10 @@
           <h1>{{ position()!.instrumentName }}</h1>
           <div class="meta">
             <span class="symbol">{{ position()!.instrumentSymbol }}</span>
-            <p-tag [value]="position()!.instrumentType" [severity]="getInstrumentTypeSeverity(position()!.instrumentType)" />
+            <p-tag
+              [value]="position()!.instrumentType"
+              [severity]="getInstrumentTypeSeverity(position()!.instrumentType)"
+            />
           </div>
         </div>
         <div class="account-info">
@@ -101,7 +114,6 @@
           </p-card>
         </div>
       </section>
-
     </p-card>
   }
 </div>

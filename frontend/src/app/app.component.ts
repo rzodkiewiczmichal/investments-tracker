@@ -9,19 +9,19 @@ import { ButtonModule } from 'primeng/button';
   standalone: true,
   imports: [RouterOutlet, MenubarModule, ButtonModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
 })
 export class AppComponent {
   menuItems: MenuItem[] = [
     {
       label: 'Portfolio',
       icon: 'pi pi-chart-pie',
-      routerLink: '/portfolio'
+      routerLink: '/portfolio',
     },
     {
       label: 'Add Position',
       icon: 'pi pi-plus',
-      routerLink: '/positions/new'
-    }
+      routerLink: '/positions/new',
+    },
   ];
 }

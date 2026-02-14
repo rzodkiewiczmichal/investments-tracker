@@ -2,21 +2,20 @@ package com.investments.tracker.domain.model.value;
 
 import java.util.Objects;
 
+import com.investments.tracker.domain.exception.DomainException;
+
 /**
  * Value object representing the total invested amount.
- * <p>
- * Calculated as Quantity × CostBasis. Must be greater than zero.
- * </p>
+ *
+ * <p>Calculated as Quantity × CostBasis. Must be greater than zero.
  */
 public record InvestedAmount(Money money) {
 
-    /**
-     * Canonical constructor with validation.
-     */
+    /** Canonical constructor with validation. */
     public InvestedAmount {
         Objects.requireNonNull(money, "Invested amount money cannot be null");
         if (!money.isPositive()) {
-            throw new IllegalArgumentException("Invested amount must be positive, got: " + money.amount());
+            throw new DomainException("Invested amount must be positive, got: " + money.amount());
         }
     }
 

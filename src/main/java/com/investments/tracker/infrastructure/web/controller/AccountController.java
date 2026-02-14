@@ -1,5 +1,19 @@
 package com.investments.tracker.infrastructure.web.controller;
 
+import java.util.Collection;
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.investments.tracker.application.dto.mapper.AccountMapper;
 import com.investments.tracker.application.dto.request.CreateAccountRequest;
 import com.investments.tracker.application.dto.response.AccountDTO;
@@ -10,22 +24,8 @@ import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.AccountName;
 import com.investments.tracker.domain.model.value.BrokerName;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
-import java.util.List;
-
-/**
- * REST controller for account operations.
- */
+/** REST controller for account operations. */
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
@@ -51,9 +51,7 @@ public class AccountController {
     @GetMapping
     public AccountListResponse listAccounts() {
         Collection<Account> accounts = accountQueryUseCase.listAccounts();
-        List<AccountDTO> accountDTOs = accounts.stream()
-                .map(accountMapper::toDTO)
-                .toList();
+        List<AccountDTO> accountDTOs = accounts.stream().map(accountMapper::toDTO).toList();
         return new AccountListResponse(accountDTOs, accountDTOs.size());
     }
 
@@ -78,9 +76,9 @@ public class AccountController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AccountDTO createAccount(@Valid @RequestBody CreateAccountRequest request) {
-        Account account = accountCommandUseCase.createAccount(
-                new AccountName(request.name()),
-                new BrokerName(request.broker()));
+        Account account =
+                accountCommandUseCase.createAccount(
+                        new AccountName(request.name()), new BrokerName(request.broker()));
         return accountMapper.toDTO(account);
     }
 }

@@ -1,6 +1,5 @@
 package com.investments.tracker.infrastructure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,20 +12,18 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Base class for integration tests.
- * <p>
- * Provides:
- * - PostgreSQL database via Testcontainers
- * - Spring Boot application context
- * - MockMvc for REST API testing
- * - ObjectMapper for JSON serialization
- * </p>
- * <p>
- * All integration tests should extend this class to ensure consistent setup.
- * </p>
- * <p>
- * Usage:
+ *
+ * <p>Provides: - PostgreSQL database via Testcontainers - Spring Boot application context - MockMvc
+ * for REST API testing - ObjectMapper for JSON serialization
+ *
+ * <p>All integration tests should extend this class to ensure consistent setup.
+ *
+ * <p>Usage:
+ *
  * <pre>
  * class PositionControllerIntegrationTest extends IntegrationTestBase {
  *
@@ -39,11 +36,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  *     }
  * }
  * </pre>
- * </p>
  *
  * @see <a href="https://www.testcontainers.org/">Testcontainers Documentation</a>
  * @see <a href="../../docs/adr/ADR-012-test-architecture.md">ADR-012: Test Architecture</a>
- * @see <a href="../../docs/adr/ADR-013-mock-vs-real-dependencies.md">ADR-013: Mock vs Real Dependencies</a>
+ * @see <a href="../../docs/adr/ADR-013-mock-vs-real-dependencies.md">ADR-013: Mock vs Real
+ *     Dependencies</a>
  */
 @SpringBootTest
 @Testcontainers
@@ -53,36 +50,28 @@ public abstract class IntegrationTestBase {
 
     /**
      * PostgreSQL container shared across all integration tests.
-     * <p>
-     * Configuration:
-     * - Version: postgres:16-alpine (matches production)
-     * - Database: testdb
-     * - Username: test
-     * - Password: test
-     * - Reuse: enabled (faster test execution)
-     * </p>
+     *
+     * <p>Configuration: - Version: postgres:16-alpine (matches production) - Database: testdb -
+     * Username: test - Password: test - Reuse: enabled (faster test execution)
      */
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test")
-            .withReuse(true);  // Reuse container across tests for speed
+    static PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:16-alpine")
+                    .withDatabaseName("testdb")
+                    .withUsername("test")
+                    .withPassword("test")
+                    .withReuse(true); // Reuse container across tests for speed
 
     @Container
-    static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
-            .withExposedPorts(6379)
-            .withReuse(true);
+    static GenericContainer<?> redis =
+            new GenericContainer<>("redis:7-alpine").withExposedPorts(6379).withReuse(true);
 
     /**
      * Configure Spring Boot to use Testcontainers PostgreSQL and Redis.
-     * <p>
-     * Dynamically sets:
-     * - spring.datasource.url (from Testcontainers)
-     * - spring.datasource.username
-     * - spring.datasource.password
-     * - spring.flyway.enabled=true (run migrations)
-     * </p>
+     *
+     * <p>Dynamically sets: - spring.datasource.url (from Testcontainers) -
+     * spring.datasource.username - spring.datasource.password - spring.flyway.enabled=true (run
+     * migrations)
      */
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -96,30 +85,28 @@ public abstract class IntegrationTestBase {
 
     /**
      * MockMvc for testing REST controllers.
-     * <p>
-     * Use this to perform HTTP requests and assert responses without starting
-     * a full HTTP server.
-     * </p>
-     * <p>
-     * Example:
+     *
+     * <p>Use this to perform HTTP requests and assert responses without starting a full HTTP
+     * server.
+     *
+     * <p>Example:
+     *
      * <pre>
      * mockMvc.perform(get("/api/v1/portfolio"))
      *     .andExpect(status().isOk())
      *     .andExpect(jsonPath("$.positionsCount").value(3));
      * </pre>
-     * </p>
      */
-    @Autowired
-    protected MockMvc mockMvc;
+    @Autowired protected MockMvc mockMvc;
 
     /**
      * ObjectMapper for JSON serialization/deserialization.
-     * <p>
-     * Use this to convert objects to JSON strings for POST/PUT requests,
-     * and to parse JSON responses.
-     * </p>
-     * <p>
-     * Example:
+     *
+     * <p>Use this to convert objects to JSON strings for POST/PUT requests, and to parse JSON
+     * responses.
+     *
+     * <p>Example:
+     *
      * <pre>
      * String json = objectMapper.writeValueAsString(command);
      * mockMvc.perform(post("/api/v1/positions")
@@ -127,8 +114,6 @@ public abstract class IntegrationTestBase {
      *         .content(json))
      *     .andExpect(status().isCreated());
      * </pre>
-     * </p>
      */
-    @Autowired
-    protected ObjectMapper objectMapper;
+    @Autowired protected ObjectMapper objectMapper;
 }

@@ -1,13 +1,13 @@
 package com.investments.tracker.domain.model.value;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Percentage value object")
 class PercentageTest {
@@ -35,9 +35,8 @@ class PercentageTest {
         @Test
         @DisplayName("creates Percentage from fraction")
         void createsFromFraction() {
-            Percentage percentage = Percentage.fromFraction(
-                    new BigDecimal("25"),
-                    new BigDecimal("100"));
+            Percentage percentage =
+                    Percentage.fromFraction(new BigDecimal("25"), new BigDecimal("100"));
 
             assertThat(percentage.value()).isEqualByComparingTo("25.0000");
         }
@@ -56,8 +55,7 @@ class PercentageTest {
         @Test
         @DisplayName("throws exception when dividing by zero")
         void throwsWhenDividingByZero() {
-            assertThatThrownBy(() ->
-                    Percentage.fromFraction(new BigDecimal("10"), BigDecimal.ZERO))
+            assertThatThrownBy(() -> Percentage.fromFraction(new BigDecimal("10"), BigDecimal.ZERO))
                     .isInstanceOf(ArithmeticException.class)
                     .hasMessageContaining("whole is zero");
         }

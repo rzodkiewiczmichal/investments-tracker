@@ -1,9 +1,11 @@
 package com.investments.tracker.cucumber.steps;
 
-import io.cucumber.datatable.DataTable;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
-import io.cucumber.java.en.When;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -13,27 +15,24 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 /**
  * Cucumber step definitions for Account Management feature.
  *
- * @see <a href="requirements/functional/features/account-management.feature">Account Management Feature</a>
+ * @see <a href="requirements/functional/features/account-management.feature">Account Management
+ *     Feature</a>
  */
 public class AccountSteps {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Autowired private TestRestTemplate restTemplate;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     private ResponseEntity<Map> response;
     private long accountCountBefore;
@@ -109,8 +108,9 @@ public class AccountSteps {
 
     @Then("the account should be available for position assignment")
     public void theAccountShouldBeAvailableForPositionAssignment() {
-        ResponseEntity<Map> listResponse = restTemplate.getForEntity(
-                "http://localhost:" + port + "/api/v1/accounts", Map.class);
+        ResponseEntity<Map> listResponse =
+                restTemplate.getForEntity(
+                        "http://localhost:" + port + "/api/v1/accounts", Map.class);
         assertThat(listResponse.getStatusCode().is2xxSuccessful()).isTrue();
         List<?> accounts = (List<?>) listResponse.getBody().get("accounts");
         assertThat(accounts).isNotEmpty();
@@ -133,8 +133,9 @@ public class AccountSteps {
 
     @Then("the position should be assigned to account {string}")
     public void thePositionShouldBeAssignedToAccount(String accountName) {
-        List<Long> ids = jdbcTemplate.queryForList(
-                "SELECT id FROM accounts WHERE name = ?", Long.class, accountName);
+        List<Long> ids =
+                jdbcTemplate.queryForList(
+                        "SELECT id FROM accounts WHERE name = ?", Long.class, accountName);
         assertThat(ids).isNotEmpty();
     }
 
@@ -145,8 +146,7 @@ public class AccountSteps {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
         return restTemplate.postForEntity(
-                "http://localhost:" + port + "/api/v1/accounts",
-                request, Map.class);
+                "http://localhost:" + port + "/api/v1/accounts", request, Map.class);
     }
 
     private long countAccounts() {

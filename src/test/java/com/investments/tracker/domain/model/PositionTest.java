@@ -1,18 +1,19 @@
 package com.investments.tracker.domain.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Quantity;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Position aggregate")
 class PositionTest {
@@ -34,9 +35,12 @@ class PositionTest {
         @Test
         @DisplayName("creates Position from holdings list")
         void createsFromHoldingsList() {
-            List<AccountHolding> holdings = List.of(
-                    new AccountHolding(new AccountId(1L), Quantity.of(50), CostBasis.pln("500")),
-                    new AccountHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520")));
+            List<AccountHolding> holdings =
+                    List.of(
+                            new AccountHolding(
+                                    new AccountId(1L), Quantity.of(50), CostBasis.pln("500")),
+                            new AccountHolding(
+                                    new AccountId(2L), Quantity.of(30), CostBasis.pln("520")));
 
             Position position = new Position(InstrumentSymbol.of("AAPL"), holdings);
 
@@ -47,8 +51,7 @@ class PositionTest {
         @Test
         @DisplayName("throws exception for empty holdings list")
         void throwsForEmptyHoldings() {
-            assertThatThrownBy(() ->
-                    new Position(InstrumentSymbol.of("AAPL"), List.of()))
+            assertThatThrownBy(() -> new Position(InstrumentSymbol.of("AAPL"), List.of()))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("at least one holding");
         }
@@ -63,10 +66,8 @@ class PositionTest {
         void addsNewHolding() {
             Position position = createPosition("AAPL", 50, "500");
 
-            Position updated = position.addHolding(
-                    new AccountId(2L),
-                    Quantity.of(30),
-                    CostBasis.pln("520"));
+            Position updated =
+                    position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             assertThat(updated.holdings()).hasSize(2);
             assertThat(updated.getAccountCount()).isEqualTo(2);
@@ -80,10 +81,8 @@ class PositionTest {
             Position position = createPosition("AAPL", 50, "500");
 
             // Add 50 more shares at 600 PLN = (50*500 + 50*600) / 100 = 550 PLN avg
-            Position updated = position.addHolding(
-                    new AccountId(1L),
-                    Quantity.of(50),
-                    CostBasis.pln("600"));
+            Position updated =
+                    position.addHolding(new AccountId(1L), Quantity.of(50), CostBasis.pln("600"));
 
             assertThat(updated.holdings()).hasSize(1);
             assertThat(updated.calculateTotalQuantity().value()).isEqualByComparingTo("100");
@@ -95,7 +94,8 @@ class PositionTest {
         @DisplayName("removes holding from account")
         void removesHolding() {
             Position position = createPosition("AAPL", 50, "500");
-            position = position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
+            position =
+                    position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             Position updated = position.removeHolding(new AccountId(2L));
 
@@ -117,7 +117,8 @@ class PositionTest {
         @DisplayName("throws when removing non-existent holding")
         void throwsWhenRemovingNonExistent() {
             Position position = createPosition("AAPL", 50, "500");
-            position = position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
+            position =
+                    position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             Position finalPosition = position;
             assertThatThrownBy(() -> finalPosition.removeHolding(new AccountId(99L)))
@@ -134,7 +135,8 @@ class PositionTest {
         @DisplayName("calculates total quantity from multiple holdings")
         void calculatesTotalQuantity() {
             Position position = createPosition("AAPL", 50, "500");
-            position = position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
+            position =
+                    position.addHolding(new AccountId(2L), Quantity.of(30), CostBasis.pln("520"));
 
             Quantity totalQuantity = position.calculateTotalQuantity();
 
@@ -145,10 +147,11 @@ class PositionTest {
         @DisplayName("calculates weighted average cost basis")
         void calculatesWeightedAverageCostBasis() {
             Position position = createPosition("AAPL", 50, "500"); // 50 * 500 = 25000
-            position = position.addHolding(
-                    new AccountId(2L),
-                    Quantity.of(30),
-                    CostBasis.pln("520")); // 30 * 520 = 15600
+            position =
+                    position.addHolding(
+                            new AccountId(2L),
+                            Quantity.of(30),
+                            CostBasis.pln("520")); // 30 * 520 = 15600
 
             // Total: (25000 + 15600) / 80 = 507.50
             CostBasis avgCostBasis = position.calculateWeightedAverageCostBasis();
@@ -185,9 +188,14 @@ class PositionTest {
         @DisplayName("equals same symbol with different state (DDD entity semantics)")
         void equalsSameSymbolDifferentState() {
             Position p1 = createPosition("AAPL", 100, "500");
-            Position p2 = new Position(
-                    InstrumentSymbol.of("AAPL"),
-                    List.of(new AccountHolding(new AccountId(2L), Quantity.of(200), CostBasis.pln("600"))));
+            Position p2 =
+                    new Position(
+                            InstrumentSymbol.of("AAPL"),
+                            List.of(
+                                    new AccountHolding(
+                                            new AccountId(2L),
+                                            Quantity.of(200),
+                                            CostBasis.pln("600"))));
 
             // Same symbol = same entity, regardless of different holdings
             assertThat(p1).isEqualTo(p2);
@@ -207,6 +215,8 @@ class PositionTest {
     private Position createPosition(String symbol, int qty, String costBasis) {
         return new Position(
                 InstrumentSymbol.of(symbol),
-                List.of(new AccountHolding(new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))));
+                List.of(
+                        new AccountHolding(
+                                new AccountId(1L), Quantity.of(qty), CostBasis.pln(costBasis))));
     }
 }

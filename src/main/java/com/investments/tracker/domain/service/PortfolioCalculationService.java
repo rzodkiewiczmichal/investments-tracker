@@ -1,5 +1,10 @@
 package com.investments.tracker.domain.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
 import com.investments.tracker.domain.model.Portfolio;
 import com.investments.tracker.domain.model.PortfolioMetrics;
 import com.investments.tracker.domain.model.Position;
@@ -12,34 +17,27 @@ import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.ProfitAndLoss;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 /**
  * Domain service for portfolio-level calculations.
- * <p>
- * Aggregates metrics from individual positions to provide
- * portfolio-level totals and summaries. All monetary values are
- * converted to PLN using provided exchange rates.
- * </p>
- * <p>
- * This is a stateless domain service with no dependencies on infrastructure.
- * </p>
+ *
+ * <p>Aggregates metrics from individual positions to provide portfolio-level totals and summaries.
+ * All monetary values are converted to PLN using provided exchange rates.
+ *
+ * <p>This is a stateless domain service with no dependencies on infrastructure.
  */
 public class PortfolioCalculationService {
 
     private final PositionCalculationService positionCalculationService;
 
     public PortfolioCalculationService(PositionCalculationService positionCalculationService) {
-        this.positionCalculationService = Objects.requireNonNull(
-                positionCalculationService, "positionCalculationService cannot be null");
+        this.positionCalculationService =
+                Objects.requireNonNull(
+                        positionCalculationService, "positionCalculationService cannot be null");
     }
 
     /**
-     * Creates a Portfolio from positions, prices, and exchange rates.
-     * All monetary metrics are calculated in PLN using current exchange rates.
+     * Creates a Portfolio from positions, prices, and exchange rates. All monetary metrics are
+     * calculated in PLN using current exchange rates.
      *
      * @param positions the list of positions
      * @param currentPrices map of instrument symbol to current price (in native currency)
@@ -59,7 +57,8 @@ public class PortfolioCalculationService {
             return new Portfolio(List.of(), PortfolioMetrics.empty());
         }
 
-        PortfolioMetrics metrics = calculateMetrics(positions, currentPrices, exchangeRatesByCurrency);
+        PortfolioMetrics metrics =
+                calculateMetrics(positions, currentPrices, exchangeRatesByCurrency);
         return new Portfolio(positions, metrics);
     }
 
@@ -71,8 +70,7 @@ public class PortfolioCalculationService {
      * @return optional invested amount in PLN (empty if no positions)
      */
     public Optional<InvestedAmount> calculateTotalInvestedAmount(
-            List<Position> positions,
-            Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
+            List<Position> positions, Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
 
         Objects.requireNonNull(positions, "positions cannot be null");
         Objects.requireNonNull(exchangeRatesByCurrency, "exchangeRatesByCurrency cannot be null");
@@ -82,21 +80,22 @@ public class PortfolioCalculationService {
         }
 
         return positions.stream()
-                .map(p -> {
-                    InvestedAmount nativeAmount = p.calculateInvestedAmount();
-                    Currency currency = nativeAmount.currency();
-                    ExchangeRate rate = exchangeRatesByCurrency.get(currency);
-                    Objects.requireNonNull(rate,
-                            "Missing exchange rate for currency: " + currency);
-                    Money plnMoney = nativeAmount.money().convertTo(rate);
-                    return new InvestedAmount(plnMoney);
-                })
+                .map(
+                        p -> {
+                            InvestedAmount nativeAmount = p.calculateInvestedAmount();
+                            Currency currency = nativeAmount.currency();
+                            ExchangeRate rate = exchangeRatesByCurrency.get(currency);
+                            Objects.requireNonNull(
+                                    rate, "Missing exchange rate for currency: " + currency);
+                            Money plnMoney = nativeAmount.money().convertTo(rate);
+                            return new InvestedAmount(plnMoney);
+                        })
                 .reduce(InvestedAmount::add);
     }
 
     /**
-     * Calculates total current value across all positions in PLN.
-     * Returns empty if any position lacks a current price.
+     * Calculates total current value across all positions in PLN. Returns empty if any position
+     * lacks a current price.
      *
      * @param positions the list of positions
      * @param currentPrices map of instrument symbol to current price
@@ -116,28 +115,29 @@ public class PortfolioCalculationService {
             return Optional.empty();
         }
 
-        boolean allPricesAvailable = positions.stream()
-                .allMatch(p -> currentPrices.containsKey(p.symbol()));
+        boolean allPricesAvailable =
+                positions.stream().allMatch(p -> currentPrices.containsKey(p.symbol()));
 
         if (!allPricesAvailable) {
             return Optional.empty();
         }
 
         return positions.stream()
-                .map(p -> {
-                    Price price = currentPrices.get(p.symbol());
-                    Currency currency = price.currency();
-                    ExchangeRate rate = exchangeRatesByCurrency.get(currency);
-                    Objects.requireNonNull(rate,
-                            "Missing exchange rate for currency: " + currency);
-                    return positionCalculationService.calculateCurrentValue(p, price, rate);
-                })
+                .map(
+                        p -> {
+                            Price price = currentPrices.get(p.symbol());
+                            Currency currency = price.currency();
+                            ExchangeRate rate = exchangeRatesByCurrency.get(currency);
+                            Objects.requireNonNull(
+                                    rate, "Missing exchange rate for currency: " + currency);
+                            return positionCalculationService.calculateCurrentValue(p, price, rate);
+                        })
                 .reduce(CurrentValue::add);
     }
 
     /**
-     * Calculates total P&L across all positions in PLN.
-     * Returns empty if any position lacks a current price.
+     * Calculates total P&L across all positions in PLN. Returns empty if any position lacks a
+     * current price.
      *
      * @param positions the list of positions
      * @param currentPrices map of instrument symbol to current price
@@ -153,9 +153,10 @@ public class PortfolioCalculationService {
         Objects.requireNonNull(currentPrices, "currentPrices cannot be null");
         Objects.requireNonNull(exchangeRatesByCurrency, "exchangeRatesByCurrency cannot be null");
 
-        Optional<InvestedAmount> totalInvested = calculateTotalInvestedAmount(positions, exchangeRatesByCurrency);
-        Optional<CurrentValue> totalCurrentValue = calculateTotalCurrentValue(
-                positions, currentPrices, exchangeRatesByCurrency);
+        Optional<InvestedAmount> totalInvested =
+                calculateTotalInvestedAmount(positions, exchangeRatesByCurrency);
+        Optional<CurrentValue> totalCurrentValue =
+                calculateTotalCurrentValue(positions, currentPrices, exchangeRatesByCurrency);
 
         if (totalInvested.isEmpty() || totalCurrentValue.isEmpty()) {
             return Optional.empty();
@@ -169,10 +170,11 @@ public class PortfolioCalculationService {
             Map<InstrumentSymbol, Price> currentPrices,
             Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
 
-        InvestedAmount totalInvested = calculateTotalInvestedAmount(
-                positions, exchangeRatesByCurrency).orElse(null);
-        CurrentValue totalCurrentValue = calculateTotalCurrentValue(
-                positions, currentPrices, exchangeRatesByCurrency).orElse(null);
+        InvestedAmount totalInvested =
+                calculateTotalInvestedAmount(positions, exchangeRatesByCurrency).orElse(null);
+        CurrentValue totalCurrentValue =
+                calculateTotalCurrentValue(positions, currentPrices, exchangeRatesByCurrency)
+                        .orElse(null);
 
         ProfitAndLoss profitAndLoss = null;
         if (totalInvested != null && totalCurrentValue != null) {
@@ -180,9 +182,6 @@ public class PortfolioCalculationService {
         }
 
         return new PortfolioMetrics(
-                totalInvested,
-                totalCurrentValue,
-                profitAndLoss,
-                positions.size());
+                totalInvested, totalCurrentValue, profitAndLoss, positions.size());
     }
 }

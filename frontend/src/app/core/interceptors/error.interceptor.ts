@@ -16,12 +16,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           error: error.statusText || 'Error',
           message: error.message || 'An unexpected error occurred',
           path: req.url,
-          traceId: 'unknown'
+          traceId: 'unknown',
         };
       }
 
       console.error('API Error:', apiError);
       return throwError(() => apiError);
-    })
+    }),
   );
 };

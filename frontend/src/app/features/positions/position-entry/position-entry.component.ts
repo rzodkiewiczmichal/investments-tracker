@@ -14,7 +14,14 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { PositionService, AccountService } from '../../../core/services';
-import { Account, CreateAccountRequest, InstrumentType, CurrencyCode, ApiError, ValidationError } from '../../../core/models';
+import {
+  Account,
+  CreateAccountRequest,
+  InstrumentType,
+  CurrencyCode,
+  ApiError,
+  ValidationError,
+} from '../../../core/models';
 
 @Component({
   selector: 'app-position-entry',
@@ -31,10 +38,10 @@ import { Account, CreateAccountRequest, InstrumentType, CurrencyCode, ApiError, 
     SkeletonModule,
     FloatLabelModule,
     DialogModule,
-    TooltipModule
+    TooltipModule,
   ],
   templateUrl: './position-entry.component.html',
-  styleUrl: './position-entry.component.scss'
+  styleUrl: './position-entry.component.scss',
 })
 export class PositionEntryComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -57,14 +64,14 @@ export class PositionEntryComponent implements OnInit {
 
   instrumentTypes: { value: InstrumentType; label: string }[] = [
     { value: 'STOCK', label: 'Stock' },
-    { value: 'ETF', label: 'ETF' }
+    { value: 'ETF', label: 'ETF' },
   ];
 
   currencies: { value: CurrencyCode; label: string }[] = [
     { value: 'PLN', label: 'PLN' },
     { value: 'EUR', label: 'EUR' },
     { value: 'USD', label: 'USD' },
-    { value: 'GBP', label: 'GBP' }
+    { value: 'GBP', label: 'GBP' },
   ];
 
   ngOnInit(): void {
@@ -81,19 +88,20 @@ export class PositionEntryComponent implements OnInit {
       currency: ['PLN', [Validators.required]],
       accountId: [null, [Validators.required]],
       quantity: [null, [Validators.required, Validators.min(0.00000001)]],
-      averageCost: [null, [Validators.required, Validators.min(0.0001)]]
+      averageCost: [null, [Validators.required, Validators.min(0.0001)]],
     });
   }
 
   private initAccountForm(): void {
     this.accountForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(255)]],
-      broker: ['', [Validators.required, Validators.maxLength(255)]]
+      broker: ['', [Validators.required, Validators.maxLength(255)]],
     });
   }
 
   private loadAccounts(): void {
-    this.accountService.listAccounts()
+    this.accountService
+      .listAccounts()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -106,7 +114,7 @@ export class PositionEntryComponent implements OnInit {
         error: (err: ApiError) => {
           this.error.set(`Failed to load accounts: ${err.message}`);
           this.loadingAccounts.set(false);
-        }
+        },
       });
   }
 
@@ -131,11 +139,12 @@ export class PositionEntryComponent implements OnInit {
 
     const request: CreateAccountRequest = this.accountForm.value;
 
-    this.accountService.createAccount(request)
+    this.accountService
+      .createAccount(request)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (newAccount) => {
-          this.accounts.update(current => [...current, newAccount]);
+          this.accounts.update((current) => [...current, newAccount]);
           this.form.patchValue({ accountId: newAccount.id });
           this.accountDialogLoading.set(false);
           this.showAccountDialog.set(false);
@@ -143,7 +152,7 @@ export class PositionEntryComponent implements OnInit {
         error: (err: ApiError) => {
           this.accountDialogLoading.set(false);
           this.accountDialogError.set(err.message);
-        }
+        },
       });
   }
 
@@ -159,7 +168,8 @@ export class PositionEntryComponent implements OnInit {
 
     const command = this.form.value;
 
-    this.positionService.createPosition(command)
+    this.positionService
+      .createPosition(command)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (position) => {
@@ -178,7 +188,7 @@ export class PositionEntryComponent implements OnInit {
           } else {
             this.error.set(err.message);
           }
-        }
+        },
       });
   }
 
