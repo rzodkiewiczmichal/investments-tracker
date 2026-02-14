@@ -99,9 +99,11 @@ tasks.withType<Test> {
     }
 }
 
-// Exclude Cucumber tests from default test task (run via cucumberTest)
+// Exclude integration and Cucumber tests from default test task (run via integrationTest/cucumberTest)
 tasks.test {
     filter {
+        excludeTestsMatching("*IntegrationTest")
+        excludeTestsMatching("*IT")
         excludeTestsMatching("*RunCucumber*")
         excludeTestsMatching("*CucumberTest*")
     }
