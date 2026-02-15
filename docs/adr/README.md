@@ -34,6 +34,7 @@ We use the Michael Nygard format with the following structure:
 | [ADR-024](ADR-024-domain-services-cross-aggregate-calculations.md) | Domain Services for Cross-Aggregate Calculations | Accepted | 2026-02-02 |
 | [ADR-025](ADR-025-repository-adapter-single-aggregate.md) | Repository Adapters Handle Single Aggregate Only | Accepted | 2026-02-02 |
 | [ADR-026](ADR-026-application-layer-orchestration.md) | Application Layer Orchestrates Cross-Aggregate Operations | Accepted | 2026-02-02 |
+| [ADR-033](ADR-033-instrument-catalog-master-data.md) | Instrument Catalog as System-Managed Master Data | Proposed | 2026-02-15 |
 
 ### Infrastructure & Dependencies
 
