@@ -2,6 +2,7 @@ package com.investments.tracker.infrastructure.external.stooq;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * DTO for a single row from the Stooq CSV price endpoint.
@@ -18,13 +19,14 @@ record StooqCsvRow(
         BigDecimal close,
         long volume) {
 
-    private static final String NOT_AVAILABLE = "N/D";
+    /** Stooq uses "N/D" (Nie Dostępne) and "B/D" (Brak Danych) for unavailable data. */
+    private static final Set<String> NO_DATA_MARKERS = Set.of("N/D", "B/D");
 
     /**
      * Parses a single CSV line into a StooqCsvRow.
      *
      * @param csvLine comma-separated values
-     * @return parsed row, or empty if the line contains N/D (no data available)
+     * @return parsed row, or empty if the line contains no-data markers (N/D or B/D)
      * @throws IllegalArgumentException if the line has an unexpected number of fields
      */
     static Optional<StooqCsvRow> parse(String csvLine) {
@@ -34,8 +36,9 @@ record StooqCsvRow(
                     "Expected at least 8 CSV fields, got: " + fields.length);
         }
 
-        // Stooq returns "N/D" for symbols with no data
-        if (NOT_AVAILABLE.equals(fields[1].trim()) || NOT_AVAILABLE.equals(fields[6].trim())) {
+        // Stooq returns "N/D" or "B/D" for symbols with no data
+        if (NO_DATA_MARKERS.contains(fields[1].trim())
+                || NO_DATA_MARKERS.contains(fields[6].trim())) {
             return Optional.empty();
         }
 

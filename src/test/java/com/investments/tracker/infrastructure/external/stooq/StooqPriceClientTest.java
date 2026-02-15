@@ -132,6 +132,37 @@ class StooqPriceClientTest {
     }
 
     @Test
+    @DisplayName("should skip B/D rows for unavailable data")
+    void shouldSkipBdRows() {
+        mockServer
+                .expect(
+                        requestTo(
+                                "https://stooq.pl/q/l/?s=pko,atrem,elektroti&f=sd2t2ohlcv&h=&e=csv"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                Symbol,Date,Time,Open,High,Low,Close,Volume
+                                PKO,20260212,170401,92,92.94,91.66,92,2646515
+                                ATREM,B/D,B/D,B/D,B/D,B/D,B/D,B/D
+                                ELEKTROTI,B/D,B/D,B/D,B/D,B/D,B/D,B/D
+                                """,
+                                MediaType.TEXT_PLAIN));
+
+        Map<InstrumentSymbol, Price> prices =
+                client.fetchPrices(
+                        List.of(
+                                InstrumentSymbol.of("PKO"),
+                                InstrumentSymbol.of("ATREM"),
+                                InstrumentSymbol.of("ELEKTROTI")));
+
+        assertThat(prices).hasSize(1);
+        assertThat(prices).containsKey(InstrumentSymbol.of("PKO"));
+        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("ATREM"));
+        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("ELEKTROTI"));
+        mockServer.verify();
+    }
+
+    @Test
     @DisplayName("should return empty map for empty response body")
     void shouldReturnEmptyForEmptyResponse() {
         mockServer
