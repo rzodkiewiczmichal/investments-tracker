@@ -14,7 +14,7 @@ import com.investments.tracker.domain.model.value.InstrumentType;
  * version with different valuation logic.
  *
  * <p>Instrument is pure reference data identified by its symbol (natural key). Current prices are
- * managed separately via PriceCache.
+ * managed separately via {@link com.investments.tracker.domain.repository.CurrentPriceProvider}.
  */
 public record Instrument(
         InstrumentSymbol symbol, InstrumentName name, InstrumentType type, Currency currency) {

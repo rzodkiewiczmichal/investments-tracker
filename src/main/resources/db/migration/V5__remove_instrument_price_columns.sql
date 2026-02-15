@@ -1,6 +1,6 @@
 -- ============================================================================
 -- MIGRATION V5: Remove price columns from instruments table
--- Description: Prices are now served from Redis (PriceCache), not stored
+-- Description: Prices are now served from CurrentPriceProvider (Redis), not stored
 --              alongside instrument reference data in PostgreSQL.
 -- See: ADR-032 (revised) - External Data Caching Strategy
 -- ============================================================================

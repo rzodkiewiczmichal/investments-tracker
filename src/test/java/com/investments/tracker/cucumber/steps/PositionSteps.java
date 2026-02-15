@@ -17,7 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.domain.repository.PriceCache;
+import com.investments.tracker.testutils.StubCurrentPriceProvider;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -40,7 +40,7 @@ public class PositionSteps {
 
     @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired private PriceCache priceCache;
+    @Autowired private StubCurrentPriceProvider stubPriceProvider;
 
     private ResponseEntity<Map> positionResponse;
     private ResponseEntity<Map> positionsListResponse;
@@ -63,7 +63,7 @@ public class PositionSteps {
                 accountId,
                 new BigDecimal(quantity),
                 new BigDecimal(averageCost));
-        priceCache.putPrice(
+        stubPriceProvider.putPrice(
                 InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(averageCost))));
     }
 
@@ -96,7 +96,7 @@ public class PositionSteps {
                 jdbcTemplate, symbol, "Polish Government Bond", new BigDecimal(investedAmount));
         CucumberTestHelper.createPosition(
                 jdbcTemplate, symbol, accountId, BigDecimal.ONE, new BigDecimal(investedAmount));
-        priceCache.putPrice(
+        stubPriceProvider.putPrice(
                 InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(investedAmount))));
     }
 
@@ -104,7 +104,7 @@ public class PositionSteps {
     public void theCurrentValueOfTheseBondsIsPLN(Integer currentValue) {
         String symbol = instrumentSymbols.get("Polish Government Bond");
         if (symbol != null) {
-            priceCache.putPrice(
+            stubPriceProvider.putPrice(
                     InstrumentSymbol.of(symbol),
                     new Price(Money.pln(new BigDecimal(currentValue))));
         }

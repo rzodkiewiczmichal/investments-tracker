@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.domain.repository.PriceCache;
+import com.investments.tracker.testutils.StubCurrentPriceProvider;
 
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -38,7 +38,7 @@ public class PortfolioSteps {
 
     @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired private PriceCache priceCache;
+    @Autowired private StubCurrentPriceProvider stubPriceProvider;
 
     private ResponseEntity<Map> portfolioResponse;
     private BigDecimal totalInvestedAmount;
@@ -76,7 +76,8 @@ public class PortfolioSteps {
         CucumberTestHelper.ensureInstrumentExists(
                 jdbcTemplate, symbol, "Portfolio Test Stock", pricePerShare);
         CucumberTestHelper.createPosition(jdbcTemplate, symbol, accountId, quantity, costPerShare);
-        priceCache.putPrice(InstrumentSymbol.of(symbol), new Price(Money.pln(pricePerShare)));
+        stubPriceProvider.putPrice(
+                InstrumentSymbol.of(symbol), new Price(Money.pln(pricePerShare)));
     }
 
     @Given("I own {int} shares of {string} in account {string} bought at {int} PLN")
@@ -89,14 +90,14 @@ public class PortfolioSteps {
                 jdbcTemplate, symbol, instrument, new BigDecimal(price));
         CucumberTestHelper.createPosition(
                 jdbcTemplate, symbol, accountId, new BigDecimal(quantity), new BigDecimal(price));
-        priceCache.putPrice(
+        stubPriceProvider.putPrice(
                 InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(price))));
     }
 
     @Given("the current price of {string} is {int} PLN")
     public void theCurrentPriceOfIsPLN(String instrument, Integer price) {
         String symbol = CucumberTestHelper.generateValidSymbol(instrument);
-        priceCache.putPrice(
+        stubPriceProvider.putPrice(
                 InstrumentSymbol.of(symbol), new Price(Money.pln(new BigDecimal(price))));
     }
 

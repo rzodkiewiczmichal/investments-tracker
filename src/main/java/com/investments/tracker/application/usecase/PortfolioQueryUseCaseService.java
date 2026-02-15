@@ -16,10 +16,10 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.ExchangeRate;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Price;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ExchangeRateProvider;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
-import com.investments.tracker.domain.repository.PriceCache;
 import com.investments.tracker.domain.service.PortfolioCalculationService;
 
 /** Implementation of portfolio query use case. */
@@ -29,19 +29,19 @@ public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
 
     private final PositionRepository positionRepository;
     private final InstrumentRepository instrumentRepository;
-    private final PriceCache priceCache;
+    private final CurrentPriceProvider currentPriceProvider;
     private final ExchangeRateProvider exchangeRateProvider;
     private final PortfolioCalculationService portfolioCalculationService;
 
     public PortfolioQueryUseCaseService(
             PositionRepository positionRepository,
             InstrumentRepository instrumentRepository,
-            PriceCache priceCache,
+            CurrentPriceProvider currentPriceProvider,
             ExchangeRateProvider exchangeRateProvider,
             PortfolioCalculationService portfolioCalculationService) {
         this.positionRepository = positionRepository;
         this.instrumentRepository = instrumentRepository;
-        this.priceCache = priceCache;
+        this.currentPriceProvider = currentPriceProvider;
         this.exchangeRateProvider = exchangeRateProvider;
         this.portfolioCalculationService = portfolioCalculationService;
     }
@@ -57,7 +57,7 @@ public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
     private Map<InstrumentSymbol, Price> buildPriceMap() {
         List<InstrumentSymbol> symbols =
                 instrumentRepository.findAll().stream().map(Instrument::symbol).toList();
-        return priceCache.getPrices(symbols);
+        return currentPriceProvider.getPrices(symbols);
     }
 
     private Map<Currency, ExchangeRate> buildExchangeRateMap(

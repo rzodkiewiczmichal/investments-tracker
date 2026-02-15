@@ -43,7 +43,7 @@ final class CucumberTestHelper {
     /**
      * Ensures an instrument exists in the database. The currentPrice parameter is kept for backward
      * compatibility with step definitions but is no longer written to the database (prices are now
-     * in PriceCache/Redis).
+     * in CurrentPriceProvider/Redis).
      */
     static void ensureInstrumentExists(
             JdbcTemplate jdbcTemplate, String symbol, String name, BigDecimal currentPrice) {
@@ -96,8 +96,8 @@ final class CucumberTestHelper {
     }
 
     /**
-     * Ensures an instrument exists without a current price. No price is set in PriceCache (callers
-     * should not populate it).
+     * Ensures an instrument exists without a current price. No price is set in CurrentPriceProvider
+     * (callers should not populate it).
      */
     static void ensureInstrumentExistsWithoutPrice(
             JdbcTemplate jdbcTemplate, String symbol, String name) {

@@ -51,7 +51,7 @@ User requests portfolio
     │   └─ If key exists and not expired → use it
     │   └─ If missing → fetch from NBP API → write to Redis (TTL 24h) → use it
     │
-    ├─ Read instrument prices from Redis (via PriceCache port)
+    ├─ Read instrument prices from Redis (via CurrentPriceProvider port)
     │   └─ If key exists and not expired → use it
     │   └─ If missing → fetch from Stooq/Finnhub → write to Redis (TTL 24h) → use it
     │
@@ -95,27 +95,28 @@ public record Instrument(
 Prices are fetched separately at query time via a new domain port:
 
 ```java
-public interface PriceCache {
+public interface CurrentPriceProvider {
     Optional<Price> getPrice(InstrumentSymbol symbol);
-    Map<InstrumentSymbol, Price> getPrices(Iterable<InstrumentSymbol> symbols);
-    void putPrice(InstrumentSymbol symbol, Price price);
+    Map<InstrumentSymbol, Price> getPrices(Collection<InstrumentSymbol> symbols);
 }
 ```
+
+Writing prices to the cache is an infrastructure concern handled by data provider adapters directly on the Redis adapter, not through the domain port.
 
 The existing `ExchangeRateProvider` port remains unchanged. Its Redis-backed implementation caches rates internally using the decorator pattern.
 
 ### Read Path
 
 **Cache hit (typical):**
-1. `PortfolioQueryUseCaseService` calls `PriceCache.getPrices(symbols)` → Redis HGETALL.
+1. `PortfolioQueryUseCaseService` calls `CurrentPriceProvider.getPrices(symbols)` → Redis HGETALL.
 2. All prices exist in Redis → return immediately. Sub-millisecond latency.
 3. Calls `ExchangeRateProvider.getExchangeRatesToPln(currencies)` → Redis HGETALL internally.
 4. Calculate and return portfolio.
 
 **Cache miss (first load of the day):**
-1. `PriceCache.getPrices(symbols)` returns partial or empty map.
+1. `CurrentPriceProvider.getPrices(symbols)` returns partial or empty map.
 2. Application layer fetches missing prices from `InstrumentPriceProvider` (Stooq/Finnhub).
-3. Writes fetched prices to `PriceCache` (Redis HSET with TTL 24h).
+3. Writes fetched prices to Redis adapter (HSET with TTL 24h).
 4. Calculates and returns portfolio.
 
 ### Fallback When Redis Is Down
@@ -174,7 +175,7 @@ When domain events are introduced (via message queue such as RabbitMQ), the writ
 - **Before market close**: If queried before 17:05 CET, serve yesterday's cached price (don't fetch partial intraday data).
 - **Weekend**: GPW closed. Serve Friday's price. Do not call Stooq.
 - **Batch**: Fetch all GPW instruments in a single request (comma-separated symbols).
-- **Storage**: Write to Redis via `PriceCache.putPrices()` (`price:current:{symbol}`).
+- **Storage**: Write to Redis via `RedisCurrentPriceAdapter.putPrice()` (`price:current:{symbol}`).
 
 #### Finnhub (US Prices)
 
@@ -182,7 +183,7 @@ When domain events are introduced (via message queue such as RabbitMQ), the writ
 - **Before market close**: If queried before 22:05 CET, serve yesterday's cached price.
 - **Weekend**: US markets closed. Serve Friday's price. Do not call Finnhub.
 - **Sequential**: Finnhub has no batch endpoint. Fetch symbols one by one within 60 req/min limit.
-- **Storage**: Write to Redis via `PriceCache.putPrice()` (`price:current:{symbol}`).
+- **Storage**: Write to Redis via `RedisCurrentPriceAdapter.putPrice()` (`price:current:{symbol}`).
 
 ### API Call Budget (Worst Case Daily)
 
@@ -216,7 +217,7 @@ The `instruments` table becomes pure reference data: `symbol`, `name`, `instrume
 ### Positive
 
 1. **Schema purity** — `instruments` table is pure reference data; volatile cache lives in Redis
-2. **Domain model purity** — `Instrument` entity has no cached fields; prices fetched via dedicated port
+2. **Domain model purity** — `Instrument` entity has no cached fields; prices fetched via `CurrentPriceProvider` port
 3. **Fast reads** — Redis sub-millisecond reads for portfolio queries
 4. **Native TTL** — Redis handles cache expiration automatically; no manual staleness checks
 5. **Minimal API usage** — at most ~54 calls/day across all providers, far below any limits

@@ -86,6 +86,8 @@ class NamingConventionTest {
                 .resideInAPackage("..application.usecase..")
                 .and()
                 .areNotInterfaces()
+                .and()
+                .areNotRecords()
                 .should()
                 .haveSimpleNameEndingWith("UseCaseService")
                 .allowEmptyShould(true)

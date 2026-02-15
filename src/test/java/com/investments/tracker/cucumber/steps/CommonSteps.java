@@ -5,7 +5,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.investments.tracker.testutils.StubPriceCache;
+import com.investments.tracker.testutils.StubCurrentPriceProvider;
 
 import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
@@ -31,9 +31,9 @@ public class CommonSteps {
 
     @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired private StubPriceCache stubPriceCache;
+    @Autowired private StubCurrentPriceProvider stubPriceProvider;
 
-    /** Clean database and price cache before each scenario to ensure test isolation. */
+    /** Clean database and price provider state before each scenario to ensure test isolation. */
     @Before
     public void cleanDatabase() {
         // Clean in reverse order of foreign key dependencies
@@ -41,7 +41,7 @@ public class CommonSteps {
         jdbcTemplate.execute("DELETE FROM positions WHERE true");
         jdbcTemplate.execute("DELETE FROM instruments WHERE true");
         jdbcTemplate.execute("DELETE FROM accounts WHERE true");
-        stubPriceCache.clear();
+        stubPriceProvider.clear();
     }
 
     @Given("I have positions in multiple brokerage accounts")
