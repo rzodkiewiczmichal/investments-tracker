@@ -6,6 +6,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import com.investments.tracker.infrastructure.cache.RedisCurrentPriceAdapter;
+
 /**
  * Redis configuration for the cache layer.
  *
@@ -27,5 +29,11 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(new StringRedisSerializer());
         return template;
+    }
+
+    @Bean
+    public RedisCurrentPriceAdapter redisCurrentPriceAdapter(
+            RedisTemplate<String, String> redisTemplate) {
+        return new RedisCurrentPriceAdapter(redisTemplate);
     }
 }

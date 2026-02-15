@@ -16,25 +16,25 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.domain.repository.CurrentPriceProvider;
 
 /**
- * Redis-backed implementation of the {@link CurrentPriceProvider} domain port.
+ * Redis-backed price store for instrument prices.
  *
  * <p>Stores instrument prices as Redis Hash keys with 24-hour TTL. Key format: {@code
  * price:current:{symbol}} Hash fields: {@code amount}, {@code currency}
  *
+ * <p>Not a domain port bean — used internally by {@link CachingCurrentPriceAdapter} which
+ * implements {@code CurrentPriceProvider} and adds cache-aside fetch logic.
+ *
  * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032: External Data
  *     Caching Strategy</a>
  */
-@Component
-public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
+public class RedisCurrentPriceAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCurrentPriceAdapter.class);
     private static final String KEY_PREFIX = "price:current:";
@@ -48,7 +48,6 @@ public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
         this.redisTemplate = redisTemplate;
     }
 
-    @Override
     public Optional<Price> getPrice(InstrumentSymbol symbol) {
         String key = toKey(symbol);
         try {
@@ -68,7 +67,6 @@ public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
         }
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public Map<InstrumentSymbol, Price> getPrices(Collection<InstrumentSymbol> symbols) {
         if (symbols.isEmpty()) {
@@ -111,9 +109,8 @@ public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
     }
 
     /**
-     * Stores a price in Redis for the given instrument. This is not part of the {@link
-     * CurrentPriceProvider} domain port — it is used by infrastructure-level data providers to
-     * populate the cache.
+     * Stores a price in Redis for the given instrument. Used by {@link CachingCurrentPriceAdapter}
+     * to populate the cache after fetching from an external provider.
      *
      * @param symbol the instrument symbol
      * @param price the price to store
