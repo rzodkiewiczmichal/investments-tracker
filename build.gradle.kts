@@ -99,13 +99,14 @@ tasks.withType<Test> {
     }
 }
 
-// Exclude integration and Cucumber tests from default test task (run via integrationTest/cucumberTest)
+// Exclude integration, Cucumber, and live tests from default test task
 tasks.test {
     filter {
         excludeTestsMatching("*IntegrationTest")
         excludeTestsMatching("*IT")
         excludeTestsMatching("*RunCucumber*")
         excludeTestsMatching("*CucumberTest*")
+        excludeTestsMatching("*LiveTest")
     }
 }
 
@@ -183,6 +184,7 @@ tasks.register<Test>("integrationTest") {
     filter {
         includeTestsMatching("*IntegrationTest")
         includeTestsMatching("*IT")
+        excludeTestsMatching("*LiveTest")
     }
 
     testLogging {
@@ -212,6 +214,25 @@ tasks.register<Test>("cucumberTest") {
     }
 
     systemProperty("cucumber.junit-platform.naming-strategy", "long")
+}
+
+// Separate test task for live API tests (requires network, not run in CI)
+tasks.register<Test>("liveTest") {
+    description = "Runs live API tests (requires network access)"
+    group = "verification"
+
+    useJUnitPlatform()
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+
+    filter {
+        includeTestsMatching("*LiveTest")
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
 }
 
 // Add integrationTest and cucumberTest to check task

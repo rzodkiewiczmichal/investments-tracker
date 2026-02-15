@@ -30,7 +30,10 @@ import com.investments.tracker.domain.model.value.ProfitAndLoss;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.service.PositionCalculationService;
 
-/** Mapper for Position domain objects to DTOs. */
+/**
+ * Mapper for Position domain objects to DTOs. All monetary values in the output are converted to
+ * PLN.
+ */
 @Component
 public class PositionMapper {
 
@@ -41,14 +44,8 @@ public class PositionMapper {
     }
 
     /**
-     * Maps a Position to PositionSummaryDTO, enriched with Instrument data. Aggregated monetary
-     * values (invested amount, current value, P&L) are converted to PLN.
-     *
-     * @param position the position domain object
-     * @param instrument the instrument providing name and type
-     * @param currentPrice the current market price (nullable)
-     * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
-     * @return the position summary DTO
+     * Maps a Position to PositionSummaryDTO, enriched with Instrument data. All monetary values are
+     * converted to PLN.
      */
     public PositionSummaryDTO toSummaryDTO(
             Position position,
@@ -63,7 +60,7 @@ public class PositionMapper {
                 instrument.name().value(),
                 instrument.type().name(),
                 calc.totalQuantity.toBigDecimal(),
-                toMoneyDTO(calc.avgCostBasis.money()),
+                toPlnMoneyDTO(calc.avgCostBasis.money(), calc.exchangeRate),
                 calc.currentValue != null ? toMoneyDTO(calc.currentValue.money()) : null,
                 toMoneyDTO(calc.investedAmount.money()),
                 calc.profitAndLoss != null ? toMoneyDTO(calc.profitAndLoss.amount()) : null,
@@ -73,9 +70,6 @@ public class PositionMapper {
     /**
      * Maps a list of positions with market data to a sorted list response. Sorted by current value
      * descending (FR-014).
-     *
-     * @param data positions with market data
-     * @return the position list response
      */
     public PositionListResponse toListResponse(List<PositionWithMarketData> data) {
         List<PositionSummaryDTO> summaries =
@@ -98,12 +92,7 @@ public class PositionMapper {
         return new PositionListResponse(summaries, summaries.size());
     }
 
-    /**
-     * Maps position detail data to a detail response.
-     *
-     * @param data position detail data
-     * @return the position detail response
-     */
+    /** Maps position detail data to a detail response. All monetary values are converted to PLN. */
     public PositionDetailResponse toDetailResponse(PositionDetailData data) {
         return toDetailResponse(
                 data.position(),
@@ -114,15 +103,8 @@ public class PositionMapper {
     }
 
     /**
-     * Maps a Position to PositionDetailResponse, enriched with Instrument data. Aggregated monetary
-     * values (invested amount, current value, P&L) are converted to PLN.
-     *
-     * @param position the position domain object
-     * @param instrument the instrument providing name and type
-     * @param currentPrice the current market price (nullable)
-     * @param accountNames map of account IDs to names for display
-     * @param exchangeRatesByCurrency exchange rates to PLN keyed by source currency
-     * @return the position detail response
+     * Maps a Position to PositionDetailResponse, enriched with Instrument data. All monetary values
+     * are converted to PLN.
      */
     public PositionDetailResponse toDetailResponse(
             Position position,
@@ -135,7 +117,10 @@ public class PositionMapper {
 
         List<AccountHoldingDTO> holdingDTOs =
                 position.holdings().stream()
-                        .map(holding -> toAccountHoldingDTO(holding, accountNames))
+                        .map(
+                                holding ->
+                                        toAccountHoldingDTO(
+                                                holding, accountNames, exchangeRatesByCurrency))
                         .toList();
 
         return new PositionDetailResponse(
@@ -143,8 +128,10 @@ public class PositionMapper {
                 instrument.name().value(),
                 instrument.type().name(),
                 calc.totalQuantity.toBigDecimal(),
-                toMoneyDTO(calc.avgCostBasis.money()),
-                currentPrice != null ? toMoneyDTO(currentPrice.money()) : null,
+                toPlnMoneyDTO(calc.avgCostBasis.money(), calc.exchangeRate),
+                currentPrice != null
+                        ? toPlnMoneyDTO(currentPrice.money(), calc.exchangeRate)
+                        : null,
                 calc.currentValue != null ? toMoneyDTO(calc.currentValue.money()) : null,
                 toMoneyDTO(calc.investedAmount.money()),
                 calc.profitAndLoss != null ? toMoneyDTO(calc.profitAndLoss.amount()) : null,
@@ -181,21 +168,37 @@ public class PositionMapper {
         }
 
         return new PositionCalculations(
-                totalQuantity, avgCostBasis, currentValue, investedAmount, profitAndLoss);
+                totalQuantity,
+                avgCostBasis,
+                currentValue,
+                investedAmount,
+                profitAndLoss,
+                exchangeRate);
     }
 
     private AccountHoldingDTO toAccountHoldingDTO(
-            AccountHolding holding, Map<AccountId, String> accountNames) {
+            AccountHolding holding,
+            Map<AccountId, String> accountNames,
+            Map<Currency, ExchangeRate> exchangeRatesByCurrency) {
         String accountName = accountNames.getOrDefault(holding.accountId(), "Unknown Account");
+        Currency currency = holding.costBasis().currency();
+        ExchangeRate rate = exchangeRatesByCurrency.get(currency);
+        Objects.requireNonNull(rate, "Missing exchange rate for currency: " + currency);
 
         return new AccountHoldingDTO(
                 holding.accountId().value(),
                 accountName,
                 holding.quantity().toBigDecimal(),
-                toMoneyDTO(holding.costBasis().money()));
+                toPlnMoneyDTO(holding.costBasis().money(), rate));
     }
 
-    /** Converts Money to MoneyDTO. */
+    /** Converts Money to PLN using the exchange rate, then to MoneyDTO. */
+    private MoneyDTO toPlnMoneyDTO(Money money, ExchangeRate exchangeRate) {
+        Money plnMoney = money.convertTo(exchangeRate);
+        return new MoneyDTO(plnMoney.amount(), plnMoney.currency().getCode());
+    }
+
+    /** Converts Money (already in PLN) to MoneyDTO. */
     private MoneyDTO toMoneyDTO(Money money) {
         return new MoneyDTO(money.amount(), money.currency().getCode());
     }
@@ -205,5 +208,6 @@ public class PositionMapper {
             CostBasis avgCostBasis,
             @Nullable CurrentValue currentValue,
             InvestedAmount investedAmount,
-            @Nullable ProfitAndLoss profitAndLoss) {}
+            @Nullable ProfitAndLoss profitAndLoss,
+            ExchangeRate exchangeRate) {}
 }

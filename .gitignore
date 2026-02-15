@@ -52,3 +52,7 @@ reports/
 
 # Environment variables
 .env
+
+# SSL certificates
+*.cer
+*.pem

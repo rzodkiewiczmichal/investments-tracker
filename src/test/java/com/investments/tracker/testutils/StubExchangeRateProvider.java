@@ -1,6 +1,7 @@
 package com.investments.tracker.testutils;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public class StubExchangeRateProvider implements ExchangeRateProvider {
     }
 
     @Override
-    public Map<Currency, ExchangeRate> getExchangeRatesToPln(Iterable<Currency> currencies) {
+    public Map<Currency, ExchangeRate> getExchangeRatesToPln(Collection<Currency> currencies) {
         Map<Currency, ExchangeRate> rates = new HashMap<>();
         for (Currency currency : currencies) {
             rates.put(currency, getExchangeRateToPln(currency));

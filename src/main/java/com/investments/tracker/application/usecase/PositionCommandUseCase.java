@@ -49,4 +49,13 @@ public interface PositionCommandUseCase {
      */
     Position updatePosition(
             InstrumentSymbol symbol, AccountId accountId, Quantity quantity, CostBasis costBasis);
+
+    /**
+     * Deletes a position and its associated instrument entirely.
+     *
+     * @param symbol the instrument symbol
+     * @throws com.investments.tracker.application.exception.ResourceNotFoundException if position
+     *     not found
+     */
+    void deletePosition(InstrumentSymbol symbol);
 }

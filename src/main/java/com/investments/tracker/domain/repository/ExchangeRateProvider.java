@@ -1,5 +1,6 @@
 package com.investments.tracker.domain.repository;
 
+import java.util.Collection;
 import java.util.Map;
 
 import com.investments.tracker.domain.exception.ExchangeRateNotFoundException;
@@ -32,5 +33,5 @@ public interface ExchangeRateProvider {
      * @return map of currency to exchange rate to PLN
      * @throws ExchangeRateNotFoundException if any rate cannot be found
      */
-    Map<Currency, ExchangeRate> getExchangeRatesToPln(Iterable<Currency> currencies);
+    Map<Currency, ExchangeRate> getExchangeRatesToPln(Collection<Currency> currencies);
 }
