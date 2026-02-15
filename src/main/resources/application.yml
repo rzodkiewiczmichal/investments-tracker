@@ -62,3 +62,9 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# NBP API Configuration (ADR-030)
+app:
+  nbp:
+    base-url: ${NBP_BASE_URL:https://api.nbp.pl}
+    rates-path: /api/exchangerates/rates/a/{currency}/

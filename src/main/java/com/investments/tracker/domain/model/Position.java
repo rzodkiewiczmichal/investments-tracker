@@ -9,6 +9,7 @@ import java.util.Optional;
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InvestedAmount;
 import com.investments.tracker.domain.model.value.Money;
@@ -156,7 +157,10 @@ public record Position(InstrumentSymbol symbol, List<AccountHolding> holdings) {
                                                 .multiply(h.quantity().toBigDecimal()))
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Money avgCost = Money.pln(totalInvested).divide(totalQuantity.toBigDecimal());
+        Currency currency = holdings.getFirst().costBasis().currency();
+        Money totalInvestedMoney =
+                new Money(totalInvested.setScale(Money.SCALE, Money.ROUNDING_MODE), currency);
+        Money avgCost = totalInvestedMoney.divide(totalQuantity.toBigDecimal());
         return CostBasis.of(avgCost);
     }
 

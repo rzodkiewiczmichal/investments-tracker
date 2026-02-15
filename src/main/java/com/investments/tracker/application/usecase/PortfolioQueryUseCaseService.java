@@ -50,7 +50,7 @@ public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
     public Portfolio getPortfolio() {
         List<Position> positions = new ArrayList<>(positionRepository.findAll());
         Map<InstrumentSymbol, Price> currentPrices = buildPriceMap();
-        Map<Currency, ExchangeRate> exchangeRates = buildExchangeRateMap(currentPrices);
+        Map<Currency, ExchangeRate> exchangeRates = buildExchangeRateMap(positions, currentPrices);
         return portfolioCalculationService.createPortfolio(positions, currentPrices, exchangeRates);
     }
 
@@ -61,12 +61,15 @@ public class PortfolioQueryUseCaseService implements PortfolioQueryUseCase {
     }
 
     private Map<Currency, ExchangeRate> buildExchangeRateMap(
-            Map<InstrumentSymbol, Price> pricesBySymbol) {
+            List<Position> positions, Map<InstrumentSymbol, Price> pricesBySymbol) {
 
         Set<Currency> currencies =
                 pricesBySymbol.values().stream().map(Price::currency).collect(Collectors.toSet());
 
-        currencies.add(Currency.PLN);
+        positions.stream()
+                .flatMap(p -> p.holdings().stream())
+                .map(h -> h.costBasis().currency())
+                .forEach(currencies::add);
 
         return exchangeRateProvider.getExchangeRatesToPln(currencies);
     }

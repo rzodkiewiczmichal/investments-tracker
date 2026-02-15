@@ -124,4 +124,16 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
 
         return positionRepository.save(updated);
     }
+
+    @Override
+    public void deletePosition(InstrumentSymbol symbol) {
+        Objects.requireNonNull(symbol, "symbol cannot be null");
+
+        if (!positionRepository.existsBySymbol(symbol)) {
+            throw new ResourceNotFoundException("Position", "symbol", symbol.value());
+        }
+
+        positionRepository.deleteBySymbol(symbol);
+        instrumentRepository.deleteBySymbol(symbol);
+    }
 }

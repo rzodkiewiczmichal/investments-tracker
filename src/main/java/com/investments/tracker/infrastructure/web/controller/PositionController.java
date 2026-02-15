@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -121,5 +122,16 @@ public class PositionController {
                 CostBasis.of(new Money(request.averageCost(), instrument.currency())));
         PositionDetailData data = positionQueryUseCase.getPositionDetail(instrumentSymbol);
         return positionMapper.toDetailResponse(data);
+    }
+
+    /**
+     * Deletes a position and its instrument entirely.
+     *
+     * @param symbol the instrument symbol
+     */
+    @DeleteMapping("/{symbol}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePosition(@PathVariable String symbol) {
+        positionCommandUseCase.deletePosition(new InstrumentSymbol(symbol));
     }
 }
