@@ -16,7 +16,6 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
@@ -25,15 +24,17 @@ import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.CurrentPriceProvider;
 
 /**
- * Redis-backed implementation of the {@link CurrentPriceProvider} domain port.
+ * Redis-backed price store for instrument prices.
  *
  * <p>Stores instrument prices as Redis Hash keys with 24-hour TTL. Key format: {@code
  * price:current:{symbol}} Hash fields: {@code amount}, {@code currency}
  *
+ * <p>Not a standalone {@link CurrentPriceProvider} bean — used internally by {@link
+ * CachingCurrentPriceAdapter} which adds cache-aside fetch logic.
+ *
  * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032: External Data
  *     Caching Strategy</a>
  */
-@Component
 public class RedisCurrentPriceAdapter implements CurrentPriceProvider {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCurrentPriceAdapter.class);

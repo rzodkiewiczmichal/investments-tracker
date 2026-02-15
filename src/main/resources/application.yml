@@ -63,8 +63,13 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-# NBP API Configuration (ADR-030)
+# External API Configuration
 app:
+  # NBP API (ADR-030)
   nbp:
     base-url: ${NBP_BASE_URL:https://api.nbp.pl}
     rates-path: /api/exchangerates/rates/a/{currency}/
+  # Stooq.pl Price API (ADR-031)
+  stooq:
+    base-url: ${STOOQ_BASE_URL:https://stooq.pl}
+    csv-path: /q/l/
