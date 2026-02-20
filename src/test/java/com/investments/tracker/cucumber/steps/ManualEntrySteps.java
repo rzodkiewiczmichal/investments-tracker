@@ -46,6 +46,11 @@ public class ManualEntrySteps {
 
     // --- Given Steps ---
 
+    @Given("the instrument catalog contains {string} with name {string} and type {string}")
+    public void theInstrumentCatalogContains(String symbol, String name, String type) {
+        CucumberTestHelper.ensureInstrumentExists(jdbcTemplate, symbol, name, type);
+    }
+
     @Given("I want to manually add a position")
     public void iWantToManuallyAddAPosition() {
         positionData = new HashMap<>();
@@ -55,7 +60,6 @@ public class ManualEntrySteps {
     @Given("I want to manually add a bond position")
     public void iWantToManuallyAddABondPosition() {
         positionData = new HashMap<>();
-        positionData.put("instrumentType", "BOND");
         expectingError = false;
     }
 
@@ -65,7 +69,6 @@ public class ManualEntrySteps {
     public void iEnterTheFollowingPositionData(DataTable dataTable) {
         List<Map<String, String>> rows = dataTable.asMaps();
 
-        String instrumentName = null;
         String accountName = null;
         BigDecimal quantity = null;
         BigDecimal averageCost = null;
@@ -76,8 +79,7 @@ public class ManualEntrySteps {
 
             switch (field) {
                 case "Instrument":
-                    instrumentName = value;
-                    testInstrumentSymbol = CucumberTestHelper.generateValidSymbol(value);
+                    testInstrumentSymbol = value;
                     break;
                 case "Quantity":
                     quantity = new BigDecimal(value);
@@ -94,13 +96,8 @@ public class ManualEntrySteps {
         // Ensure account exists and get its ID
         testAccountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, accountName);
 
-        // Build the request with the correct API contract
+        // Build the request with the simplified API contract (catalog-based)
         positionData.put("instrumentSymbol", testInstrumentSymbol);
-        positionData.put("instrumentName", instrumentName);
-        if (!positionData.containsKey("instrumentType")) {
-            positionData.put("instrumentType", "STOCK");
-        }
-        positionData.putIfAbsent("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", quantity);
         positionData.put("averageCost", averageCost);
@@ -116,7 +113,6 @@ public class ManualEntrySteps {
         String seriesName = null;
         String accountName = null;
         BigDecimal investedAmount = null;
-        BigDecimal currentValue = null;
 
         for (Map<String, String> row : rows) {
             String field = row.get("Field");
@@ -124,7 +120,6 @@ public class ManualEntrySteps {
 
             switch (field) {
                 case "Instrument Type":
-                    // POLISH_GOVERNMENT_BOND
                     break;
                 case "Series":
                     seriesName = value;
@@ -134,7 +129,6 @@ public class ManualEntrySteps {
                     investedAmount = new BigDecimal(value);
                     break;
                 case "Current Value":
-                    currentValue = new BigDecimal(value);
                     break;
                 case "Account":
                     accountName = value;
@@ -142,16 +136,13 @@ public class ManualEntrySteps {
             }
         }
 
-        // Ensure account exists
+        // Ensure account and instrument exist
         testAccountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, accountName);
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, testInstrumentSymbol, seriesName, "BOND");
 
         // Build request - for bonds, quantity is 1 and cost basis is the invested amount
         positionData.put("instrumentSymbol", testInstrumentSymbol);
-        positionData.put("instrumentName", seriesName);
-        if (!positionData.containsKey("instrumentType")) {
-            positionData.put("instrumentType", "BOND");
-        }
-        positionData.putIfAbsent("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", BigDecimal.ONE);
         positionData.put("averageCost", investedAmount);
@@ -160,14 +151,13 @@ public class ManualEntrySteps {
         submitPosition();
     }
 
-    @When("I try to save position without instrument name")
-    public void iTryToSavePositionWithoutInstrumentName() {
+    @When("I try to save position with unknown instrument {string}")
+    public void iTryToSavePositionWithUnknownInstrument(String unknownSymbol) {
         expectingError = true;
         testAccountId = CucumberTestHelper.ensureAccountExists(jdbcTemplate, "Test Account");
+        testInstrumentSymbol = unknownSymbol;
 
-        // Missing instrumentSymbol and instrumentName
-        positionData.put("instrumentType", "STOCK");
-        positionData.put("currency", "PLN");
+        positionData.put("instrumentSymbol", unknownSymbol);
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", new BigDecimal("100"));
         positionData.put("averageCost", new BigDecimal("50"));
@@ -181,9 +171,6 @@ public class ManualEntrySteps {
         testInstrumentSymbol = "TEST";
 
         positionData.put("instrumentSymbol", testInstrumentSymbol);
-        positionData.put("instrumentName", "Test Instrument");
-        positionData.put("instrumentType", "STOCK");
-        positionData.put("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", new BigDecimal(quantity));
         positionData.put("averageCost", new BigDecimal("100"));
@@ -197,9 +184,6 @@ public class ManualEntrySteps {
         testInstrumentSymbol = "TEST";
 
         positionData.put("instrumentSymbol", testInstrumentSymbol);
-        positionData.put("instrumentName", "Test Instrument");
-        positionData.put("instrumentType", "STOCK");
-        positionData.put("currency", "PLN");
         positionData.put("accountId", testAccountId);
         positionData.put("quantity", new BigDecimal("100"));
         positionData.put("averageCost", new BigDecimal(averageCost));
@@ -209,7 +193,7 @@ public class ManualEntrySteps {
     // --- Then Steps ---
 
     @Then("a new position for {string} should be created")
-    public void aNewPositionForShouldBeCreated(String instrumentName) {
+    public void aNewPositionForShouldBeCreated(String symbol) {
         assertThat(positionResponse.getStatusCode().is2xxSuccessful())
                 .as(
                         "Expected successful response but got: "
@@ -218,10 +202,8 @@ public class ManualEntrySteps {
                                 + positionResponse.getBody())
                 .isTrue();
         assertThat(positionResponse.getBody()).isNotNull();
-        // The response uses instrumentSymbol - use the same symbol generation as in setup
-        String expectedSymbol = CucumberTestHelper.generateValidSymbol(instrumentName);
         assertThat(positionResponse.getBody().get("instrumentSymbol").toString())
-                .isEqualToIgnoringCase(expectedSymbol);
+                .isEqualToIgnoringCase(symbol);
     }
 
     @Then("the position should have {int} shares at {int} PLN average cost")

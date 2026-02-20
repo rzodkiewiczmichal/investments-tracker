@@ -28,10 +28,7 @@ import com.investments.tracker.application.usecase.PositionWithMarketData;
 import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
-import com.investments.tracker.domain.model.value.Currency;
-import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Quantity;
 
@@ -81,7 +78,8 @@ public class PositionController {
     }
 
     /**
-     * Adds a new position or adds shares to an existing position.
+     * Adds a new position or adds shares to an existing position. The instrument must exist in the
+     * catalog (ADR-033).
      *
      * @param request the add position request
      * @return position detail response
@@ -90,15 +88,12 @@ public class PositionController {
     @ResponseStatus(HttpStatus.CREATED)
     public PositionDetailResponse addPosition(@Valid @RequestBody AddPositionRequest request) {
         InstrumentSymbol instrumentSymbol = new InstrumentSymbol(request.instrumentSymbol());
-        Currency currency = Currency.valueOf(request.currency());
+        Instrument instrument = instrumentQueryUseCase.getInstrument(instrumentSymbol);
         positionCommandUseCase.addPosition(
                 instrumentSymbol,
-                new InstrumentName(request.instrumentName()),
-                InstrumentType.valueOf(request.instrumentType()),
-                currency,
                 new AccountId(request.accountId()),
                 new Quantity(request.quantity()),
-                CostBasis.of(new Money(request.averageCost(), currency)));
+                CostBasis.of(new Money(request.averageCost(), instrument.currency())));
         PositionDetailData data = positionQueryUseCase.getPositionDetail(instrumentSymbol);
         return positionMapper.toDetailResponse(data);
     }
@@ -125,7 +120,7 @@ public class PositionController {
     }
 
     /**
-     * Deletes a position and its instrument entirely.
+     * Deletes a position. The catalog instrument is preserved (master data).
      *
      * @param symbol the instrument symbol
      */

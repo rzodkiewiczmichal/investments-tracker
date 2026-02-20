@@ -23,4 +23,12 @@ public interface InstrumentQueryUseCase {
      * @return collection of all instruments
      */
     Collection<Instrument> listInstruments();
+
+    /**
+     * Searches instruments by symbol or name (case-insensitive partial match).
+     *
+     * @param query the search query
+     * @return matching instruments (limited to 20 results)
+     */
+    Collection<Instrument> searchInstruments(String query);
 }

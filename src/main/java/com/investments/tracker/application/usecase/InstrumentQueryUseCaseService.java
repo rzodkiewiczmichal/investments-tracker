@@ -37,4 +37,13 @@ public class InstrumentQueryUseCaseService implements InstrumentQueryUseCase {
     public Collection<Instrument> listInstruments() {
         return instrumentRepository.findAll();
     }
+
+    @Override
+    public Collection<Instrument> searchInstruments(String query) {
+        Objects.requireNonNull(query, "query cannot be null");
+        if (query.isBlank()) {
+            return instrumentRepository.findAll();
+        }
+        return instrumentRepository.searchBySymbolOrName(query);
+    }
 }

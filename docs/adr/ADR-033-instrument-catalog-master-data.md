@@ -1,7 +1,7 @@
 # ADR-033: Instrument Catalog as System-Managed Master Data
 
 ## Status
-Proposed (2026-02-15)
+Accepted (2026-02-15)
 
 ## Context
 

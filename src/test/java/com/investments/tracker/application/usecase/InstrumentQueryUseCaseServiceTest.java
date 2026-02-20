@@ -119,6 +119,50 @@ class InstrumentQueryUseCaseServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("searchInstruments")
+    class SearchInstruments {
+
+        @Test
+        @DisplayName("should return all instruments when query is blank")
+        void shouldReturnAllInstrumentsWhenQueryIsBlank() {
+            // Given
+            Instrument instrument1 = createInstrument("AAPL", "Apple Inc.", "STOCK");
+            Instrument instrument2 = createInstrument("MSFT", "Microsoft Corp.", "STOCK");
+            when(instrumentRepository.findAll()).thenReturn(List.of(instrument1, instrument2));
+
+            // When
+            Collection<Instrument> results = instrumentQueryUseCaseService.searchInstruments("");
+
+            // Then
+            assertThat(results).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("should delegate to repository search when query is not blank")
+        void shouldDelegateToRepositorySearchWhenQueryIsNotBlank() {
+            // Given
+            Instrument instrument = createInstrument("AAPL", "Apple Inc.", "STOCK");
+            when(instrumentRepository.searchBySymbolOrName("AAP")).thenReturn(List.of(instrument));
+
+            // When
+            Collection<Instrument> results = instrumentQueryUseCaseService.searchInstruments("AAP");
+
+            // Then
+            assertThat(results).hasSize(1);
+            assertThat(results).containsExactly(instrument);
+        }
+
+        @Test
+        @DisplayName("should throw NullPointerException when query is null")
+        void shouldThrowNullPointerExceptionWhenQueryIsNull() {
+            // When/Then
+            assertThatThrownBy(() -> instrumentQueryUseCaseService.searchInstruments(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("query");
+        }
+    }
+
     private Instrument createInstrument(String symbol, String name, String type) {
         return new Instrument(
                 InstrumentSymbol.of(symbol),

@@ -44,14 +44,15 @@ Feature: Account Management
   @FR-076
   @v0.1 @account @manual-entry
   Scenario: Inline account creation during position entry
-    Given I want to manually add a position
+    Given the instrument catalog contains "PKO" with name "PKO Bank Polski" and type "STOCK"
+    And I want to manually add a position
     And no accounts exist in the system
     When I create a new account "mBank" with broker "mBank" during position entry
     And I enter the following position data:
       | Field         | Value     |
-      | Instrument    | PKO BP    |
+      | Instrument    | PKO       |
       | Quantity      | 100       |
       | Average Cost  | 45        |
       | Account       | mBank     |
-    Then a new position for "PKO BP" should be created
+    Then a new position for "PKO" should be created
     And the position should be assigned to account "mBank"

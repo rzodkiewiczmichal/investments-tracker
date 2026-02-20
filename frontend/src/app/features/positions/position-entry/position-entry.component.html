@@ -16,7 +16,7 @@
   @if (loadingAccounts()) {
     <p-card>
       <div class="loading-form">
-        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        @for (i of [1, 2, 3, 4]; track i) {
           <div class="skeleton-field">
             <p-skeleton width="30%" height="1rem" styleClass="mb-2" />
             <p-skeleton width="100%" height="2.5rem" />
@@ -28,77 +28,44 @@
     <p-card>
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <section class="form-section">
-          <h2>Instrument Information</h2>
+          <h2>Instrument</h2>
 
           <div class="field">
-            <label for="instrumentName">Instrument Name *</label>
-            <input
-              pInputText
-              id="instrumentName"
-              formControlName="instrumentName"
-              placeholder="e.g., Apple Inc."
-              [class.ng-invalid]="hasFieldError('instrumentName')"
-              [class.ng-dirty]="form.get('instrumentName')?.touched"
-              class="w-full"
-            />
-            @if (hasFieldError('instrumentName')) {
-              <small class="p-error">{{ getFieldError('instrumentName') }}</small>
+            <label for="instrumentSymbol">Search Instrument *</label>
+            <p-autoComplete
+              id="instrumentSymbol"
+              [suggestions]="instrumentSuggestions()"
+              (completeMethod)="searchInstruments($event)"
+              (onSelect)="onInstrumentSelect($event)"
+              (onClear)="onInstrumentClear()"
+              field="symbol"
+              placeholder="Type symbol or name, e.g., PKO"
+              [minLength]="1"
+              [forceSelection]="true"
+              [showClear]="true"
+              styleClass="w-full"
+              inputStyleClass="w-full"
+            >
+              <ng-template let-instrument pTemplate="item">
+                <div class="instrument-suggestion">
+                  <strong>{{ instrument.symbol }}</strong>
+                  <span> - {{ instrument.name }}</span>
+                  <small class="instrument-meta"> ({{ instrument.type }}, {{ instrument.currency }})</small>
+                </div>
+              </ng-template>
+            </p-autoComplete>
+            @if (hasFieldError('instrumentSymbol')) {
+              <small class="p-error">{{ getFieldError('instrumentSymbol') }}</small>
             }
           </div>
 
-          <div class="form-row">
-            <div class="field">
-              <label for="instrumentSymbol">Symbol / Ticker *</label>
-              <input
-                pInputText
-                id="instrumentSymbol"
-                formControlName="instrumentSymbol"
-                placeholder="e.g., AAPL"
-                [class.ng-invalid]="hasFieldError('instrumentSymbol')"
-                [class.ng-dirty]="form.get('instrumentSymbol')?.touched"
-                class="w-full"
-              />
-              @if (hasFieldError('instrumentSymbol')) {
-                <small class="p-error">{{ getFieldError('instrumentSymbol') }}</small>
-              }
+          @if (selectedInstrument()) {
+            <div class="instrument-info">
+              <span><strong>{{ selectedInstrument()!.name }}</strong></span>
+              <span>Type: {{ selectedInstrument()!.type }}</span>
+              <span>Currency: {{ selectedInstrument()!.currency }}</span>
             </div>
-
-            <div class="field">
-              <label for="instrumentType">Type *</label>
-              <p-select
-                id="instrumentType"
-                formControlName="instrumentType"
-                [options]="instrumentTypes"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select type"
-                styleClass="w-full"
-                [class.ng-invalid]="hasFieldError('instrumentType')"
-                [class.ng-dirty]="form.get('instrumentType')?.touched"
-              />
-              @if (hasFieldError('instrumentType')) {
-                <small class="p-error">{{ getFieldError('instrumentType') }}</small>
-              }
-            </div>
-
-            <div class="field">
-              <label for="currency">Currency *</label>
-              <p-select
-                id="currency"
-                formControlName="currency"
-                [options]="currencies"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Select currency"
-                styleClass="w-full"
-                [class.ng-invalid]="hasFieldError('currency')"
-                [class.ng-dirty]="form.get('currency')?.touched"
-              />
-              @if (hasFieldError('currency')) {
-                <small class="p-error">{{ getFieldError('currency') }}</small>
-              }
-            </div>
-          </div>
+          }
         </section>
 
         <section class="form-section">
@@ -167,7 +134,7 @@
                 id="averageCost"
                 formControlName="averageCost"
                 mode="currency"
-                [currency]="form.get('currency')?.value || 'PLN'"
+                [currency]="selectedInstrument()?.currency ?? 'PLN'"
                 locale="pl-PL"
                 [minFractionDigits]="2"
                 [maxFractionDigits]="4"

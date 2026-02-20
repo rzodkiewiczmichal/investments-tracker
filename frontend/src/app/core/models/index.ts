@@ -3,3 +3,4 @@ export * from './portfolio.model';
 export * from './position.model';
 export * from './account.model';
 export * from './error.model';
+export * from './instrument.model';

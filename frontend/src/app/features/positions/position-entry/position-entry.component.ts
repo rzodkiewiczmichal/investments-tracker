@@ -13,12 +13,12 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { PositionService, AccountService } from '../../../core/services';
+import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { PositionService, AccountService, InstrumentService } from '../../../core/services';
 import {
   Account,
   CreateAccountRequest,
-  InstrumentType,
-  CurrencyCode,
+  InstrumentDTO,
   ApiError,
   ValidationError,
 } from '../../../core/models';
@@ -39,6 +39,7 @@ import {
     FloatLabelModule,
     DialogModule,
     TooltipModule,
+    AutoCompleteModule,
   ],
   templateUrl: './position-entry.component.html',
   styleUrl: './position-entry.component.scss',
@@ -48,6 +49,7 @@ export class PositionEntryComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly positionService = inject(PositionService);
   private readonly accountService = inject(AccountService);
+  private readonly instrumentService = inject(InstrumentService);
   private readonly destroyRef = inject(DestroyRef);
 
   form!: FormGroup;
@@ -62,17 +64,8 @@ export class PositionEntryComponent implements OnInit {
   accountDialogLoading = signal(false);
   accountDialogError = signal<string | null>(null);
 
-  instrumentTypes: { value: InstrumentType; label: string }[] = [
-    { value: 'STOCK', label: 'Stock' },
-    { value: 'ETF', label: 'ETF' },
-  ];
-
-  currencies: { value: CurrencyCode; label: string }[] = [
-    { value: 'PLN', label: 'PLN' },
-    { value: 'EUR', label: 'EUR' },
-    { value: 'USD', label: 'USD' },
-    { value: 'GBP', label: 'GBP' },
-  ];
+  instrumentSuggestions = signal<InstrumentDTO[]>([]);
+  selectedInstrument = signal<InstrumentDTO | null>(null);
 
   ngOnInit(): void {
     this.initForm();
@@ -82,10 +75,7 @@ export class PositionEntryComponent implements OnInit {
 
   private initForm(): void {
     this.form = this.fb.group({
-      instrumentName: ['', [Validators.required, Validators.maxLength(255)]],
-      instrumentSymbol: ['', [Validators.required, Validators.maxLength(50)]],
-      instrumentType: ['STOCK', [Validators.required]],
-      currency: ['PLN', [Validators.required]],
+      instrumentSymbol: ['', [Validators.required]],
       accountId: [null, [Validators.required]],
       quantity: [null, [Validators.required, Validators.min(0.00000001)]],
       averageCost: [null, [Validators.required, Validators.min(0.0001)]],
@@ -116,6 +106,37 @@ export class PositionEntryComponent implements OnInit {
           this.loadingAccounts.set(false);
         },
       });
+  }
+
+  searchInstruments(event: AutoCompleteCompleteEvent): void {
+    const query = event.query;
+    if (query.length < 1) {
+      this.instrumentSuggestions.set([]);
+      return;
+    }
+
+    this.instrumentService
+      .searchInstruments(query)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.instrumentSuggestions.set(response.instruments);
+        },
+        error: () => {
+          this.instrumentSuggestions.set([]);
+        },
+      });
+  }
+
+  onInstrumentSelect(event: { value: InstrumentDTO }): void {
+    const instrument = event.value;
+    this.selectedInstrument.set(instrument);
+    this.form.patchValue({ instrumentSymbol: instrument.symbol });
+  }
+
+  onInstrumentClear(): void {
+    this.selectedInstrument.set(null);
+    this.form.patchValue({ instrumentSymbol: '' });
   }
 
   goBack(): void {

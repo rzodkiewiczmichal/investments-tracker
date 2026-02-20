@@ -48,6 +48,12 @@ public class InstrumentRepositoryAdapter implements InstrumentRepository {
     }
 
     @Override
+    public Collection<Instrument> searchBySymbolOrName(String query) {
+        String pattern = "%" + query + "%";
+        return jdbcRepository.searchBySymbolOrName(pattern).stream().map(mapper::toDomain).toList();
+    }
+
+    @Override
     public void deleteBySymbol(InstrumentSymbol symbol) {
         jdbcRepository.deleteById(symbol.value());
     }

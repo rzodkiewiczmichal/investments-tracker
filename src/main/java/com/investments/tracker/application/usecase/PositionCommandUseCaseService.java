@@ -7,16 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.investments.tracker.application.exception.ResourceNotFoundException;
-import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.model.AccountHolding;
-import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
-import com.investments.tracker.domain.model.value.Currency;
-import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.AccountRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
@@ -42,17 +37,8 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
 
     @Override
     public Position addPosition(
-            InstrumentSymbol symbol,
-            InstrumentName instrumentName,
-            InstrumentType instrumentType,
-            Currency currency,
-            AccountId accountId,
-            Quantity quantity,
-            CostBasis costBasis) {
+            InstrumentSymbol symbol, AccountId accountId, Quantity quantity, CostBasis costBasis) {
         Objects.requireNonNull(symbol, "symbol cannot be null");
-        Objects.requireNonNull(instrumentName, "instrumentName cannot be null");
-        Objects.requireNonNull(instrumentType, "instrumentType cannot be null");
-        Objects.requireNonNull(currency, "currency cannot be null");
         Objects.requireNonNull(accountId, "accountId cannot be null");
         Objects.requireNonNull(quantity, "quantity cannot be null");
         Objects.requireNonNull(costBasis, "costBasis cannot be null");
@@ -62,23 +48,9 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
             throw new ResourceNotFoundException("Account", "id", accountId.value().toString());
         }
 
-        // Create instrument if it doesn't exist, or validate currency matches
+        // Validate instrument exists in catalog (ADR-033)
         if (!instrumentRepository.existsBySymbol(symbol)) {
-            Instrument instrument =
-                    new Instrument(symbol, instrumentName, instrumentType, currency);
-            instrumentRepository.save(instrument);
-        } else {
-            Instrument existing = instrumentRepository.findBySymbol(symbol).orElseThrow();
-            if (existing.currency() != currency) {
-                throw new DomainException(
-                        "Currency mismatch: instrument "
-                                + symbol.value()
-                                + " has currency "
-                                + existing.currency().getCode()
-                                + " but "
-                                + currency.getCode()
-                                + " was provided");
-            }
+            throw new ResourceNotFoundException("Instrument", "symbol", symbol.value());
         }
 
         // Find or create position
@@ -134,6 +106,5 @@ public class PositionCommandUseCaseService implements PositionCommandUseCase {
         }
 
         positionRepository.deleteBySymbol(symbol);
-        instrumentRepository.deleteBySymbol(symbol);
     }
 }

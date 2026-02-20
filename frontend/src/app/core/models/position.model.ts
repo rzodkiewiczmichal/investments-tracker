@@ -31,13 +31,8 @@ export interface PositionsResponse {
   totalCount: number;
 }
 
-export type CurrencyCode = 'PLN' | 'EUR' | 'USD' | 'GBP';
-
 export interface AddPositionCommand {
-  instrumentName: string;
   instrumentSymbol: string;
-  instrumentType: InstrumentType;
-  currency: CurrencyCode;
   accountId: number;
   quantity: number;
   averageCost: number;

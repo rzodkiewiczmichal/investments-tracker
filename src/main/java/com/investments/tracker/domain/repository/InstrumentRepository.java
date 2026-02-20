@@ -52,6 +52,14 @@ public interface InstrumentRepository {
     boolean existsBySymbol(InstrumentSymbol symbol);
 
     /**
+     * Searches instruments whose symbol or name contains the query string (case-insensitive).
+     *
+     * @param query the search query
+     * @return matching instruments (limited to 20 results)
+     */
+    Collection<Instrument> searchBySymbolOrName(String query);
+
+    /**
      * Counts all instruments.
      *
      * @return the count

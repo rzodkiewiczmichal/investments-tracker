@@ -47,6 +47,15 @@ final class CucumberTestHelper {
      */
     static void ensureInstrumentExists(
             JdbcTemplate jdbcTemplate, String symbol, String name, BigDecimal currentPrice) {
+        ensureInstrumentExists(jdbcTemplate, symbol, name, "STOCK");
+    }
+
+    /**
+     * Ensures an instrument exists in the catalog with the given type. Used by manual-entry steps
+     * that seed catalog instruments before creating positions.
+     */
+    static void ensureInstrumentExists(
+            JdbcTemplate jdbcTemplate, String symbol, String name, String instrumentType) {
         Integer count =
                 jdbcTemplate.queryForObject(
                         "SELECT COUNT(*) FROM instruments WHERE symbol = ?", Integer.class, symbol);
@@ -56,7 +65,7 @@ final class CucumberTestHelper {
                     "INSERT INTO instruments (symbol, name, instrument_type, currency, version) VALUES (?, ?, ?, 'PLN', 0)",
                     symbol,
                     name != null ? name : symbol,
-                    "STOCK");
+                    instrumentType);
         }
     }
 
