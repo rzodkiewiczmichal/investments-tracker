@@ -63,7 +63,7 @@ class StooqPriceClientTest {
     @DisplayName("should parse valid multi-symbol batch CSV response")
     void shouldParseMultiSymbolBatchCsvResponse() {
         mockServer
-                .expect(requestTo("https://stooq.pl/q/l/?s=pko,pzu,kghm&f=sd2t2ohlcv&h=&e=csv"))
+                .expect(requestTo("https://stooq.pl/q/l/?s=pko%20pzu%20kghm&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(
                         withSuccess(
                                 """
@@ -111,7 +111,7 @@ class StooqPriceClientTest {
     @DisplayName("should skip N/D rows for unavailable data")
     void shouldSkipNdRows() {
         mockServer
-                .expect(requestTo("https://stooq.pl/q/l/?s=pko,bad1&f=sd2t2ohlcv&h=&e=csv"))
+                .expect(requestTo("https://stooq.pl/q/l/?s=pko%20bad1&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(
                         withSuccess(
                                 """
@@ -137,7 +137,7 @@ class StooqPriceClientTest {
         mockServer
                 .expect(
                         requestTo(
-                                "https://stooq.pl/q/l/?s=pko,atrem,elektroti&f=sd2t2ohlcv&h=&e=csv"))
+                                "https://stooq.pl/q/l/?s=pko%20atrem%20elektroti&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(
                         withSuccess(
                                 """
@@ -219,7 +219,9 @@ class StooqPriceClientTest {
     @DisplayName("should handle mixed stock and ETF batch request")
     void shouldHandleMixedStockAndEtfBatchRequest() {
         mockServer
-                .expect(requestTo("https://stooq.pl/q/l/?s=pko,etfsp500.pl&f=sd2t2ohlcv&h=&e=csv"))
+                .expect(
+                        requestTo(
+                                "https://stooq.pl/q/l/?s=pko%20etfsp500.pl&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(
                         withSuccess(
                                 """
