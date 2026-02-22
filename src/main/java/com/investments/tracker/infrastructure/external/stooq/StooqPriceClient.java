@@ -23,12 +23,17 @@ import com.investments.tracker.domain.model.value.Price;
  * <p>Fetches end-of-day and intraday prices for GPW (Warsaw Stock Exchange) instruments. All GPW
  * instruments are priced in PLN.
  *
+ * <p>Stooq requires different symbol formats depending on instrument type: stocks use bare symbols
+ * (e.g. {@code pko}), while ETFs require a {@code .pl} suffix (e.g. {@code etfsp500.pl}).
+ *
  * @see <a href="https://stooq.pl">Stooq.pl</a>
  */
 @Component
 public class StooqPriceClient {
 
     private static final Logger log = LoggerFactory.getLogger(StooqPriceClient.class);
+    private static final String ETF_PREFIX = "ETF";
+    private static final String STOOQ_GPW_SUFFIX = ".pl";
 
     private final RestClient restClient;
     private final String csvPath;
@@ -52,7 +57,7 @@ public class StooqPriceClient {
         }
 
         String symbolsParam =
-                symbols.stream().map(s -> s.value().toLowerCase()).collect(Collectors.joining(","));
+                symbols.stream().map(this::toStooqSymbol).collect(Collectors.joining(","));
 
         log.debug("Fetching prices from Stooq for: {}", symbolsParam);
 
@@ -110,10 +115,12 @@ public class StooqPriceClient {
                 StooqCsvRow.parse(line)
                         .ifPresent(
                                 row -> {
-                                    InstrumentSymbol symbol = InstrumentSymbol.of(row.symbol());
+                                    InstrumentSymbol symbol =
+                                            InstrumentSymbol.of(fromStooqSymbol(row.symbol()));
                                     Price price = new Price(Money.pln(row.close()));
                                     result.put(symbol, price);
-                                    log.debug("Stooq price for {}: {}", row.symbol(), row.close());
+                                    log.debug(
+                                            "Stooq price for {}: {}", symbol.value(), row.close());
                                 });
             } catch (Exception e) {
                 log.warn("Failed to parse Stooq CSV row: '{}' — {}", line, e.getMessage());
@@ -121,5 +128,16 @@ public class StooqPriceClient {
         }
 
         return Map.copyOf(result);
+    }
+
+    private String toStooqSymbol(InstrumentSymbol symbol) {
+        String lower = symbol.value().toLowerCase();
+        return lower.startsWith(ETF_PREFIX.toLowerCase()) ? lower + STOOQ_GPW_SUFFIX : lower;
+    }
+
+    private static String fromStooqSymbol(String stooqSymbol) {
+        return stooqSymbol.endsWith(STOOQ_GPW_SUFFIX.toUpperCase())
+                ? stooqSymbol.substring(0, stooqSymbol.length() - STOOQ_GPW_SUFFIX.length())
+                : stooqSymbol;
     }
 }

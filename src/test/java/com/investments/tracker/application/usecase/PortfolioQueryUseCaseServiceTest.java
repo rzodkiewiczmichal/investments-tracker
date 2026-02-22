@@ -16,22 +16,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.investments.tracker.domain.model.AccountHolding;
-import com.investments.tracker.domain.model.Instrument;
 import com.investments.tracker.domain.model.Portfolio;
 import com.investments.tracker.domain.model.Position;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.CostBasis;
 import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.ExchangeRate;
-import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
-import com.investments.tracker.domain.model.value.InstrumentType;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ExchangeRateProvider;
-import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
 import com.investments.tracker.domain.service.PortfolioCalculationService;
 import com.investments.tracker.domain.service.PositionCalculationService;
@@ -44,8 +40,6 @@ class PortfolioQueryUseCaseServiceTest {
             Map.of(Currency.PLN, ExchangeRate.identity(Currency.PLN));
 
     @Mock private PositionRepository positionRepository;
-
-    @Mock private InstrumentRepository instrumentRepository;
 
     @Mock private CurrentPriceProvider currentPriceProvider;
 
@@ -61,7 +55,6 @@ class PortfolioQueryUseCaseServiceTest {
         portfolioQueryUseCaseService =
                 new PortfolioQueryUseCaseService(
                         positionRepository,
-                        instrumentRepository,
                         currentPriceProvider,
                         exchangeRateProvider,
                         portfolioCalculationService);
@@ -76,7 +69,6 @@ class PortfolioQueryUseCaseServiceTest {
         void shouldReturnEmptyPortfolioWhenNoPositions() {
             // Given
             when(positionRepository.findAll()).thenReturn(List.of());
-            when(instrumentRepository.findAll()).thenReturn(List.of());
             when(currentPriceProvider.getPrices(any())).thenReturn(Map.of());
             when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
@@ -94,14 +86,7 @@ class PortfolioQueryUseCaseServiceTest {
         void shouldReturnPortfolioWithPositionsAndPrices() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument =
-                    new Instrument(
-                            InstrumentSymbol.of("AAPL"),
-                            new InstrumentName("Apple Inc."),
-                            InstrumentType.STOCK,
-                            Currency.PLN);
             when(positionRepository.findAll()).thenReturn(List.of(position));
-            when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
             when(currentPriceProvider.getPrices(any()))
                     .thenReturn(
                             Map.of(InstrumentSymbol.of("AAPL"), new Price(Money.pln("175.00"))));
@@ -124,14 +109,7 @@ class PortfolioQueryUseCaseServiceTest {
         void shouldReturnPortfolioWithoutCurrentValueWhenPricesUnknown() {
             // Given
             Position position = createPosition("AAPL", 100, "150.00");
-            Instrument instrument =
-                    new Instrument(
-                            InstrumentSymbol.of("AAPL"),
-                            new InstrumentName("Apple Inc."),
-                            InstrumentType.STOCK,
-                            Currency.PLN);
             when(positionRepository.findAll()).thenReturn(List.of(position));
-            when(instrumentRepository.findAll()).thenReturn(List.of(instrument));
             when(currentPriceProvider.getPrices(any())).thenReturn(Map.of());
             when(exchangeRateProvider.getExchangeRatesToPln(any())).thenReturn(PLN_RATES);
 
