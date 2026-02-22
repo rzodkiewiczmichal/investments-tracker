@@ -57,7 +57,7 @@ public class StooqPriceClient {
         }
 
         String symbolsParam =
-                symbols.stream().map(this::toStooqSymbol).collect(Collectors.joining(","));
+                symbols.stream().map(this::toStooqSymbol).collect(Collectors.joining(" "));
 
         log.debug("Fetching prices from Stooq for: {}", symbolsParam);
 
