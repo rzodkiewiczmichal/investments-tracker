@@ -79,6 +79,12 @@ Claude has direct access to GitHub via MCP server and can:
 3. Close issues when work is complete (with completion comment)
 4. Link related issues (e.g., "Closes #18", "Part of #13")
 
+**Post-Push Issue Closure (Mandatory):**
+After work is pushed (PR merged or commits pushed to main), Claude must:
+1. Search open GitHub issues for any that are addressed by the pushed work
+2. Close matched issues with a completion comment summarizing what was delivered and which PR(s) resolved it
+3. If no matching issue exists for the pushed work, ask the user whether to create and immediately close one (for traceability) or skip
+
 **Repository:** `rzodkiewiczmichal/investments-tracker`
 
 ## Output Guidelines
