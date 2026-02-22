@@ -196,6 +196,52 @@ class StooqPriceClientTest {
     }
 
     @Test
+    @DisplayName("should append .pl suffix for ETF symbols in request")
+    void shouldAppendPlSuffixForEtfSymbols() {
+        mockServer
+                .expect(requestTo("https://stooq.pl/q/l/?s=etfbtbsp.pl&f=sd2t2ohlcv&h=&e=csv"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                Symbol,Date,Time,Open,High,Low,Close,Volume
+                                ETFBTBSP.PL,20260220,170200,230.85,230.9,230.5,230.5,8885
+                                """,
+                                MediaType.TEXT_PLAIN));
+
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("ETFBTBSP"));
+
+        assertThat(price).isPresent();
+        assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("230.5"));
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("should handle mixed stock and ETF batch request")
+    void shouldHandleMixedStockAndEtfBatchRequest() {
+        mockServer
+                .expect(requestTo("https://stooq.pl/q/l/?s=pko,etfsp500.pl&f=sd2t2ohlcv&h=&e=csv"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                Symbol,Date,Time,Open,High,Low,Close,Volume
+                                PKO,20260220,170401,90.5,91.4,89.76,91.4,1466051
+                                ETFSP500.PL,20260220,170200,253.4,254,252.55,254,4406
+                                """,
+                                MediaType.TEXT_PLAIN));
+
+        Map<InstrumentSymbol, Price> prices =
+                client.fetchPrices(
+                        List.of(InstrumentSymbol.of("PKO"), InstrumentSymbol.of("ETFSP500")));
+
+        assertThat(prices).hasSize(2);
+        assertThat(prices.get(InstrumentSymbol.of("PKO")).money().amount())
+                .isEqualByComparingTo(new BigDecimal("91.4"));
+        assertThat(prices.get(InstrumentSymbol.of("ETFSP500")).money().amount())
+                .isEqualByComparingTo(new BigDecimal("254"));
+        mockServer.verify();
+    }
+
+    @Test
     @DisplayName("should handle decimal prices correctly")
     void shouldHandleDecimalPricesCorrectly() {
         mockServer

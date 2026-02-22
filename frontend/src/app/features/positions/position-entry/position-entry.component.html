@@ -50,7 +50,9 @@
                 <div class="instrument-suggestion">
                   <strong>{{ instrument.symbol }}</strong>
                   <span> - {{ instrument.name }}</span>
-                  <small class="instrument-meta"> ({{ instrument.type }}, {{ instrument.currency }})</small>
+                  <small class="instrument-meta">
+                    ({{ instrument.type }}, {{ instrument.currency }})</small
+                  >
                 </div>
               </ng-template>
             </p-autoComplete>
@@ -61,7 +63,9 @@
 
           @if (selectedInstrument()) {
             <div class="instrument-info">
-              <span><strong>{{ selectedInstrument()!.name }}</strong></span>
+              <span
+                ><strong>{{ selectedInstrument()!.name }}</strong></span
+              >
               <span>Type: {{ selectedInstrument()!.type }}</span>
               <span>Currency: {{ selectedInstrument()!.currency }}</span>
             </div>
