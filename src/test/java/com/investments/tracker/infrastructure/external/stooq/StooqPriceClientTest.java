@@ -219,7 +219,9 @@ class StooqPriceClientTest {
     @DisplayName("should handle mixed stock and ETF batch request")
     void shouldHandleMixedStockAndEtfBatchRequest() {
         mockServer
-                .expect(requestTo("https://stooq.pl/q/l/?s=pko%20etfsp500.pl&f=sd2t2ohlcv&h=&e=csv"))
+                .expect(
+                        requestTo(
+                                "https://stooq.pl/q/l/?s=pko%20etfsp500.pl&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(
                         withSuccess(
                                 """
