@@ -94,13 +94,13 @@ public class PortfolioCalculationService {
     }
 
     /**
-     * Calculates total current value across all positions in PLN. Returns empty if any position
-     * lacks a current price.
+     * Calculates total current value across all positions in PLN. Positions without a current price
+     * are skipped. Returns empty only when no positions have prices (or positions list is empty).
      *
      * @param positions the list of positions
      * @param currentPrices map of instrument symbol to current price
      * @param exchangeRatesByCurrency map of currency to exchange rate to PLN
-     * @return optional current value in PLN (empty if any position lacks price)
+     * @return optional current value in PLN (empty if no positions have prices)
      */
     public Optional<CurrentValue> calculateTotalCurrentValue(
             List<Position> positions,
@@ -115,14 +115,8 @@ public class PortfolioCalculationService {
             return Optional.empty();
         }
 
-        boolean allPricesAvailable =
-                positions.stream().allMatch(p -> currentPrices.containsKey(p.symbol()));
-
-        if (!allPricesAvailable) {
-            return Optional.empty();
-        }
-
         return positions.stream()
+                .filter(p -> currentPrices.containsKey(p.symbol()))
                 .map(
                         p -> {
                             Price price = currentPrices.get(p.symbol());
@@ -136,13 +130,17 @@ public class PortfolioCalculationService {
     }
 
     /**
-     * Calculates total P&L across all positions in PLN. Returns empty if any position lacks a
-     * current price.
+     * Calculates total P&L across positions that have current prices, in PLN. Positions without
+     * prices are skipped (treated as "no profit, no loss"). Returns empty only when no positions
+     * have prices (or positions list is empty).
+     *
+     * <p>Both invested amount and current value are computed from the same subset of priced
+     * positions to ensure a meaningful P&L percentage.
      *
      * @param positions the list of positions
      * @param currentPrices map of instrument symbol to current price
      * @param exchangeRatesByCurrency map of currency to exchange rate to PLN
-     * @return optional P&L in PLN (empty if prices are incomplete)
+     * @return optional P&L in PLN (empty if no positions have prices)
      */
     public Optional<ProfitAndLoss> calculateTotalProfitAndLoss(
             List<Position> positions,
@@ -153,16 +151,24 @@ public class PortfolioCalculationService {
         Objects.requireNonNull(currentPrices, "currentPrices cannot be null");
         Objects.requireNonNull(exchangeRatesByCurrency, "exchangeRatesByCurrency cannot be null");
 
-        Optional<InvestedAmount> totalInvested =
-                calculateTotalInvestedAmount(positions, exchangeRatesByCurrency);
-        Optional<CurrentValue> totalCurrentValue =
-                calculateTotalCurrentValue(positions, currentPrices, exchangeRatesByCurrency);
+        List<Position> pricedPositions =
+                positions.stream().filter(p -> currentPrices.containsKey(p.symbol())).toList();
 
-        if (totalInvested.isEmpty() || totalCurrentValue.isEmpty()) {
+        if (pricedPositions.isEmpty()) {
             return Optional.empty();
         }
 
-        return Optional.of(ProfitAndLoss.calculate(totalCurrentValue.get(), totalInvested.get()));
+        Optional<InvestedAmount> investedForPriced =
+                calculateTotalInvestedAmount(pricedPositions, exchangeRatesByCurrency);
+        Optional<CurrentValue> currentForPriced =
+                calculateTotalCurrentValue(pricedPositions, currentPrices, exchangeRatesByCurrency);
+
+        if (investedForPriced.isEmpty() || currentForPriced.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(
+                ProfitAndLoss.calculate(currentForPriced.get(), investedForPriced.get()));
     }
 
     private PortfolioMetrics calculateMetrics(
@@ -172,13 +178,24 @@ public class PortfolioCalculationService {
 
         InvestedAmount totalInvested =
                 calculateTotalInvestedAmount(positions, exchangeRatesByCurrency).orElse(null);
-        CurrentValue totalCurrentValue =
-                calculateTotalCurrentValue(positions, currentPrices, exchangeRatesByCurrency)
-                        .orElse(null);
 
+        List<Position> pricedPositions =
+                positions.stream().filter(p -> currentPrices.containsKey(p.symbol())).toList();
+
+        CurrentValue totalCurrentValue = null;
         ProfitAndLoss profitAndLoss = null;
-        if (totalInvested != null && totalCurrentValue != null) {
-            profitAndLoss = ProfitAndLoss.calculate(totalCurrentValue, totalInvested);
+
+        if (!pricedPositions.isEmpty()) {
+            totalCurrentValue =
+                    calculateTotalCurrentValue(
+                                    pricedPositions, currentPrices, exchangeRatesByCurrency)
+                            .orElse(null);
+            InvestedAmount pricedInvested =
+                    calculateTotalInvestedAmount(pricedPositions, exchangeRatesByCurrency)
+                            .orElse(null);
+            if (pricedInvested != null && totalCurrentValue != null) {
+                profitAndLoss = ProfitAndLoss.calculate(totalCurrentValue, pricedInvested);
+            }
         }
 
         return new PortfolioMetrics(

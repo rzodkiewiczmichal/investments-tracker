@@ -11,9 +11,12 @@ import com.investments.tracker.domain.model.value.ProfitAndLoss;
  *
  * <ul>
  *   <li>totalInvestedAmount - null when portfolio is empty
- *   <li>totalCurrentValue - null when prices are unknown for any position
- *   <li>profitAndLoss - null when portfolio is empty or prices are unknown
+ *   <li>totalCurrentValue - null when no position has a known price
+ *   <li>profitAndLoss - null when portfolio is empty or no position has a known price
  * </ul>
+ *
+ * <p>Positions without prices are skipped in current value and P&L calculations (treated as "no
+ * profit, no loss"). The totalInvestedAmount always includes all positions.
  */
 public record PortfolioMetrics(
         InvestedAmount totalInvestedAmount,

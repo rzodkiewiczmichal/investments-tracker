@@ -82,19 +82,29 @@ class PortfolioCalculationServiceTest {
         }
 
         @Test
-        @DisplayName("creates portfolio with null metrics when only some prices available")
-        void createsPortfolioWithNullMetricsWhenPartialPrices() {
-            Position aapl = createPosition("AAPL", 100, "500");
-            Position msft = createPosition("MSFT", 50, "300");
+        @DisplayName(
+                "creates portfolio with metrics from priced positions when some prices missing")
+        void createsPortfolioWithMetricsFromPricedPositionsWhenPartialPrices() {
+            Position aapl = createPosition("AAPL", 100, "500"); // invested 50000
+            Position msft = createPosition("MSFT", 50, "300"); // invested 15000, no price
             Map<InstrumentSymbol, Price> prices =
-                    Map.of(InstrumentSymbol.of("AAPL"), Price.pln("550"));
+                    Map.of(InstrumentSymbol.of("AAPL"), Price.pln("550")); // current 55000
 
             Portfolio portfolio = service.createPortfolio(List.of(aapl, msft), prices, PLN_RATES);
 
             assertThat(portfolio.getPositionCount()).isEqualTo(2);
+            // Total invested includes ALL positions
             assertThat(portfolio.getTotalInvestedAmount()).isPresent();
-            assertThat(portfolio.getTotalCurrentValue()).isEmpty();
-            assertThat(portfolio.getTotalProfitAndLoss()).isEmpty();
+            assertThat(portfolio.getTotalInvestedAmount().get().money().amount())
+                    .isEqualByComparingTo("65000");
+            // Current value only from priced positions (AAPL)
+            assertThat(portfolio.getTotalCurrentValue()).isPresent();
+            assertThat(portfolio.getTotalCurrentValue().get().money().amount())
+                    .isEqualByComparingTo("55000");
+            // P&L from priced positions only: 55000 - 50000 = 5000
+            assertThat(portfolio.getTotalProfitAndLoss()).isPresent();
+            assertThat(portfolio.getTotalProfitAndLoss().get().amount().amount())
+                    .isEqualByComparingTo("5000");
         }
     }
 
@@ -158,15 +168,28 @@ class PortfolioCalculationServiceTest {
         }
 
         @Test
-        @DisplayName("returns empty when any position lacks a price")
-        void returnsEmptyWhenPriceMissing() {
+        @DisplayName("calculates current value from priced positions only when some prices missing")
+        void calculatesFromPricedPositionsWhenSomePricesMissing() {
             Position aapl = createPosition("AAPL", 100, "500");
             Position msft = createPosition("MSFT", 50, "300");
             Map<InstrumentSymbol, Price> prices =
-                    Map.of(InstrumentSymbol.of("AAPL"), Price.pln("550"));
+                    Map.of(InstrumentSymbol.of("AAPL"), Price.pln("550")); // 100 * 550 = 55000
 
             Optional<CurrentValue> result =
                     service.calculateTotalCurrentValue(List.of(aapl, msft), prices, PLN_RATES);
+
+            assertThat(result).isPresent();
+            assertThat(result.get().money().amount()).isEqualByComparingTo("55000");
+        }
+
+        @Test
+        @DisplayName("returns empty when no positions have prices")
+        void returnsEmptyWhenNoPricesAvailable() {
+            Position aapl = createPosition("AAPL", 100, "500");
+            Position msft = createPosition("MSFT", 50, "300");
+
+            Optional<CurrentValue> result =
+                    service.calculateTotalCurrentValue(List.of(aapl, msft), Map.of(), PLN_RATES);
 
             assertThat(result).isEmpty();
         }
@@ -224,7 +247,24 @@ class PortfolioCalculationServiceTest {
         }
 
         @Test
-        @DisplayName("returns empty when prices are unknown")
+        @DisplayName("calculates P&L from priced positions only, ignoring unpriced")
+        void calculatesPLFromPricedPositionsOnly() {
+            Position aapl = createPosition("AAPL", 100, "500"); // invested 50000
+            Position msft = createPosition("MSFT", 50, "300"); // invested 15000, no price
+            Map<InstrumentSymbol, Price> prices =
+                    Map.of(InstrumentSymbol.of("AAPL"), Price.pln("550")); // current 55000
+            // P&L should be based on AAPL only: 55000 - 50000 = 5000
+
+            Optional<ProfitAndLoss> result =
+                    service.calculateTotalProfitAndLoss(List.of(aapl, msft), prices, PLN_RATES);
+
+            assertThat(result).isPresent();
+            assertThat(result.get().amount().amount()).isEqualByComparingTo("5000");
+            assertThat(result.get().isProfit()).isTrue();
+        }
+
+        @Test
+        @DisplayName("returns empty when no prices are available")
         void returnsEmptyWhenNoPrices() {
             Position aapl = createPosition("AAPL", 100, "500");
             Position msft = createPosition("MSFT", 50, "300");
