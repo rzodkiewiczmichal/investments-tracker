@@ -141,14 +141,15 @@ Requirements are organized into the following categories:
 
 ## 3. Data Import
 
-### FR-021: Import Positions from Broker File
+### FR-021: Import Positions from Broker Transaction History
 **Category:** Data Import
 **Priority:** Must Have
-**Description:** System can import position data from broker-specific CSV export files, creating positions in the system based on valid data.
+**Description:** System imports broker-specific CSV transaction history files (buy/sell records), computes current positions by netting buys against sells per instrument, and calculates weighted average cost basis from purchase transactions. Commission is included in cost basis. Import performs full replacement of all positions within the target account. If the account does not exist, import creates it. New accounts can only be created via import — manual account creation is not supported. After an account exists, individual positions can be added manually (corrections/additions).
+**Broker Accounts:** mBank Makler, mBank IKE, mBank IKZE (shared format), XTB, Degiro. Government bonds deferred (future).
 **Related Scenarios:** Import positions from broker file
 **Cucumber Tags:** @FR-021
 **Dependencies:** None
-**Target Version:** v0.2 (first broker), v0.5 (all 6 brokers)
+**Target Version:** v0.2 (mBank adapter), v0.3+ (XTB, Degiro)
 
 ### FR-022: Import Validation - Missing Instrument Identifier
 **Category:** Data Import
@@ -248,7 +249,7 @@ Requirements are organized into the following categories:
 ### FR-041: Manual Entry of Stock Position
 **Category:** Manual Entry
 **Priority:** Must Have
-**Description:** User can manually add a stock position by entering instrument name, quantity, average cost, and account, with system confirming successful creation.
+**Description:** User can manually add a stock position to an existing account by entering instrument name, quantity, average cost, and account, with system confirming successful creation. Only available for accounts that already exist (created via import).
 **Related Scenarios:** Manual entry of stock position
 **Cucumber Tags:** @FR-041
 **Dependencies:** None
@@ -257,7 +258,7 @@ Requirements are organized into the following categories:
 ### FR-042: Manual Entry of ETF Position
 **Category:** Manual Entry
 **Priority:** Must Have
-**Description:** User can manually add an ETF position by entering instrument name, quantity, average cost, and account, with system confirming successful creation.
+**Description:** User can manually add an ETF position to an existing account by entering instrument name, quantity, average cost, and account, with system confirming successful creation. Only available for accounts that already exist (created via import).
 **Related Scenarios:** Manual entry of ETF position
 **Cucumber Tags:** @FR-042
 **Dependencies:** None
@@ -442,14 +443,15 @@ Requirements are organized into the following categories:
 **Dependencies:** FR-071
 **Target Version:** v0.2
 
-### FR-073: Create Account
+### FR-073: Create Account via Import
 **Category:** Account Management
 **Priority:** Must Have
-**Description:** User can create a new brokerage account by providing account name and broker name. The account is persisted and immediately available for assigning positions.
+**Description:** New accounts are created exclusively through the import flow. When importing a transaction history file, the user specifies account name and broker name. The account is created and positions are populated from the imported data. Standalone manual account creation is not supported.
 **Related Scenarios:** Create new account
 **Cucumber Tags:** @FR-073
-**Dependencies:** None
-**Target Version:** v0.1
+**Dependencies:** FR-021
+**Target Version:** v0.2
+**Note:** Supersedes previous v0.1 manual account creation. Existing manual creation API/UI to be replaced by import-driven flow.
 
 ### FR-074: Create Account Validation - Missing Required Fields
 **Category:** Account Management
@@ -469,14 +471,13 @@ Requirements are organized into the following categories:
 **Dependencies:** FR-073
 **Target Version:** v0.1
 
-### FR-076: Inline Account Creation During Position Entry
+### FR-076: ~~Inline Account Creation During Position Entry~~ (Superseded)
 **Category:** Account Management
-**Priority:** Must Have
-**Description:** When adding a position, if no accounts exist or the user needs a new one, the UI allows creating an account inline without navigating away from the position entry flow. The newly created account is immediately selectable in the account dropdown.
-**Related Scenarios:** Inline account creation during position entry
+**Priority:** ~~Must Have~~ Removed
+**Description:** ~~When adding a position, if no accounts exist or the user needs a new one, the UI allows creating an account inline without navigating away from the position entry flow.~~ **Superseded:** Accounts are created exclusively via import (FR-021). Manual position entry (FR-041, FR-042) only works on existing accounts. Inline account creation during position entry is no longer supported.
 **Cucumber Tags:** @FR-076
 **Dependencies:** FR-073, FR-041
-**Target Version:** v0.1
+**Target Version:** ~~v0.1~~ Removed
 
 ---
 
