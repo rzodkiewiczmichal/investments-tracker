@@ -1,0 +1,126 @@
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: center;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-color);
+
+  &.positive {
+    color: var(--green-500);
+  }
+
+  &.negative {
+    color: var(--red-500);
+  }
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.section-description {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  margin: 0 0 1.5rem 0;
+}
+
+.mapping-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.broker-name {
+  .label {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+  }
+
+  strong {
+    font-size: 1.1rem;
+  }
+}
+
+.mapping-body {
+  .field {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.suggestions-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.no-suggestions {
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.instrument-suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+
+  .instrument-meta {
+    color: var(--text-color-secondary);
+    font-size: 0.8rem;
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.confirm-hint {
+  color: var(--text-color-secondary);
+  font-style: italic;
+}

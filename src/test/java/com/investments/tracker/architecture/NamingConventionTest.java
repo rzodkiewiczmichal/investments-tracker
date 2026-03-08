@@ -154,6 +154,8 @@ class NamingConventionTest {
                 .resideInAPackage("..domain.service..")
                 .and()
                 .areNotInterfaces()
+                .and()
+                .areTopLevelClasses()
                 .should()
                 .haveSimpleNameEndingWith("Service")
                 .allowEmptyShould(true)

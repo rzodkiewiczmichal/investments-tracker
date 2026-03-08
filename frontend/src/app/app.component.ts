@@ -19,6 +19,11 @@ export class AppComponent {
       routerLink: '/portfolio',
     },
     {
+      label: 'Import',
+      icon: 'pi pi-upload',
+      routerLink: '/import',
+    },
+    {
       label: 'Add Position',
       icon: 'pi pi-plus',
       routerLink: '/positions/new',

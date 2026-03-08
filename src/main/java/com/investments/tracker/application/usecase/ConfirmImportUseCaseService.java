@@ -27,7 +27,9 @@ import com.investments.tracker.domain.model.value.BrokerInstrumentName;
 import com.investments.tracker.domain.model.value.ImportSessionId;
 import com.investments.tracker.domain.model.value.ImportSessionStatus;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.AccountRepository;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ImportSessionRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
@@ -43,18 +45,21 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
     private final AccountRepository accountRepository;
     private final PositionRepository positionRepository;
     private final ImportCalculationService importCalculationService;
+    private final CurrentPriceProvider currentPriceProvider;
 
     public ConfirmImportUseCaseService(
             ImportSessionRepository importSessionRepository,
             InstrumentRepository instrumentRepository,
             AccountRepository accountRepository,
             PositionRepository positionRepository,
-            ImportCalculationService importCalculationService) {
+            ImportCalculationService importCalculationService,
+            CurrentPriceProvider currentPriceProvider) {
         this.importSessionRepository = importSessionRepository;
         this.instrumentRepository = instrumentRepository;
         this.accountRepository = accountRepository;
         this.positionRepository = positionRepository;
         this.importCalculationService = importCalculationService;
+        this.currentPriceProvider = currentPriceProvider;
     }
 
     @Override
@@ -71,6 +76,43 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
         validateMappingsComplete(mergedMappings);
         validateCatalogSymbolsExist(userMappings);
 
+        Set<InstrumentSymbol> resolvedSymbols =
+                mergedMappings.stream()
+                        .filter(InstrumentMapping::isResolved)
+                        .map(InstrumentMapping::catalogSymbol)
+                        .collect(Collectors.toSet());
+
+        Map<InstrumentSymbol, Price> availablePrices =
+                currentPriceProvider.getPrices(resolvedSymbols);
+
+        Set<InstrumentSymbol> missingPrices =
+                resolvedSymbols.stream()
+                        .filter(s -> !availablePrices.containsKey(s))
+                        .collect(Collectors.toSet());
+
+        if (!missingPrices.isEmpty()) {
+            ImportSession pendingPrices =
+                    new ImportSession(
+                            session.id(),
+                            ImportSessionStatus.PENDING_PRICES,
+                            session.broker(),
+                            session.accountName(),
+                            session.transactions(),
+                            mergedMappings,
+                            session.createdAt(),
+                            null);
+
+            return importSessionRepository.save(pendingPrices);
+        }
+
+        return completeImport(session, mergedMappings);
+    }
+
+    /**
+     * Completes the import by resolving transactions, computing holdings, and replacing positions.
+     * Package-private so {@link ProvideImportPricesUseCaseService} can reuse it.
+     */
+    ImportSession completeImport(ImportSession session, List<InstrumentMapping> mergedMappings) {
         List<Transaction> resolvedTransactions =
                 resolveTransactions(session.transactions(), mergedMappings);
 

@@ -1,0 +1,109 @@
+@if (error()) {
+  <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
+}
+
+<p-card styleClass="summary-card mb-4">
+  <div class="summary">
+    <div class="summary-item">
+      <span class="summary-value">{{ session.summary.totalTransactions }}</span>
+      <span class="summary-label">Transactions Parsed</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-value positive">{{ session.summary.matchedInstruments }}</span>
+      <span class="summary-label">Matched Automatically</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-value negative">{{ session.summary.unmatchedInstruments }}</span>
+      <span class="summary-label">Need Your Attention</span>
+    </div>
+  </div>
+</p-card>
+
+<h2 class="section-title">Map Unmatched Instruments</h2>
+<p class="section-description">
+  The following instruments from your broker file could not be matched automatically. Please select
+  the correct catalog instrument for each one.
+</p>
+
+@for (mapping of mappings(); track mapping.brokerName; let i = $index) {
+  <p-card styleClass="mapping-card mb-3">
+    <div class="mapping-header">
+      <div class="broker-name">
+        <span class="label">Broker Name:</span>
+        <strong>{{ mapping.brokerName }}</strong>
+      </div>
+      @if (mapping.selectedInstrument) {
+        <p-tag severity="success" value="Mapped" icon="pi pi-check" />
+      } @else {
+        <p-tag severity="warn" value="Unmapped" icon="pi pi-exclamation-triangle" />
+      }
+    </div>
+
+    <p-divider />
+
+    <div class="mapping-body">
+      <div class="field">
+        <label [for]="'mapping-' + i">Map to catalog instrument:</label>
+        <p-autoComplete
+          [id]="'mapping-' + i"
+          [suggestions]="mapping.searchResults"
+          (completeMethod)="searchInstruments($event, i)"
+          (onSelect)="onInstrumentSelect($event, i)"
+          (onClear)="onInstrumentClear(i)"
+          field="symbol"
+          placeholder="Search by symbol or name..."
+          [minLength]="1"
+          [forceSelection]="true"
+          [showClear]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [ngModel]="mapping.selectedInstrument"
+        >
+          <ng-template let-instrument pTemplate="item">
+            <div class="instrument-suggestion">
+              <strong>{{ instrument.symbol }}</strong>
+              <span> — {{ instrument.name }}</span>
+              <small class="instrument-meta"
+                >({{ instrument.type }}, {{ instrument.currency }})</small
+              >
+            </div>
+          </ng-template>
+        </p-autoComplete>
+      </div>
+
+      @if (mapping.suggestions.length > 0) {
+        <div class="suggestions">
+          <span class="suggestions-label">Suggestions:</span>
+          <div class="suggestions-list">
+            @for (suggestion of mapping.suggestions; track suggestion.symbol) {
+              <p-button
+                [label]="suggestion.symbol + ' — ' + suggestion.name"
+                [outlined]="true"
+                severity="secondary"
+                size="small"
+                icon="pi pi-arrow-right"
+                iconPos="right"
+                (onClick)="useSuggestion(i, suggestion.symbol, suggestion.name)"
+              />
+            }
+          </div>
+        </div>
+      } @else {
+        <small class="no-suggestions">No suggestions available — use the search above.</small>
+      }
+    </div>
+  </p-card>
+}
+
+<div class="confirm-actions">
+  <p-button
+    label="Confirm Import"
+    icon="pi pi-check"
+    [loading]="confirming()"
+    [disabled]="!allMapped() || confirming()"
+    (onClick)="confirm()"
+  />
+  @if (!allMapped()) {
+    <small class="confirm-hint">All instruments must be mapped before confirming.</small>
+  }
+</div>

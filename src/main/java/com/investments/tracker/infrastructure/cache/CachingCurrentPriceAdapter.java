@@ -15,10 +15,11 @@ import org.springframework.web.client.RestClientException;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.CurrentPriceProvider;
+import com.investments.tracker.domain.repository.ManualPriceProvider;
 import com.investments.tracker.infrastructure.external.stooq.StooqPriceClient;
 
 /**
- * Cache-aside implementation of {@link CurrentPriceProvider}.
+ * Cache-aside implementation of {@link CurrentPriceProvider} and {@link ManualPriceProvider}.
  *
  * <p>Checks Redis first via {@link RedisCurrentPriceAdapter}; on cache miss, fetches from Stooq.pl
  * via {@link StooqPriceClient} and stores the result in Redis with a 24-hour TTL.
@@ -27,7 +28,7 @@ import com.investments.tracker.infrastructure.external.stooq.StooqPriceClient;
  * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032</a>
  */
 @Component
-public class CachingCurrentPriceAdapter implements CurrentPriceProvider {
+public class CachingCurrentPriceAdapter implements CurrentPriceProvider, ManualPriceProvider {
 
     private static final Logger log = LoggerFactory.getLogger(CachingCurrentPriceAdapter.class);
 
@@ -93,5 +94,17 @@ public class CachingCurrentPriceAdapter implements CurrentPriceProvider {
         Map<InstrumentSymbol, Price> result = new HashMap<>(cached);
         result.putAll(fetched);
         return Map.copyOf(result);
+    }
+
+    /**
+     * Stores a price directly in the cache. Used for user-provided prices during import when no
+     * automatic price provider covers the instrument.
+     *
+     * @param symbol the instrument symbol
+     * @param price the price to store
+     */
+    @Override
+    public void putPrice(InstrumentSymbol symbol, Price price) {
+        redisAdapter.putPrice(symbol, price);
     }
 }

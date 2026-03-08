@@ -33,9 +33,18 @@ public record Transaction(
         Objects.requireNonNull(currency, "currency cannot be null");
     }
 
-    /** Calculates total cost: (unitPrice * quantity) + commission. */
+    /**
+     * Calculates total cost of the transaction.
+     *
+     * <p>Commission is only included when its currency matches the trade currency. For
+     * cross-currency commissions (e.g., PLN commission on EUR trades), the commission is excluded
+     * from the cost basis since no exchange rate is available.
+     */
     public Money totalCost() {
         Money value = unitPrice.money().multiply(quantity.toBigDecimal());
-        return value.add(commission.money());
+        if (commission.currency().equals(currency)) {
+            return value.add(commission.money());
+        }
+        return value;
     }
 }

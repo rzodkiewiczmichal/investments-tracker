@@ -1,0 +1,62 @@
+@if (error()) {
+  <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
+}
+
+<p-card>
+  <div class="upload-form">
+    <div class="field">
+      <label for="broker">Broker *</label>
+      <input
+        pInputText
+        id="broker"
+        [ngModel]="broker()"
+        (ngModelChange)="broker.set($event)"
+        placeholder="e.g., mBank"
+        class="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label for="accountName">Account Name *</label>
+      <input
+        pInputText
+        id="accountName"
+        [ngModel]="accountName()"
+        (ngModelChange)="accountName.set($event)"
+        placeholder="e.g., My Brokerage Account"
+        class="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label for="fileUpload">Transaction History File *</label>
+      <p-fileUpload
+        mode="basic"
+        chooseLabel="Choose CSV File"
+        chooseIcon="pi pi-upload"
+        accept=".csv"
+        [auto]="false"
+        [customUpload]="true"
+        (onSelect)="onFileSelect($event)"
+        (onClear)="onFileClear()"
+      />
+      @if (selectedFile()) {
+        <div class="file-info">
+          <i class="pi pi-file"></i>
+          <span>{{ selectedFile()!.name }}</span>
+          <small>({{ (selectedFile()!.size / 1024).toFixed(1) }} KB)</small>
+        </div>
+      }
+    </div>
+
+    <div class="form-actions">
+      <p-button
+        label="Upload & Parse"
+        icon="pi pi-upload"
+        [loading]="loading()"
+        [disabled]="!canUpload() || loading()"
+        (onClick)="upload()"
+      />
+    </div>
+  </div>
+</p-card>

@@ -1,0 +1,35 @@
+<p-message severity="success" text="Import completed successfully!" styleClass="mb-4 w-full" />
+
+<p-card>
+  <div class="confirmation-details">
+    <div class="detail-row">
+      <span class="detail-label">Broker</span>
+      <span class="detail-value">{{ session.broker }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Account</span>
+      <span class="detail-value">{{ session.accountName }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Transactions Processed</span>
+      <span class="detail-value">{{ session.summary.totalTransactions }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Instruments Imported</span>
+      <span class="detail-value">{{
+        session.summary.matchedInstruments + session.summary.unmatchedInstruments
+      }}</span>
+    </div>
+  </div>
+
+  <div class="confirmation-actions">
+    <p-button label="Go to Portfolio" icon="pi pi-chart-pie" routerLink="/portfolio" />
+    <p-button
+      label="Import Another File"
+      icon="pi pi-upload"
+      [outlined]="true"
+      severity="secondary"
+      (onClick)="importAnother.emit()"
+    />
+  </div>
+</p-card>

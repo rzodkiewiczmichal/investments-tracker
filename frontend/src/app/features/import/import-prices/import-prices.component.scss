@@ -1,0 +1,43 @@
+.price-entry {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.instrument-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.instrument-symbol {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.instrument-name {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.price-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-200);
+}

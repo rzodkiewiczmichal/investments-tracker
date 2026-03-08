@@ -14,6 +14,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'import',
+    loadComponent: () =>
+      import('./features/import/import-wizard/import-wizard.component').then(
+        (m) => m.ImportWizardComponent,
+      ),
+  },
+  {
     path: 'positions/new',
     loadComponent: () =>
       import('./features/positions/position-entry/position-entry.component').then(

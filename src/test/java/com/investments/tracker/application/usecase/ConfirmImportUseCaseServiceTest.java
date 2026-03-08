@@ -38,6 +38,7 @@ import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.model.value.TransactionType;
 import com.investments.tracker.domain.repository.AccountRepository;
+import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ImportSessionRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 import com.investments.tracker.domain.repository.PositionRepository;
@@ -55,6 +56,8 @@ class ConfirmImportUseCaseServiceTest {
     @Mock private PositionRepository positionRepository;
 
     @Mock private ImportCalculationService importCalculationService;
+
+    @Mock private CurrentPriceProvider currentPriceProvider;
 
     @InjectMocks private ConfirmImportUseCaseService useCase;
 
@@ -112,6 +115,10 @@ class ConfirmImportUseCaseServiceTest {
                                         new InstrumentSymbol("ETFBCASH"))),
                         ImportSessionStatus.READY_TO_CONFIRM);
         when(importSessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        when(currentPriceProvider.getPrices(any()))
+                .thenReturn(
+                        java.util.Map.of(
+                                new InstrumentSymbol("ETFBCASH"), Price.of(Money.pln("10.00"))));
         when(accountRepository.findByName(AccountName.of("Test")))
                 .thenReturn(
                         Optional.of(
@@ -140,6 +147,10 @@ class ConfirmImportUseCaseServiceTest {
                                         new InstrumentSymbol("ETFBCASH"))),
                         ImportSessionStatus.READY_TO_CONFIRM);
         when(importSessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        when(currentPriceProvider.getPrices(any()))
+                .thenReturn(
+                        java.util.Map.of(
+                                new InstrumentSymbol("ETFBCASH"), Price.of(Money.pln("10.00"))));
         when(accountRepository.findByName(AccountName.of("Test"))).thenReturn(Optional.empty());
         when(accountRepository.create(AccountName.of("Test"), BrokerName.of("mBank")))
                 .thenReturn(

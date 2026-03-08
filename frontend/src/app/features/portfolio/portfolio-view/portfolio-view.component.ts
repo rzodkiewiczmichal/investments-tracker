@@ -71,6 +71,10 @@ export class PortfolioViewComponent implements OnInit {
     }
   }
 
+  navigateToImport(): void {
+    this.router.navigate(['/import']);
+  }
+
   navigateToAdd(): void {
     this.router.navigate(['/positions/new']);
   }

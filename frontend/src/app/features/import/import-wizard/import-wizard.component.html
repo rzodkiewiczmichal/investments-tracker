@@ -1,0 +1,75 @@
+<div class="import-wizard">
+  <div class="page-header">
+    <h1>Import Transactions</h1>
+    <p class="page-description">
+      Upload your broker's transaction history file to automatically compute positions.
+    </p>
+  </div>
+
+  @if (error()) {
+    <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
+  }
+
+  @if (autoConfirming()) {
+    <p-message
+      severity="info"
+      text="All instruments matched! Confirming import..."
+      styleClass="mb-4 w-full"
+    />
+  }
+
+  <p-stepper [(value)]="activeStep" [linear]="true">
+    <p-step-list>
+      <p-step [value]="0">Upload File</p-step>
+      <p-stepper-separator />
+      <p-step [value]="1">Map Instruments</p-step>
+      <p-stepper-separator />
+      <p-step [value]="2">Provide Prices</p-step>
+      <p-stepper-separator />
+      <p-step [value]="3">Complete</p-step>
+    </p-step-list>
+
+    <p-step-panels>
+      <p-step-panel [value]="0">
+        <ng-template pTemplate="content">
+          <div class="step-content">
+            <app-import-upload (uploaded)="onUploaded($event)" />
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <p-step-panel [value]="1">
+        <ng-template pTemplate="content">
+          <div class="step-content">
+            @if (session() && session()!.status === 'PENDING_REVIEW') {
+              <app-import-mapping [session]="session()!" (confirmed)="onMappingConfirmed($event)" />
+            }
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <p-step-panel [value]="2">
+        <ng-template pTemplate="content">
+          <div class="step-content">
+            @if (session() && session()!.status === 'PENDING_PRICES') {
+              <app-import-prices
+                [session]="session()!"
+                (pricesProvided)="onPricesProvided($event)"
+              />
+            }
+          </div>
+        </ng-template>
+      </p-step-panel>
+
+      <p-step-panel [value]="3">
+        <ng-template pTemplate="content">
+          <div class="step-content">
+            @if (session() && session()!.status === 'COMPLETED') {
+              <app-import-confirmation [session]="session()!" (importAnother)="onImportAnother()" />
+            }
+          </div>
+        </ng-template>
+      </p-step-panel>
+    </p-step-panels>
+  </p-stepper>
+</div>

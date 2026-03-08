@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.investments.tracker.application.port.out.TransactionHistoryParser;
+import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.exception.ImportParsingException;
 import com.investments.tracker.domain.model.ImportSession;
 import com.investments.tracker.domain.model.InstrumentMapping;
@@ -109,13 +110,18 @@ public class InitiateImportUseCaseService implements InitiateImportUseCase {
             }
 
             BrokerInstrumentName brokerName = entry.getKey();
-            InstrumentSymbol symbol = new InstrumentSymbol(brokerName.value());
 
-            if (instrumentRepository.findBySymbol(symbol).isPresent()) {
-                mappings.add(InstrumentMapping.resolved(brokerName, symbol));
-            } else {
-                mappings.add(InstrumentMapping.unresolved(brokerName));
+            try {
+                InstrumentSymbol symbol = new InstrumentSymbol(brokerName.value());
+                if (instrumentRepository.findBySymbol(symbol).isPresent()) {
+                    mappings.add(InstrumentMapping.resolved(brokerName, symbol));
+                    continue;
+                }
+            } catch (DomainException ignored) {
+                // Broker name is not a valid symbol format — treat as unmatched
             }
+
+            mappings.add(InstrumentMapping.unresolved(brokerName));
         }
 
         return mappings;

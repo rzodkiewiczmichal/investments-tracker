@@ -46,34 +46,29 @@ public class ImportCalculationService {
         Objects.requireNonNull(transactions, "transactions cannot be null");
         Objects.requireNonNull(accountId, "accountId cannot be null");
 
-        // Accumulate per symbol: [0] = totalBuyCost (Money), [1] = totalBuyQty (BigDecimal), [2] =
-        // totalSellQty (BigDecimal)
-        Map<InstrumentSymbol, Object[]> accumulators = new HashMap<>();
+        Map<InstrumentSymbol, TransactionAccumulator> accumulators = new HashMap<>();
 
         for (Transaction tx : transactions) {
-            Object[] acc =
+            TransactionAccumulator acc =
                     accumulators.computeIfAbsent(
                             tx.symbol(),
-                            k -> new Object[] {Money.zero(), BigDecimal.ZERO, BigDecimal.ZERO});
+                            k -> new TransactionAccumulator(Money.zero(tx.currency())));
 
             if (tx.type() == TransactionType.BUY) {
-                acc[0] = ((Money) acc[0]).add(tx.totalCost());
-                acc[1] = ((BigDecimal) acc[1]).add(tx.quantity().toBigDecimal());
+                acc.totalBuyCost = acc.totalBuyCost.add(tx.totalCost());
+                acc.totalBuyQty = acc.totalBuyQty.add(tx.quantity().toBigDecimal());
             } else {
-                acc[2] = ((BigDecimal) acc[2]).add(tx.quantity().toBigDecimal());
+                acc.totalSellQty = acc.totalSellQty.add(tx.quantity().toBigDecimal());
             }
         }
 
         Map<InstrumentSymbol, AccountHolding> holdings = new HashMap<>();
         for (var entry : accumulators.entrySet()) {
-            Object[] acc = entry.getValue();
-            Money totalBuyCost = (Money) acc[0];
-            BigDecimal totalBuyQty = (BigDecimal) acc[1];
-            BigDecimal totalSellQty = (BigDecimal) acc[2];
-            BigDecimal netQty = totalBuyQty.subtract(totalSellQty);
+            TransactionAccumulator acc = entry.getValue();
+            BigDecimal netQty = acc.totalBuyQty.subtract(acc.totalSellQty);
 
             if (netQty.signum() > 0) {
-                CostBasis costBasis = CostBasis.of(totalBuyCost.divide(totalBuyQty));
+                CostBasis costBasis = CostBasis.of(acc.totalBuyCost.divide(acc.totalBuyQty));
                 holdings.put(
                         entry.getKey(),
                         new AccountHolding(accountId, Quantity.of(netQty), costBasis));
@@ -81,5 +76,15 @@ public class ImportCalculationService {
         }
 
         return holdings;
+    }
+
+    private static class TransactionAccumulator {
+        Money totalBuyCost;
+        BigDecimal totalBuyQty = BigDecimal.ZERO;
+        BigDecimal totalSellQty = BigDecimal.ZERO;
+
+        TransactionAccumulator(Money zeroCost) {
+            this.totalBuyCost = zeroCost;
+        }
     }
 }

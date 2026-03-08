@@ -1,0 +1,46 @@
+@if (error()) {
+  <p-message severity="error" [text]="error()!" styleClass="mb-4 w-full" />
+}
+
+<p-message
+  severity="warn"
+  text="Some instruments don't have automatic price data. Please provide the current market price for each."
+  styleClass="mb-4 w-full"
+/>
+
+<div class="price-list">
+  @for (state of priceStates(); track state.symbol; let i = $index) {
+    <p-card styleClass="mb-3">
+      <div class="price-entry">
+        <div class="instrument-info">
+          <span class="instrument-symbol">{{ state.symbol }}</span>
+          <span class="instrument-name">{{ state.name }}</span>
+        </div>
+        <div class="price-input">
+          <label [for]="'price-' + i">Current Price ({{ state.currency }})</label>
+          <p-inputNumber
+            [id]="'price-' + i"
+            [ngModel]="state.price"
+            (ngModelChange)="onPriceChange(i, $event)"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+            mode="decimal"
+            [min]="0"
+            placeholder="e.g. 3.24"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+    </p-card>
+  }
+</div>
+
+<div class="form-actions">
+  <p-button
+    label="Submit Prices & Complete Import"
+    icon="pi pi-check"
+    [loading]="loading()"
+    [disabled]="!allPricesProvided() || loading()"
+    (onClick)="submit()"
+  />
+</div>

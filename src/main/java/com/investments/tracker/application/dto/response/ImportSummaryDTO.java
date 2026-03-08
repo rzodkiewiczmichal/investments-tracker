@@ -7,4 +7,5 @@ public record ImportSummaryDTO(
         int totalTransactions,
         int matchedInstruments,
         int unmatchedInstruments,
-        List<UnmatchedInstrumentDTO> unmatchedDetails) {}
+        List<UnmatchedInstrumentDTO> unmatchedDetails,
+        List<InstrumentNeedingPriceDTO> instrumentsNeedingPrices) {}

@@ -107,6 +107,23 @@ class InitiateImportUseCaseServiceTest {
     }
 
     @Test
+    void invalidSymbolFormatTreatedAsUnmatched() {
+        when(parser.brokerName()).thenReturn("mBank");
+        when(parser.parse(any()))
+                .thenReturn(List.of(rawTx("DTLE GR ETF", TransactionType.BUY, 10)));
+        when(importSessionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        ImportSession session =
+                useCase.initiateImport(
+                        "mBank", AccountName.of("Test"), new ByteArrayInputStream(new byte[0]));
+
+        assertThat(session.status()).isEqualTo(ImportSessionStatus.PENDING_REVIEW);
+        assertThat(session.unresolvedMappings()).hasSize(1);
+        assertThat(session.unresolvedMappings().getFirst().brokerName().value())
+                .isEqualTo("DTLE GR ETF");
+    }
+
+    @Test
     void throwsForUnsupportedBroker() {
         when(parser.brokerName()).thenReturn("mBank");
 

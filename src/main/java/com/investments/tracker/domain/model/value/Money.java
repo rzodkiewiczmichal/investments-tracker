@@ -62,6 +62,16 @@ public record Money(BigDecimal amount, Currency currency) {
     }
 
     /**
+     * Creates zero Money in the given currency.
+     *
+     * @param currency the currency
+     * @return zero Money
+     */
+    public static Money zero(Currency currency) {
+        return new Money(BigDecimal.ZERO, currency);
+    }
+
+    /**
      * Adds another Money to this one.
      *
      * @param other the Money to add
