@@ -549,8 +549,8 @@ Don't rely on the REST API for test data setup in Given steps. Use `JdbcTemplate
 
 4. **Build commands:**
    ```bash
-   # Full build with tests
-   ./gradlew clean build
+   # Full build with tests (always run spotless first)
+   ./gradlew spotlessApply && ./gradlew clean build
 
    # Compile only (faster check)
    ./gradlew compileJava compileTestJava
@@ -570,5 +570,60 @@ Don't rely on the REST API for test data setup in Given steps. Use `JdbcTemplate
 - Erodes trust in Claude's output
 - Slows development velocity
 
+## Post-Implementation Code Review (Mandatory)
+
+After every implementation is finished (all tasks completed, build passing), automatically perform the following:
+
+1. Run `/ddd-java` and `/effective-java` skills to do a code review of all changed files.
+2. Apply fixes to all found issues.
+3. If any fix requires a decision (ambiguous intent, multiple valid approaches, trade-offs), **ask the user** — do not guess or assume.
+4. Generate `post-implementation.md` in the project directory with:
+   - List of all issues found
+   - Fixes applied
+   - Any open questions or decisions deferred to the user
+5. **Never commit `post-implementation.md`** — it is a local review artifact only. Do not `git add` it or include it in any commit.
+
+## Design and Planning Rules
+
+### No Hardcoded Data
+Never hardcode domain data in frontend or backend code (broker names, account names, instrument lists, etc.). If data comes from a finite set of implementations (e.g., registered parsers), let the user type it freely and validate server-side. Dropdown menus require a persistent, user-managed data source — not a hardcoded list or an endpoint that wraps a hardcoded list. When in doubt, use a plain text input with server-side validation.
+
+### Validate Against Real Data Before Planning
+When designing data import, parsing, or transformation logic, always analyze ALL available sample/real data files first (check `.context/attachments/` and test resources). Cross-reference assumptions against actual data before proposing a solution. Never design parsers or matching logic based on assumed formats — verify with real files.
+
+### User Confirmation for Critical Data Mapping
+Never implement automatic fuzzy matching, text-based guessing, or heuristic resolution for critical data like instrument symbols, account identifiers, or financial amounts. When exact matching fails, always return unmatched items to the user for explicit manual resolution. The user decides — the system only suggests.
+
+### Think Through State Conflicts
+When planning features that modify data (import, update, delete), proactively identify conflicts with existing data states. Ask yourself: "What if this data already exists from a different source?" Present edge cases and conflict scenarios to the user as part of the proposal, not as an afterthought when asked.
+
+### Proactive DDD Layer Validation
+When placing new types (records, interfaces, classes), proactively verify the layer assignment against DDD/hexagonal architecture rules. Specifically:
+- Domain records used by aggregates belong in `domain/model/`
+- Port interfaces (driven ports) belong in `application/port/out/`
+- DTOs that cross layer boundaries need justification for their placement
+If uncertain about a type's placement, flag it to the user rather than defaulting to a possibly wrong layer.
+
+## Refactoring and Rename Rules
+
+### Atomic Renames
+When renaming a class, interface, or method, grep the entire codebase for all references and update them in the same step. Never leave a rename partially complete. After renaming, always grep to confirm zero remaining references to the old name before running the build.
+
+### ArchUnit Naming Awareness
+Before creating any new class in a convention-governed package, review the ArchUnit tests in `src/test/java/.../architecture/` to check naming constraints. Key conventions:
+- `domain.service..` — top-level classes must end with `Service`
+- `domain.repository..` — interfaces must end with `Repository`, `Provider`, or `Cache`
+- `infrastructure.web.controller..` — classes must end with `Controller`
+- `application.dto.mapper..` — classes must end with `Mapper`
+Inner/nested classes are excluded from these rules.
+
+## Communication Style Preferences
+
+### Terse User Messages
+The user communicates tersely. Short messages like "what was wrong?", "create them", "push this" should be interpreted in context of the current work. Don't ask for clarification on messages that are clearly referring to the immediately preceding discussion. Act on the obvious intent.
+
+### Architecture Review Awareness
+The user is a DDD practitioner who actively reviews plans for architectural correctness. When presenting plans or code, anticipate DDD challenges: layer violations, naming conventions, aggregate boundaries, port/adapter placement. Don't wait for the user to invoke `/ddd-java` — apply DDD principles proactively during design and flag any questionable decisions.
+
 ---
-*Last updated: 2026-02-06*
+*Last updated: 2026-03-08*
