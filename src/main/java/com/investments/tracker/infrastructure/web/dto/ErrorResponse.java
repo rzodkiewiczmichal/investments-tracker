@@ -34,6 +34,17 @@ public record ErrorResponse(
                 LocalDateTime.now(ZoneOffset.UTC), 409, "Conflict", message, null, path, traceId);
     }
 
+    public static ErrorResponse unprocessableEntity(String message, String path, String traceId) {
+        return new ErrorResponse(
+                LocalDateTime.now(ZoneOffset.UTC),
+                422,
+                "Unprocessable Entity",
+                message,
+                null,
+                path,
+                traceId);
+    }
+
     public static ErrorResponse internalError(String path, String traceId) {
         return new ErrorResponse(
                 LocalDateTime.now(ZoneOffset.UTC),

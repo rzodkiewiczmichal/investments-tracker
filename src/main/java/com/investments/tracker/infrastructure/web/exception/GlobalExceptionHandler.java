@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.investments.tracker.application.exception.ResourceAlreadyExistsException;
 import com.investments.tracker.application.exception.ResourceNotFoundException;
 import com.investments.tracker.domain.exception.DomainException;
+import com.investments.tracker.domain.exception.ImportParsingException;
+import com.investments.tracker.domain.exception.ImportSessionNotFoundException;
+import com.investments.tracker.domain.exception.IncompleteMappingsException;
+import com.investments.tracker.domain.exception.InvalidMappingException;
 import com.investments.tracker.domain.exception.InvalidPriceException;
 import com.investments.tracker.domain.exception.InvalidQuantityException;
 import com.investments.tracker.domain.exception.InvalidSymbolException;
@@ -61,6 +65,28 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleDomainValidation(DomainException ex, HttpServletRequest request) {
         return ErrorResponse.badRequest(
                 ex.getMessage(), null, request.getRequestURI(), getTraceId());
+    }
+
+    @ExceptionHandler(ImportParsingException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleImportParsing(
+            ImportParsingException ex, HttpServletRequest request) {
+        return ErrorResponse.badRequest(
+                ex.getMessage(), null, request.getRequestURI(), getTraceId());
+    }
+
+    @ExceptionHandler(ImportSessionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleImportSessionNotFound(
+            ImportSessionNotFoundException ex, HttpServletRequest request) {
+        return ErrorResponse.notFound(ex.getMessage(), request.getRequestURI(), getTraceId());
+    }
+
+    @ExceptionHandler({IncompleteMappingsException.class, InvalidMappingException.class})
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    public ErrorResponse handleImportMappingError(DomainException ex, HttpServletRequest request) {
+        return ErrorResponse.unprocessableEntity(
+                ex.getMessage(), request.getRequestURI(), getTraceId());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

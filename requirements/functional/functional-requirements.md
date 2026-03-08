@@ -144,12 +144,21 @@ Requirements are organized into the following categories:
 ### FR-021: Import Positions from Broker Transaction History
 **Category:** Data Import
 **Priority:** Must Have
-**Description:** System imports broker-specific CSV transaction history files (buy/sell records), computes current positions by netting buys against sells per instrument, and calculates weighted average cost basis from purchase transactions. Commission is included in cost basis. Import performs full replacement of all positions within the target account. If the account does not exist, import creates it. New accounts can only be created via import — manual account creation is not supported. After an account exists, individual positions can be added manually (corrections/additions).
+**Description:** System imports broker-specific CSV transaction history files (buy/sell records), computes current positions by netting buys against sells per instrument, and calculates weighted average cost basis from purchase transactions. Commission is included in cost basis. Import performs full replacement of all positions within the target account. If the account does not exist, import creates it. New accounts can only be created via import — manual account creation is not supported. After an account exists, individual positions can be added manually (corrections/additions). Instrument matching follows FR-032 (user-confirmed mapping for non-exact matches).
 **Broker Accounts:** mBank Makler, mBank IKE, mBank IKZE (shared format), XTB, Degiro. Government bonds deferred (future).
 **Related Scenarios:** Import positions from broker file
 **Cucumber Tags:** @FR-021
 **Dependencies:** None
 **Target Version:** v0.2 (mBank adapter), v0.3+ (XTB, Degiro)
+
+### FR-032: Import Instrument Matching
+**Category:** Data Import
+**Priority:** Must Have
+**Description:** When importing broker transaction history, the system attempts to match broker instrument names to catalog instruments using exact symbol match only. If unmatched instruments exist with open positions (net quantity > 0), the system returns the unmatched list to the user with catalog search suggestions. The user must explicitly map each unmatched broker instrument to a catalog instrument before the import can complete. No automatic fuzzy or text-based matching is performed — every non-exact mapping requires user confirmation. Instruments with net quantity = 0 (fully sold positions) are silently skipped without requiring matching.
+**Related Scenarios:** Import with unmatched instruments requires user mapping
+**Cucumber Tags:** @FR-032
+**Dependencies:** FR-021
+**Target Version:** v0.2
 
 ### FR-022: Import Validation - Missing Instrument Identifier
 **Category:** Data Import
