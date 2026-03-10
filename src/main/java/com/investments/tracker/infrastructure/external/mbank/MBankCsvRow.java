@@ -1,6 +1,7 @@
 package com.investments.tracker.infrastructure.external.mbank;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import com.investments.tracker.domain.exception.ImportParsingException;
 import com.investments.tracker.domain.model.value.Currency;
@@ -24,7 +25,11 @@ record MBankCsvRow(
 
     private static final int EXPECTED_FIELD_COUNT = 11;
 
-    static MBankCsvRow parse(String line, int lineNumber) {
+    /**
+     * Parses a CSV line into a row. Returns empty if the row uses an unsupported currency (e.g.,
+     * PKT for futures contracts), as these instruments are outside the tracking scope.
+     */
+    static Optional<MBankCsvRow> parse(String line, int lineNumber) {
         String[] fields = line.split(";", -1);
         if (fields.length != EXPECTED_FIELD_COUNT) {
             throw ImportParsingException.invalidFormat(
@@ -33,16 +38,24 @@ record MBankCsvRow(
         }
 
         try {
-            return new MBankCsvRow(
-                    fields[0].trim(),
-                    fields[1].trim(),
-                    fields[2].trim(),
-                    fields[3].trim(),
-                    parsePolishNumber(fields[4]),
-                    parsePolishNumber(fields[5]),
-                    parseCurrency(fields[6].trim(), lineNumber),
-                    parsePolishNumber(fields[7]),
-                    parseCurrency(fields[8].trim(), lineNumber));
+            Optional<Currency> priceCurrency = parseCurrency(fields[6].trim());
+            Optional<Currency> commissionCurrency = parseCurrency(fields[8].trim());
+
+            if (priceCurrency.isEmpty() || commissionCurrency.isEmpty()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(
+                    new MBankCsvRow(
+                            fields[0].trim(),
+                            fields[1].trim(),
+                            fields[2].trim(),
+                            fields[3].trim(),
+                            parsePolishNumber(fields[4]),
+                            parsePolishNumber(fields[5]),
+                            priceCurrency.get(),
+                            parsePolishNumber(fields[7]),
+                            commissionCurrency.get()));
         } catch (ImportParsingException e) {
             throw e;
         } catch (Exception e) {
@@ -59,12 +72,11 @@ record MBankCsvRow(
         return new BigDecimal(normalized);
     }
 
-    private static Currency parseCurrency(String value, int lineNumber) {
+    private static Optional<Currency> parseCurrency(String value) {
         try {
-            return Currency.valueOf(value);
+            return Optional.of(Currency.valueOf(value));
         } catch (IllegalArgumentException e) {
-            throw ImportParsingException.invalidFormat(
-                    lineNumber, "unsupported currency: " + value);
+            return Optional.empty();
         }
     }
 }

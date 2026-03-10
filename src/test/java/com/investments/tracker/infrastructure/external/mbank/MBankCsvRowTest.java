@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ class MBankCsvRowTest {
     void parsesStandardPlnRow() {
         String line = "18.08.2025 14:28:01;ATREM;WWA-GPW;K;3;37,20;PLN;0,44;PLN;111,60;PLN";
 
-        MBankCsvRow row = MBankCsvRow.parse(line, 36);
+        MBankCsvRow row = MBankCsvRow.parse(line, 36).orElseThrow();
 
         assertThat(row.instrumentName()).isEqualTo("ATREM");
         assertThat(row.exchange()).isEqualTo("WWA-GPW");
@@ -32,7 +33,7 @@ class MBankCsvRowTest {
     void parsesRowWithThousandsSeparator() {
         String line = "18.08.2025 13:38:13;ATREM;WWA-GPW;K;90;37,20;PLN;13,06;PLN;3 348,00;PLN";
 
-        MBankCsvRow row = MBankCsvRow.parse(line, 36);
+        MBankCsvRow row = MBankCsvRow.parse(line, 36).orElseThrow();
 
         assertThat(row.quantity()).isEqualByComparingTo("90");
         assertThat(row.commission()).isEqualByComparingTo("13.06");
@@ -43,7 +44,7 @@ class MBankCsvRowTest {
         String line =
                 "16.09.2024 10:38:23;DTLE GR ETF;DEU-XETRA;K;709;3,4117;EUR;30,03;PLN;10 355,29;PLN";
 
-        MBankCsvRow row = MBankCsvRow.parse(line, 36);
+        MBankCsvRow row = MBankCsvRow.parse(line, 36).orElseThrow();
 
         assertThat(row.instrumentName()).isEqualTo("DTLE GR ETF");
         assertThat(row.exchange()).isEqualTo("DEU-XETRA");
@@ -57,7 +58,7 @@ class MBankCsvRowTest {
     void parsesSellRow() {
         String line = "18.08.2025 13:28:37;ETFBCASH;WWA-GPW;S;50;140,40;PLN;11,27;PLN;7 020,00;PLN";
 
-        MBankCsvRow row = MBankCsvRow.parse(line, 36);
+        MBankCsvRow row = MBankCsvRow.parse(line, 36).orElseThrow();
 
         assertThat(row.side()).isEqualTo("S");
         assertThat(row.quantity()).isEqualByComparingTo("50");
@@ -91,11 +92,20 @@ class MBankCsvRowTest {
     }
 
     @Test
-    void throwsOnUnsupportedCurrency() {
-        String line = "18.08.2025 14:28:01;ATREM;WWA-GPW;K;3;37,20;CHF;0,44;PLN;111,60;PLN";
+    void returnsEmptyForUnsupportedPriceCurrency() {
+        String line = "18.08.2025 14:28:01;FW20H2420;WWA-GPW;K;1;2204,00;PKT;9,00;PLN;44080,00;PLN";
 
-        assertThatThrownBy(() -> MBankCsvRow.parse(line, 36))
-                .isInstanceOf(ImportParsingException.class)
-                .hasMessageContaining("unsupported currency: CHF");
+        Optional<MBankCsvRow> row = MBankCsvRow.parse(line, 36);
+
+        assertThat(row).isEmpty();
+    }
+
+    @Test
+    void returnsEmptyForUnsupportedCommissionCurrency() {
+        String line = "18.08.2025 14:28:01;ATREM;WWA-GPW;K;3;37,20;PLN;0,44;CHF;111,60;PLN";
+
+        Optional<MBankCsvRow> row = MBankCsvRow.parse(line, 36);
+
+        assertThat(row).isEmpty();
     }
 }
