@@ -14,6 +14,7 @@ print_usage() {
     echo "  start     Start infrastructure, backend, and frontend (default)"
     echo "  stop      Stop everything (app processes + Docker containers)"
     echo "  restart   Stop and start everything"
+    echo "  reset     Stop apps, clear DB (positions/imports), rebuild and start fresh"
     echo "  infra     Start only infrastructure (PostgreSQL, Redis, Tempo, Grafana)"
     echo ""
     echo "Services:"
@@ -121,6 +122,21 @@ case "${1:-start}" in
         start_frontend
         echo ""
         echo "All services started. Press Ctrl+C to stop the applications."
+        wait
+        ;;
+    reset)
+        stop_apps
+        start_infra
+        echo "Clearing positions and import data..."
+        "$SCRIPT_DIR/scripts/clear-positions.sh"
+        echo "Building project..."
+        ./gradlew spotlessApply clean build -x test
+        echo "Restarting apps..."
+        trap cleanup INT TERM
+        start_backend
+        start_frontend
+        echo ""
+        echo "All services started (DB cleared). Press Ctrl+C to stop the applications."
         wait
         ;;
     infra)

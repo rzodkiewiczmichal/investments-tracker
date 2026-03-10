@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -56,8 +57,9 @@ public class MBankCsvParser implements TransactionHistoryParser {
                     continue;
                 }
 
-                MBankCsvRow row = MBankCsvRow.parse(line, lineNumber);
-                transactions.add(toRawTransaction(row, lineNumber));
+                int currentLine = lineNumber;
+                Optional<MBankCsvRow> row = MBankCsvRow.parse(line, currentLine);
+                row.ifPresent(r -> transactions.add(toRawTransaction(r, currentLine)));
             }
         } catch (ImportParsingException e) {
             throw e;

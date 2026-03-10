@@ -89,6 +89,21 @@ class MBankCsvParserTest {
     }
 
     @Test
+    void skipsRowsWithUnsupportedCurrency() {
+        String csv =
+                buildCsv(
+                        "18.08.2025 14:28:01;ATREM;WWA-GPW;K;10;37,20;PLN;1,00;PLN;372,00;PLN",
+                        "18.01.2024 14:14:35;FW20H2420;WWA-GPW;S;1;2 204,00;PKT;9,00;PLN;44 080,00;PLN",
+                        "18.08.2025 13:28:37;ETFBCASH;WWA-GPW;S;5;140,40;PLN;1,00;PLN;702,00;PLN");
+
+        List<RawTransaction> transactions = parser.parse(toInputStream(csv));
+
+        assertThat(transactions).hasSize(2);
+        assertThat(transactions.get(0).brokerInstrumentName().value()).isEqualTo("ATREM");
+        assertThat(transactions.get(1).brokerInstrumentName().value()).isEqualTo("ETFBCASH");
+    }
+
+    @Test
     void throwsOnInvalidTransactionSide() {
         String csv =
                 buildCsv("18.08.2025 14:28:01;ATREM;WWA-GPW;X;10;37,20;PLN;1,00;PLN;372,00;PLN");
