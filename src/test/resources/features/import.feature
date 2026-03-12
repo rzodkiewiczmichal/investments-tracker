@@ -17,6 +17,10 @@ Feature: Broker Transaction History Import
     And the import summary should show 1 matched instruments
     And the import summary should show 0 unmatched instruments
     When I confirm the import for account "mBank eMAKLER"
+    Then the import session status should be "PENDING_PRICES"
+    When I provide prices for the import:
+      | symbol   | price  | currency |
+      | ETFBCASH | 140.40 | PLN      |
     Then the import session status should be "COMPLETED"
     And a position for "ETFBCASH" should exist with quantity 100
 
@@ -33,6 +37,10 @@ Feature: Broker Transaction History Import
     When I confirm the import with mappings for account "mBank eMAKLER":
       | brokerName | catalogSymbol |
       | TORPOL     | TOR           |
+    Then the import session status should be "PENDING_PRICES"
+    When I provide prices for the import:
+      | symbol | price | currency |
+      | TOR    | 24.80 | PLN      |
     Then the import session status should be "COMPLETED"
     And a position for "TOR" should exist with quantity 163
 
@@ -67,4 +75,61 @@ Feature: Broker Transaction History Import
       | instrument | side | quantity | price  | commission |
       | ETFBCASH   | K    | 200      | 140.40 | 5.00       |
     And I confirm the import for account "mBank eMAKLER"
+    And I provide prices for the import:
+      | symbol   | price  | currency |
+      | ETFBCASH | 140.40 | PLN      |
     Then a position for "ETFBCASH" should exist with quantity 200
+
+  @FR-021 @FR-032
+  @v0.2 @import @mbank
+  Scenario: Import mBank IKE account
+    Given the instrument catalog contains "PKO" with name "PKO BP S.A." and type "STOCK"
+    When I upload an mBank CSV for account "mBank IKE" with the following transactions:
+      | instrument | side | quantity | price | commission |
+      | PKO        | K    | 50       | 45.20 | 10.00      |
+    Then the import session status should be "READY_TO_CONFIRM"
+    When I confirm the import for account "mBank IKE"
+    Then the import session status should be "PENDING_PRICES"
+    When I provide prices for the import:
+      | symbol | price | currency |
+      | PKO    | 45.20 | PLN      |
+    Then the import session status should be "COMPLETED"
+    And a position for "PKO" should exist with quantity 50
+
+  @FR-021 @FR-032
+  @v0.2 @import @mbank
+  Scenario: Import mBank IKZE account
+    Given the instrument catalog contains "PZU" with name "PZU S.A." and type "STOCK"
+    When I upload an mBank CSV for account "mBank IKZE" with the following transactions:
+      | instrument | side | quantity | price | commission |
+      | PZU        | K    | 30       | 38.50 | 8.00       |
+    Then the import session status should be "READY_TO_CONFIRM"
+    When I confirm the import for account "mBank IKZE"
+    Then the import session status should be "PENDING_PRICES"
+    When I provide prices for the import:
+      | symbol | price | currency |
+      | PZU    | 38.50 | PLN      |
+    Then the import session status should be "COMPLETED"
+    And a position for "PZU" should exist with quantity 30
+
+  @FR-021 @FR-032
+  @v0.2 @import @mbank
+  Scenario: Import handles Polish characters in instrument names
+    When I upload an mBank CSV for account "mBank eMAKLER" with the following transactions:
+      | instrument              | side | quantity | price  | commission |
+      | ŻYWIEC TRADE S.A.      | K    | 10       | 520.00 | 15.00      |
+    Then the import session status should be "PENDING_REVIEW"
+    And the import summary should show 0 matched instruments
+    And the import summary should show 1 unmatched instruments
+
+  @FR-021 @FR-032
+  @v0.2 @import @mbank
+  Scenario: Import skips transactions with unsupported currencies
+    Given the instrument catalog contains "ETFBCASH" with name "Beta ETF Cash" and type "ETF"
+    When I upload an mBank CSV for account "mBank eMAKLER" with mixed currency transactions:
+      | instrument | side | quantity | price  | commission | currency |
+      | ETFBCASH   | K    | 100      | 140.40 | 5.00       | PLN      |
+      | FW20       | K    | 1        | 2350.00| 9.00       | PKT      |
+    Then the import session status should be "READY_TO_CONFIRM"
+    And the import summary should show 1 matched instruments
+    And the import summary should show 0 unmatched instruments
