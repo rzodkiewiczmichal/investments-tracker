@@ -49,7 +49,9 @@ export class ImportPricesComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
 
-  allPricesProvided = computed(() => this.priceStates().every((s) => s.price !== null && s.price > 0));
+  allPricesProvided = computed(() =>
+    this.priceStates().every((s) => s.price !== null && s.price > 0),
+  );
 
   ngOnInit(): void {
     const instruments: InstrumentNeedingPrice[] =
