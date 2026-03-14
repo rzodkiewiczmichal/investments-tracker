@@ -1,7 +1,10 @@
 package com.investments.tracker.infrastructure.persistence.adapter;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
@@ -45,6 +48,30 @@ public class InstrumentRepositoryAdapter implements InstrumentRepository {
         InstrumentJdbcEntity entity = mapper.toEntity(instrument, version);
         InstrumentJdbcEntity saved = jdbcRepository.save(entity);
         return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Collection<Instrument> saveAll(Collection<Instrument> instruments) {
+        if (instruments.isEmpty()) {
+            return List.of();
+        }
+        List<String> symbols = instruments.stream().map(i -> i.symbol().value()).toList();
+        Map<String, Long> existingVersions =
+                jdbcRepository.findAllById(symbols).stream()
+                        .collect(
+                                Collectors.toMap(
+                                        InstrumentJdbcEntity::symbol,
+                                        InstrumentJdbcEntity::version));
+        List<InstrumentJdbcEntity> entities =
+                instruments.stream()
+                        .map(
+                                instrument ->
+                                        mapper.toEntity(
+                                                instrument,
+                                                existingVersions.get(instrument.symbol().value())))
+                        .toList();
+        List<InstrumentJdbcEntity> saved = jdbcRepository.saveAll(entities);
+        return saved.stream().map(mapper::toDomain).toList();
     }
 
     @Override
