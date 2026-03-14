@@ -37,6 +37,14 @@ public interface InstrumentRepository {
     Instrument save(Instrument instrument);
 
     /**
+     * Saves multiple instruments (insert or update).
+     *
+     * @param instruments the instruments to save
+     * @return the saved instruments
+     */
+    Collection<Instrument> saveAll(Collection<Instrument> instruments);
+
+    /**
      * Deletes an instrument by its symbol.
      *
      * @param symbol the instrument symbol

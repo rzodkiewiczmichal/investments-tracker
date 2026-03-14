@@ -91,6 +91,49 @@ class InstrumentSymbolTest {
                     .isInstanceOf(InvalidSymbolException.class)
                     .hasMessageContaining("Invalid instrument symbol format");
         }
+
+        @Test
+        @DisplayName("creates InstrumentSymbol from dotted ticker (share class)")
+        void createsFromDottedTicker() {
+            InstrumentSymbol symbol = InstrumentSymbol.of("BRK.B");
+
+            assertThat(symbol.value()).isEqualTo("BRK.B");
+            assertThat(symbol.isTicker()).isTrue();
+            assertThat(symbol.isIsin()).isFalse();
+        }
+
+        @Test
+        @DisplayName("creates InstrumentSymbol from single-letter share class suffix")
+        void createsFromSingleLetterShareClass() {
+            InstrumentSymbol symbol = InstrumentSymbol.of("BF.A");
+
+            assertThat(symbol.value()).isEqualTo("BF.A");
+            assertThat(symbol.isTicker()).isTrue();
+        }
+
+        @Test
+        @DisplayName("throws exception for trailing dot without suffix")
+        void throwsForTrailingDot() {
+            assertThatThrownBy(() -> InstrumentSymbol.of("BRK."))
+                    .isInstanceOf(InvalidSymbolException.class)
+                    .hasMessageContaining("Invalid instrument symbol format");
+        }
+
+        @Test
+        @DisplayName("throws exception for leading dot")
+        void throwsForLeadingDot() {
+            assertThatThrownBy(() -> InstrumentSymbol.of(".B"))
+                    .isInstanceOf(InvalidSymbolException.class)
+                    .hasMessageContaining("Invalid instrument symbol format");
+        }
+
+        @Test
+        @DisplayName("throws exception for share class suffix longer than 2 characters")
+        void throwsForLongShareClassSuffix() {
+            assertThatThrownBy(() -> InstrumentSymbol.of("BRK.BCD"))
+                    .isInstanceOf(InvalidSymbolException.class)
+                    .hasMessageContaining("Invalid instrument symbol format");
+        }
     }
 
     @Nested

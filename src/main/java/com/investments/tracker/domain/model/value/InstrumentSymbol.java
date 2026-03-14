@@ -18,8 +18,12 @@ public record InstrumentSymbol(String value) {
     /** Pattern for ISIN validation (2 letters + 9 alphanumeric + 1 check digit). */
     private static final Pattern ISIN_PATTERN = Pattern.compile("^[A-Z]{2}[A-Z0-9]{9}[0-9]$");
 
-    /** Pattern for ticker symbol validation (1-10 uppercase letters and optionally digits). */
-    private static final Pattern TICKER_PATTERN = Pattern.compile("^[A-Z0-9]{1,10}$");
+    /**
+     * Pattern for ticker symbol validation (1-10 uppercase alphanumeric, optional dot suffix for
+     * share classes).
+     */
+    private static final Pattern TICKER_PATTERN =
+            Pattern.compile("^[A-Z0-9]{1,10}(\\.[A-Z]{1,2})?$");
 
     /** Canonical constructor with validation. */
     public InstrumentSymbol {
