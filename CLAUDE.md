@@ -27,6 +27,18 @@ Claude will be used for all phases of software lifecycle:
 
 Claude Code will not be just agentic code help - will use all handy MCP servers for variety of automations (e.g., GitHub MCP server is configured)
 
+## Branch Naming Convention
+
+All work must happen on a feature branch, never directly on `main`. Branch names must include both the epic and issue number:
+
+**Format:** `rzodkiewiczmichal/<epic#>-<issue#>-<short-description>`
+
+**Examples:**
+- `rzodkiewiczmichal/55-68-analyze-xtb-format`
+- `rzodkiewiczmichal/54-67-mbank-cucumber-scenarios`
+
+When a task spans multiple issues under the same epic, use the primary issue number.
+
 ## Project Location
 GitHub repository cloned in this directory
 
