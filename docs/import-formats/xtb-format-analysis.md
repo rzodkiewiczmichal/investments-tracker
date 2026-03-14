@@ -8,7 +8,7 @@
 | **Import sheet** | "Cash Operations" (transaction log) |
 | **Encoding** | N/A (binary Excel format) |
 
-XTB exports contain two sheets: "Closed Positions" and "Cash Operations". XTB does **not** provide a separate "Open Positions" export — both report types produce the same structure. We import from **Cash Operations only** because it's a transaction log (individual buy/sell entries) matching our `RawTransaction` model.
+XTB exports contain two sheets: "Closed Positions" and "Cash Operations". We import from **Cash Operations only** because it's a **complete transaction log** — it contains all buy and sell operations for both currently open and already closed positions, matching our `RawTransaction` model.
 
 The Closed Positions sheet is **not used for import** but serves as a lookup table for ticker resolution (it maps instrument names to tickers).
 
@@ -46,9 +46,9 @@ The Closed Positions sheet is **not used for import** but serves as a lookup tab
 | Stock sell | 362 | **Yes** → maps to SELL |
 | Dividend | 109 | Future (v0.3+) |
 | Withholding tax | 109 | Future (v0.3+) |
-| Close trade | 84 | No (CFDs) |
+| Close trade | 84 | No (CFD close — uses different operation type than stocks) |
 | Deposit | 36 | No |
-| Swap | 35 | No (CFDs) |
+| Swap | 35 | No (CFD swap costs) |
 | SEC fee | 29 | No |
 | Free funds interest | 23 | No |
 | Free funds interest tax | 23 | No |
@@ -104,21 +104,21 @@ Tickers use `SYMBOL.MARKET` format:
 - `.FR` — French-listed (AM.FR)
 - `.IT` — Italian-listed (LDO.IT)
 
-### Unresolvable Instruments
+### Instrument Name Collisions
 
-3 of 18 currently open positions have never had a closed trade, so their tickers cannot be resolved from the file:
-- Amazon (24 shares)
-- NASDAQ 100 (6 units — ETF, not CFD)
-- Torpol (105 shares)
+Some instruments share similar names across categories (e.g., "Bitcoin" as ETN VBTC.DE vs "BITCOIN" as CFD). The parser must use the operation type to distinguish:
+- `Stock purchase` / `Stock sell` → real assets (STOCK, ETF, ETC, ETN)
+- `Close trade` / `Swap` → CFDs (skip)
 
-These require manual mapping during import confirmation.
+### Unresolvable Tickers
 
-## Verified with Real Data
+Instruments that have never been sold (no entry in Closed Positions) and have no dividend history cannot be automatically resolved to a ticker. These require manual mapping during import confirmation.
+
+## Data Volume (Real Export)
 
 From real export (2006-01-01 to 2026-03-14):
-- **18 currently open positions** derived from net buy/sell calculations
-- **98 total instruments** traded (80 fully closed, 18 open)
-- **Categories**: STOCK, ETF, ETC, ETN (importable), CFD (skip)
+- **374 stock purchases**, **362 stock sells** across ~98 instruments
+- **Categories found**: STOCK, ETF, ETC, ETN (importable), CFD (skip)
 
 ## Challenges
 
