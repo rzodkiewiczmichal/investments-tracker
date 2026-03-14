@@ -144,6 +144,19 @@ The Comment field in Cash Operations contains useful structured data:
 
 **Important**: The Comment field contains the **ticker** (e.g., "MSFT.US") for dividends, and the **price in native currency** for stock operations. The Amount column is always in PLN.
 
+## Important: No Separate Open Positions Export
+
+XTB (xStation5) does **not** provide a separate "Open Positions" export. Both report types (different date ranges, different downloads) produce the same two-sheet structure: "Closed Positions" and "Cash Operations".
+
+To determine currently held positions, one must calculate net quantities from Cash Operations: `sum(Stock purchase quantities) - sum(Stock sell quantities)` per instrument.
+
+### Verified with Real Data
+
+From real export (2006-01-01 to 2026-03-14):
+- **18 currently open positions** derived from 374 purchases and 362 sells across 98 instruments
+- **3 instruments have no ticker resolution** from file alone (never had a closed trade): Amazon, NASDAQ 100, Torpol
+- These 3 require manual mapping during import confirmation
+
 ## Recommended Import Strategy
 
 ### Primary approach: Cash Operations sheet
@@ -153,13 +166,26 @@ Use the "Cash Operations" sheet filtering for "Stock purchase" and "Stock sell" 
 - Consistent with mBank's transaction-log approach
 - Amount is in PLN but Comment has the native currency price
 
+### Ticker Resolution Strategy
+
+1. **Primary**: Cross-reference instrument name with Closed Positions sheet (has ticker in Column C)
+2. **Secondary**: Parse dividend Comment field (contains ticker, e.g., `"MSFT.US USD 0.9100/ SHR"`)
+3. **Fallback**: Manual mapping via import confirmation flow (for instruments with no closed trades or dividends)
+
+| Resolution Method | Coverage | Example |
+|-------------------|----------|---------|
+| Closed Positions cross-ref | ~85% of instruments | "Microsoft" → MSFT.US |
+| Dividend comment parsing | Additional ~5% | "MSFT.US USD 0.9100/ SHR" |
+| Manual mapping (user) | Remaining ~10% | "Amazon" → user provides AMZN.US |
+
 ### Challenges
 
 1. **XLSX format**: Need Apache POI dependency (vs simple CSV for mBank)
-2. **Instrument name vs ticker**: Cash Operations uses full names ("Microsoft"), not tickers. Ticker can be extracted from Comment field for dividends, but not for stock purchases
-3. **Cross-referencing**: May need to join Cash Operations (for transactions) with Closed Positions (for ticker resolution via instrument name)
+2. **Instrument name vs ticker**: Cash Operations uses full names ("Microsoft"), not tickers
+3. **Cross-referencing**: Must join Cash Operations with Closed Positions for ticker resolution
 4. **Amount in PLN only**: Native currency price only available in Comment field parsing
 5. **No explicit quantity in Cash Operations**: Must derive from Comment parsing (`"OPEN BUY 20/60 @ 22.31"` = 20 units at 22.31)
+6. **Commission not available**: Cash Operations does not include commission data
 
 ### Column-to-Domain Mapping (Cash Operations approach)
 
@@ -170,7 +196,16 @@ Use the "Cash Operations" sheet filtering for "Stock purchase" and "Stock sell" 
 | quantity | Parsed from Column F Comment (e.g., "OPEN BUY **20**/60 @ 22.31") |
 | unitPrice | Parsed from Column F Comment (e.g., "OPEN BUY 20/60 @ **22.31**") |
 | commission | Not available in Cash Operations |
-| currency | Derived from ticker suffix or hardcoded mapping |
+| currency | Derived from ticker suffix (via Closed Positions cross-ref) or manual mapping |
+
+### Comment Field Parsing Patterns
+
+| Pattern | Example | Extracted |
+|---------|---------|-----------|
+| Simple buy | `OPEN BUY 20 @ 16.50` | qty=20, price=16.50 |
+| Partial fill buy | `OPEN BUY 3/20 @ 17.00` | qty=3, price=17.00 |
+| Sell (close) | `CLOSE BUY 20/60 @ 22.31` | qty=20, price=22.31 |
+| Regex | `(OPEN\|CLOSE) BUY (\d+)(?:/\d+)? @ ([\d.]+)` | groups: qty, price |
 
 ### Alternative: Closed Positions sheet
 
