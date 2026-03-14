@@ -29,7 +29,9 @@ import org.junit.platform.suite.api.Suite;
         key = PLUGIN_PROPERTY_NAME,
         value =
                 "pretty, html:build/reports/cucumber/cucumber-report.html, json:build/reports/cucumber/cucumber-report.json")
-@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "@v0.1 and not @ignored")
+@ConfigurationParameter(
+        key = FILTER_TAGS_PROPERTY_NAME,
+        value = "(@v0.1 or @v0.2) and not @ignored")
 public class RunCucumberTest {
     // This class is used only as a holder for the above annotations
 }

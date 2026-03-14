@@ -40,6 +40,7 @@ public class ImportSteps {
 
     private ResponseEntity<Map> importResponse;
     private ResponseEntity<Map> confirmResponse;
+    private ResponseEntity<Map> pricesResponse;
     private String importSessionId;
 
     @Given("account {string} exists with broker {string}")
@@ -62,8 +63,24 @@ public class ImportSteps {
 
     @When("I upload an mBank CSV with the following transactions:")
     public void iUploadMBankCsv(DataTable dataTable) {
+        iUploadMBankCsvForAccount("mBank eMAKLER", dataTable);
+    }
+
+    @When("I upload an mBank CSV for account {string} with the following transactions:")
+    public void iUploadMBankCsvForAccount(String accountName, DataTable dataTable) {
         List<Map<String, String>> rows = dataTable.asMaps();
         String csv = buildMBankCsv(rows);
+        uploadMBankCsv(accountName, csv);
+    }
+
+    @When("I upload an mBank CSV for account {string} with mixed currency transactions:")
+    public void iUploadMBankCsvWithMixedCurrencies(String accountName, DataTable dataTable) {
+        List<Map<String, String>> rows = dataTable.asMaps();
+        String csv = buildMBankCsvWithCurrency(rows);
+        uploadMBankCsv(accountName, csv);
+    }
+
+    private void uploadMBankCsv(String accountName, String csv) {
         byte[] csvBytes = csv.getBytes(WINDOWS_1250);
 
         ByteArrayResource resource =
@@ -76,7 +93,7 @@ public class ImportSteps {
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("broker", "mBank");
-        body.add("accountName", "mBank eMAKLER");
+        body.add("accountName", accountName);
         body.add("file", resource);
 
         HttpHeaders headers = new HttpHeaders();
@@ -153,6 +170,31 @@ public class ImportSteps {
         iConfirmImportForAccount(accountName);
     }
 
+    @When("I provide prices for the import:")
+    public void iProvidePricesForImport(DataTable dataTable) {
+        List<Map<String, String>> rows = dataTable.asMaps();
+        List<Map<String, String>> prices = new ArrayList<>();
+        for (Map<String, String> row : rows) {
+            Map<String, String> entry = new HashMap<>();
+            entry.put("symbol", row.get("symbol"));
+            entry.put("price", row.get("price"));
+            entry.put("currency", row.get("currency"));
+            prices.add(entry);
+        }
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("prices", prices);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        pricesResponse =
+                restTemplate.postForEntity(
+                        baseUrl() + "/api/v1/imports/" + importSessionId + "/prices",
+                        new HttpEntity<>(request, headers),
+                        Map.class);
+    }
+
     @Then("the import confirmation should fail with status {int}")
     public void importConfirmationShouldFailWithStatus(int expectedStatus) {
         assertThat(confirmResponse.getStatusCode().value()).isEqualTo(expectedStatus);
@@ -171,6 +213,9 @@ public class ImportSteps {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getLatestResponseBody() {
+        if (pricesResponse != null && pricesResponse.getStatusCode().is2xxSuccessful()) {
+            return pricesResponse.getBody();
+        }
         if (confirmResponse != null && confirmResponse.getStatusCode().is2xxSuccessful()) {
             return confirmResponse.getBody();
         }
@@ -184,6 +229,16 @@ public class ImportSteps {
     }
 
     private String buildMBankCsv(List<Map<String, String>> rows) {
+        List<Map<String, String>> rowsWithCurrency = new ArrayList<>();
+        for (Map<String, String> row : rows) {
+            Map<String, String> enriched = new HashMap<>(row);
+            enriched.putIfAbsent("currency", "PLN");
+            rowsWithCurrency.add(enriched);
+        }
+        return buildMBankCsvWithCurrency(rowsWithCurrency);
+    }
+
+    private String buildMBankCsvWithCurrency(List<Map<String, String>> rows) {
         StringBuilder sb = new StringBuilder();
         IntStream.rangeClosed(1, 34)
                 .forEach(i -> sb.append("metadata line ").append(i).append("\n"));
@@ -192,10 +247,11 @@ public class ImportSteps {
 
         for (Map<String, String> row : rows) {
             String instrument = row.get("instrument");
-            String side = row.get("side");
+            String side = row.getOrDefault("side", "K");
             String quantity = row.get("quantity");
             String price = row.get("price").replace(".", ",");
             String commission = row.get("commission").replace(".", ",");
+            String currency = row.getOrDefault("currency", "PLN");
             BigDecimal total =
                     new BigDecimal(row.get("price")).multiply(new BigDecimal(row.get("quantity")));
             String totalStr = total.toPlainString().replace(".", ",");
@@ -208,11 +264,17 @@ public class ImportSteps {
                     .append(quantity)
                     .append(";")
                     .append(price)
-                    .append(";PLN;")
+                    .append(";")
+                    .append(currency)
+                    .append(";")
                     .append(commission)
-                    .append(";PLN;")
+                    .append(";")
+                    .append(currency)
+                    .append(";")
                     .append(totalStr)
-                    .append(";PLN\n");
+                    .append(";")
+                    .append(currency)
+                    .append("\n");
         }
         return sb.toString();
     }
