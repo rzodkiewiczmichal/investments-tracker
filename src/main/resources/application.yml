@@ -76,4 +76,5 @@ app:
   # Finnhub Price API (ADR-031)
   finnhub:
     base-url: ${FINNHUB_BASE_URL:https://finnhub.io}
+    symbols-path: /api/v1/stock/symbol
     api-key: ${FINNHUB_API_KEY:}
