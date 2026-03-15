@@ -28,6 +28,7 @@ import com.investments.tracker.domain.model.value.ImportSessionStatus;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
+import com.investments.tracker.domain.model.value.Market;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
@@ -152,6 +153,7 @@ class InitiateImportUseCaseServiceTest {
                 new InstrumentSymbol(symbol),
                 new InstrumentName(symbol),
                 InstrumentType.STOCK,
-                Currency.PLN);
+                Currency.PLN,
+                Market.GPW);
     }
 }

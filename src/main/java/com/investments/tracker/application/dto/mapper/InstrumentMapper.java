@@ -20,6 +20,7 @@ public class InstrumentMapper {
                 instrument.symbol().value(),
                 instrument.name().value(),
                 instrument.type().name(),
-                instrument.currency().getCode());
+                instrument.currency().getCode(),
+                instrument.market().name());
     }
 }

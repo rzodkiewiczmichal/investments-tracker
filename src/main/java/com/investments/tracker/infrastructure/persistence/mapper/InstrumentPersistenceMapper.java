@@ -9,6 +9,7 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
+import com.investments.tracker.domain.model.value.Market;
 import com.investments.tracker.infrastructure.persistence.entity.InstrumentJdbcEntity;
 import com.investments.tracker.infrastructure.persistence.entity.InstrumentTypeValue;
 
@@ -29,7 +30,8 @@ public class InstrumentPersistenceMapper {
                 new InstrumentSymbol(entity.symbol()),
                 new InstrumentName(entity.name()),
                 mapToDomainType(entity.instrumentType()),
-                Currency.valueOf(entity.currency()));
+                Currency.valueOf(entity.currency()),
+                Market.valueOf(entity.market()));
     }
 
     /**
@@ -46,6 +48,7 @@ public class InstrumentPersistenceMapper {
                 instrument.name().value(),
                 mapToPersistenceType(instrument.type()).name(),
                 instrument.currency().getCode(),
+                instrument.market().name(),
                 version);
     }
 

@@ -96,6 +96,7 @@ public final class TestDataBuilder {
         private String name = "Apple Inc.";
         private String instrumentType = "STOCK";
         private String currency = "PLN";
+        private String market = "GPW";
 
         public InstrumentDataBuilder symbol(String symbol) {
             this.symbol = symbol;
@@ -132,8 +133,23 @@ public final class TestDataBuilder {
             return this;
         }
 
+        public InstrumentDataBuilder market(String market) {
+            this.market = market;
+            return this;
+        }
+
+        public InstrumentDataBuilder gpw() {
+            this.market = "GPW";
+            return this;
+        }
+
+        public InstrumentDataBuilder us() {
+            this.market = "US";
+            return this;
+        }
+
         public InstrumentData build() {
-            return new InstrumentData(symbol, name, instrumentType, currency);
+            return new InstrumentData(symbol, name, instrumentType, currency, market);
         }
     }
 
@@ -228,7 +244,7 @@ public final class TestDataBuilder {
 
     /** Data record for instrument test data. */
     public record InstrumentData(
-            String symbol, String name, String instrumentType, String currency) {}
+            String symbol, String name, String instrumentType, String currency, String market) {}
 
     /** Data record for position test data. */
     public record PositionData(

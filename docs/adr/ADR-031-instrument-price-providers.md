@@ -2,6 +2,7 @@
 
 ## Status
 Accepted (2026-02-13, extracted from ADR-030)
+Amended (2026-03-14): Market-based routing, Kotlin client clarification
 
 ## Context
 
@@ -188,18 +189,61 @@ Both stocks and forex. **Rejected**: Only 25 calls/day total - insufficient for 
 - [ADR-030: Currency Exchange Rate Provider](ADR-030-currency-exchange-rate-provider.md) - Currency conversion (separate concern)
 - [ADR-006: Money Representation](ADR-006-money-representation.md) - Currency storage and conversion
 
+## Amendment (2026-03-14): Market-Based Routing and Client Clarification
+
+### Finnhub Client Clarification
+
+The original decision referenced `io.finnhub:finnhub-java-client`. This artifact **does not exist** on Maven Central. Finnhub's official JVM client is a Kotlin library:
+
+```gradle
+implementation 'io.finnhub:kotlin-client:2.0.22'
+```
+
+The Kotlin client is fully callable from Java (JVM bytecode), but adds the Kotlin standard library (~1.5 MB) as a transitive dependency. This is acceptable for a personal project. The alternative — writing a raw `RestClient`-based adapter — would avoid the Kotlin dependency but lose the benefit of Finnhub's maintained, typed API model.
+
+**Decision**: Use `io.finnhub:kotlin-client` as originally intended. If the Kotlin dependency becomes undesirable, swapping to `RestClient` is trivial due to the port abstraction.
+
+### Market-Based Provider Routing
+
+Provider routing requires knowing which market an instrument belongs to. We add a `Market` enum to the domain model:
+
+```java
+public enum Market {
+    GPW,  // Warsaw Stock Exchange — routed to Stooq
+    US    // NYSE, NASDAQ — routed to Finnhub
+}
+```
+
+`Market` is added as a mandatory field on `Instrument`. Routing logic in the infrastructure layer groups symbols by market and dispatches to the corresponding price client.
+
+**Why not route by currency?** Currency does not uniquely identify a market. EUR-denominated instruments exist on multiple exchanges (Frankfurt, Amsterdam, Paris). Market is an explicit, unambiguous routing key that scales to future exchanges.
+
+**Scope**: Only `GPW` and `US` for now. EUR/GBP exchanges are out of scope and will be added when a provider is selected for them.
+
+### Planned Architecture
+
+```
+PriceProviderRouter (infrastructure)
+├── GPW → StooqPriceClient
+└── US  → FinnhubPriceClient
+
+CachingCurrentPriceAdapter (infrastructure)
+└── cache miss → PriceProviderRouter → cache result in Redis
+```
+
 ## Implementation Notes
 
 ### Dependencies
 
 ```gradle
-// Finnhub official Java client
-implementation 'io.finnhub:finnhub-java-client:x.x.x'
+// Finnhub official Kotlin client (callable from Java)
+implementation 'io.finnhub:kotlin-client:2.0.22'
 ```
 
 ### Planned Adapters
 
-- `StooqPriceAdapter` - for GPW instruments (CSV parsing)
-- `FinnhubPriceAdapter` - for US instruments (official Java client)
+- `StooqPriceClient` - for GPW instruments (CSV parsing) — already implemented
+- `FinnhubPriceClient` - for US instruments (Kotlin client)
+- `PriceProviderRouter` - dispatches by `Market`, groups batch calls
 
-Routing logic determines which adapter handles each symbol based on exchange/market metadata.
+Routing logic determines which adapter handles each symbol based on the `Market` field on `Instrument`.
