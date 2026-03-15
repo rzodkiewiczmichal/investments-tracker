@@ -10,19 +10,18 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
 
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ManualPriceProvider;
-import com.investments.tracker.infrastructure.external.stooq.StooqPriceClient;
 
 /**
  * Cache-aside implementation of {@link CurrentPriceProvider} and {@link ManualPriceProvider}.
  *
- * <p>Checks Redis first via {@link RedisCurrentPriceAdapter}; on cache miss, fetches from Stooq.pl
- * via {@link StooqPriceClient} and stores the result in Redis with a 24-hour TTL.
+ * <p>Checks Redis first via {@link RedisCurrentPriceAdapter}; on cache miss, fetches from the
+ * appropriate price provider via {@link PriceProviderRouter} and stores the result in Redis with a
+ * 24-hour TTL.
  *
  * @see <a href="../../docs/adr/ADR-031-instrument-price-providers.md">ADR-031</a>
  * @see <a href="../../docs/adr/ADR-032-external-data-caching-strategy.md">ADR-032</a>
@@ -33,12 +32,12 @@ public class CachingCurrentPriceAdapter implements CurrentPriceProvider, ManualP
     private static final Logger log = LoggerFactory.getLogger(CachingCurrentPriceAdapter.class);
 
     private final RedisCurrentPriceAdapter redisAdapter;
-    private final StooqPriceClient stooqClient;
+    private final PriceProviderRouter priceProviderRouter;
 
     public CachingCurrentPriceAdapter(
-            RedisCurrentPriceAdapter redisAdapter, StooqPriceClient stooqClient) {
+            RedisCurrentPriceAdapter redisAdapter, PriceProviderRouter priceProviderRouter) {
         this.redisAdapter = redisAdapter;
-        this.stooqClient = stooqClient;
+        this.priceProviderRouter = priceProviderRouter;
     }
 
     @Override
@@ -48,14 +47,9 @@ public class CachingCurrentPriceAdapter implements CurrentPriceProvider, ManualP
             return cached;
         }
 
-        try {
-            Optional<Price> fetched = stooqClient.fetchPrice(symbol);
-            fetched.ifPresent(price -> redisAdapter.putPrice(symbol, price));
-            return fetched;
-        } catch (RestClientException e) {
-            log.warn("Failed to fetch price from Stooq for {}: {}", symbol.value(), e.getMessage());
-            return Optional.empty();
-        }
+        Optional<Price> fetched = priceProviderRouter.fetchPrice(symbol);
+        fetched.ifPresent(price -> redisAdapter.putPrice(symbol, price));
+        return fetched;
     }
 
     @Override
@@ -78,14 +72,8 @@ public class CachingCurrentPriceAdapter implements CurrentPriceProvider, ManualP
             }
         }
 
-        // Fetch missing from Stooq
-        Map<InstrumentSymbol, Price> fetched;
-        try {
-            fetched = stooqClient.fetchPrices(missing);
-        } catch (RestClientException e) {
-            log.warn("Failed to fetch prices from Stooq: {}", e.getMessage());
-            return cached;
-        }
+        // Fetch missing from appropriate providers
+        Map<InstrumentSymbol, Price> fetched = priceProviderRouter.fetchPrices(missing);
 
         // Cache fetched prices in Redis
         fetched.forEach(redisAdapter::putPrice);

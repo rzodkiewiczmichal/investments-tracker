@@ -12,4 +12,5 @@ public record InstrumentJdbcEntity(
         String name,
         @Column("instrument_type") String instrumentType,
         String currency,
+        String market,
         @Version Long version) {}

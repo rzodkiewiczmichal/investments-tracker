@@ -73,3 +73,7 @@ app:
   stooq:
     base-url: ${STOOQ_BASE_URL:https://stooq.pl}
     csv-path: /q/l/
+  # Finnhub Price API (ADR-031)
+  finnhub:
+    base-url: ${FINNHUB_BASE_URL:https://finnhub.io}
+    api-key: ${FINNHUB_API_KEY:}

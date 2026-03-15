@@ -23,6 +23,7 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
+import com.investments.tracker.domain.model.value.Market;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 
 @DisplayName("InstrumentQueryUseCaseService")
@@ -168,6 +169,7 @@ class InstrumentQueryUseCaseServiceTest {
                 InstrumentSymbol.of(symbol),
                 new InstrumentName(name),
                 InstrumentType.valueOf(type),
-                Currency.PLN);
+                Currency.PLN,
+                Market.GPW);
     }
 }
