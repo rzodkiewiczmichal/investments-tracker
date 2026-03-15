@@ -131,13 +131,23 @@ public class StooqPriceClient {
     }
 
     private String toStooqSymbol(InstrumentSymbol symbol) {
-        String lower = symbol.value().toLowerCase();
+        String value = symbol.value();
+        // Strip .PL market suffix (all GPW instruments now have TICKER.PL format)
+        if (value.endsWith(".PL")) {
+            value = value.substring(0, value.length() - 3);
+        }
+        String lower = value.toLowerCase();
+        // Stooq requires .pl suffix for ETFs
         return lower.startsWith(ETF_PREFIX.toLowerCase()) ? lower + STOOQ_GPW_SUFFIX : lower;
     }
 
     private static String fromStooqSymbol(String stooqSymbol) {
-        return stooqSymbol.endsWith(STOOQ_GPW_SUFFIX.toUpperCase())
-                ? stooqSymbol.substring(0, stooqSymbol.length() - STOOQ_GPW_SUFFIX.length())
-                : stooqSymbol;
+        // Stooq returns ETFs with .PL suffix, regular stocks without
+        String base =
+                stooqSymbol.endsWith(STOOQ_GPW_SUFFIX.toUpperCase())
+                        ? stooqSymbol.substring(0, stooqSymbol.length() - STOOQ_GPW_SUFFIX.length())
+                        : stooqSymbol;
+        // All GPW instruments now use TICKER.PL format
+        return base + ".PL";
     }
 }

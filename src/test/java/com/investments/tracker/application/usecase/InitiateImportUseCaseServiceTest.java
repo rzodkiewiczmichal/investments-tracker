@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.investments.tracker.application.port.out.ParseResult;
 import com.investments.tracker.application.port.out.TransactionHistoryParser;
 import com.investments.tracker.domain.exception.ImportParsingException;
 import com.investments.tracker.domain.model.ImportSession;
@@ -33,6 +35,7 @@ import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.model.value.TransactionType;
+import com.investments.tracker.domain.repository.BrokerInstrumentMappingRepository;
 import com.investments.tracker.domain.repository.ImportSessionRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 
@@ -45,19 +48,27 @@ class InitiateImportUseCaseServiceTest {
 
     @Mock private ImportSessionRepository importSessionRepository;
 
+    @Mock private BrokerInstrumentMappingRepository brokerMappingRepository;
+
     private InitiateImportUseCaseService useCase;
 
     @BeforeEach
     void setUp() {
         useCase =
                 new InitiateImportUseCaseService(
-                        List.of(parser), instrumentRepository, importSessionRepository);
+                        List.of(parser),
+                        instrumentRepository,
+                        importSessionRepository,
+                        brokerMappingRepository);
     }
 
     @Test
     void allInstrumentsMatchedSetsReadyToConfirm() {
         when(parser.brokerName()).thenReturn("mBank");
-        when(parser.parse(any())).thenReturn(List.of(rawTx("ETFBCASH", TransactionType.BUY, 50)));
+        when(parser.parse(any()))
+                .thenReturn(
+                        new ParseResult(
+                                List.of(rawTx("ETFBCASH", TransactionType.BUY, 50)), Map.of()));
         when(instrumentRepository.findBySymbol(new InstrumentSymbol("ETFBCASH")))
                 .thenReturn(Optional.of(instrument("ETFBCASH")));
         when(importSessionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -74,7 +85,10 @@ class InitiateImportUseCaseServiceTest {
     @Test
     void unmatchedInstrumentSetsPendingReview() {
         when(parser.brokerName()).thenReturn("mBank");
-        when(parser.parse(any())).thenReturn(List.of(rawTx("TORPOL", TransactionType.BUY, 100)));
+        when(parser.parse(any()))
+                .thenReturn(
+                        new ParseResult(
+                                List.of(rawTx("TORPOL", TransactionType.BUY, 100)), Map.of()));
         when(instrumentRepository.findBySymbol(new InstrumentSymbol("TORPOL")))
                 .thenReturn(Optional.empty());
         when(importSessionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -94,9 +108,11 @@ class InitiateImportUseCaseServiceTest {
         when(parser.brokerName()).thenReturn("mBank");
         when(parser.parse(any()))
                 .thenReturn(
-                        List.of(
-                                rawTx("ALLEGRO", TransactionType.BUY, 100),
-                                rawTx("ALLEGRO", TransactionType.SELL, 100)));
+                        new ParseResult(
+                                List.of(
+                                        rawTx("ALLEGRO", TransactionType.BUY, 100),
+                                        rawTx("ALLEGRO", TransactionType.SELL, 100)),
+                                Map.of()));
         when(importSessionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ImportSession session =
@@ -111,7 +127,9 @@ class InitiateImportUseCaseServiceTest {
     void invalidSymbolFormatTreatedAsUnmatched() {
         when(parser.brokerName()).thenReturn("mBank");
         when(parser.parse(any()))
-                .thenReturn(List.of(rawTx("DTLE GR ETF", TransactionType.BUY, 10)));
+                .thenReturn(
+                        new ParseResult(
+                                List.of(rawTx("DTLE GR ETF", TransactionType.BUY, 10)), Map.of()));
         when(importSessionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ImportSession session =

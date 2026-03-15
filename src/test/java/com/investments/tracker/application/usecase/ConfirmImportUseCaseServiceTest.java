@@ -38,6 +38,7 @@ import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
 import com.investments.tracker.domain.model.value.TransactionType;
 import com.investments.tracker.domain.repository.AccountRepository;
+import com.investments.tracker.domain.repository.BrokerInstrumentMappingRepository;
 import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ImportSessionRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
@@ -58,6 +59,8 @@ class ConfirmImportUseCaseServiceTest {
     @Mock private ImportCalculationService importCalculationService;
 
     @Mock private CurrentPriceProvider currentPriceProvider;
+
+    @Mock private BrokerInstrumentMappingRepository brokerMappingRepository;
 
     @InjectMocks private ConfirmImportUseCaseService useCase;
 

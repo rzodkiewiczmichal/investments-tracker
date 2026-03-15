@@ -7,10 +7,12 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import com.investments.tracker.application.port.out.ParseResult;
 import com.investments.tracker.application.port.out.TransactionHistoryParser;
 import com.investments.tracker.domain.exception.ImportParsingException;
 import com.investments.tracker.domain.model.RawTransaction;
@@ -38,7 +40,7 @@ public class MBankCsvParser implements TransactionHistoryParser {
     private static final int LINES_TO_SKIP = METADATA_LINES + HEADER_LINES;
 
     @Override
-    public List<RawTransaction> parse(InputStream file) {
+    public ParseResult parse(InputStream file) {
         List<RawTransaction> transactions = new ArrayList<>();
 
         try (BufferedReader reader =
@@ -71,7 +73,7 @@ public class MBankCsvParser implements TransactionHistoryParser {
             throw ImportParsingException.emptyFile();
         }
 
-        return transactions;
+        return new ParseResult(transactions, Map.of());
     }
 
     @Override

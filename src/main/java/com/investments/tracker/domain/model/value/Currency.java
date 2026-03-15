@@ -5,7 +5,8 @@ public enum Currency {
     PLN("PLN", "Polish Zloty", 2),
     EUR("EUR", "Euro", 2),
     GBP("GBP", "British Pound Sterling", 2),
-    USD("USD", "US Dollar", 2);
+    USD("USD", "US Dollar", 2),
+    DKK("DKK", "Danish Krone", 2);
 
     private final String code;
     private final String displayName;

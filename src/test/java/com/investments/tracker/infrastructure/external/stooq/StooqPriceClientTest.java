@@ -51,7 +51,7 @@ class StooqPriceClientTest {
                                 """,
                                 MediaType.TEXT_PLAIN));
 
-        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("PKO"));
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("PKO.PL"));
 
         assertThat(price).isPresent();
         assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("92"));
@@ -77,16 +77,16 @@ class StooqPriceClientTest {
         Map<InstrumentSymbol, Price> prices =
                 client.fetchPrices(
                         List.of(
-                                InstrumentSymbol.of("PKO"),
-                                InstrumentSymbol.of("PZU"),
-                                InstrumentSymbol.of("KGHM")));
+                                InstrumentSymbol.of("PKO.PL"),
+                                InstrumentSymbol.of("PZU.PL"),
+                                InstrumentSymbol.of("KGHM.PL")));
 
         assertThat(prices).hasSize(3);
-        assertThat(prices.get(InstrumentSymbol.of("PKO")).money().amount())
+        assertThat(prices.get(InstrumentSymbol.of("PKO.PL")).money().amount())
                 .isEqualByComparingTo(new BigDecimal("92"));
-        assertThat(prices.get(InstrumentSymbol.of("PZU")).money().amount())
+        assertThat(prices.get(InstrumentSymbol.of("PZU.PL")).money().amount())
                 .isEqualByComparingTo(new BigDecimal("45.8"));
-        assertThat(prices.get(InstrumentSymbol.of("KGHM")).money().amount())
+        assertThat(prices.get(InstrumentSymbol.of("KGHM.PL")).money().amount())
                 .isEqualByComparingTo(new BigDecimal("141.2"));
         mockServer.verify();
     }
@@ -101,7 +101,7 @@ class StooqPriceClientTest {
                                 "Symbol,Date,Time,Open,High,Low,Close,Volume\n",
                                 MediaType.TEXT_PLAIN));
 
-        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("XYZ"));
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("XYZ.PL"));
 
         assertThat(price).isEmpty();
         mockServer.verify();
@@ -123,11 +123,11 @@ class StooqPriceClientTest {
 
         Map<InstrumentSymbol, Price> prices =
                 client.fetchPrices(
-                        List.of(InstrumentSymbol.of("PKO"), InstrumentSymbol.of("BAD1")));
+                        List.of(InstrumentSymbol.of("PKO.PL"), InstrumentSymbol.of("BAD1.PL")));
 
         assertThat(prices).hasSize(1);
-        assertThat(prices).containsKey(InstrumentSymbol.of("PKO"));
-        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("BAD1"));
+        assertThat(prices).containsKey(InstrumentSymbol.of("PKO.PL"));
+        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("BAD1.PL"));
         mockServer.verify();
     }
 
@@ -151,14 +151,14 @@ class StooqPriceClientTest {
         Map<InstrumentSymbol, Price> prices =
                 client.fetchPrices(
                         List.of(
-                                InstrumentSymbol.of("PKO"),
-                                InstrumentSymbol.of("ATREM"),
-                                InstrumentSymbol.of("ELEKTROTI")));
+                                InstrumentSymbol.of("PKO.PL"),
+                                InstrumentSymbol.of("ATREM.PL"),
+                                InstrumentSymbol.of("ELEKTROTI.PL")));
 
         assertThat(prices).hasSize(1);
-        assertThat(prices).containsKey(InstrumentSymbol.of("PKO"));
-        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("ATREM"));
-        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("ELEKTROTI"));
+        assertThat(prices).containsKey(InstrumentSymbol.of("PKO.PL"));
+        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("ATREM.PL"));
+        assertThat(prices).doesNotContainKey(InstrumentSymbol.of("ELEKTROTI.PL"));
         mockServer.verify();
     }
 
@@ -169,7 +169,7 @@ class StooqPriceClientTest {
                 .expect(requestTo("https://stooq.pl/q/l/?s=pko&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(withSuccess("", MediaType.TEXT_PLAIN));
 
-        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("PKO"));
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("PKO.PL"));
 
         assertThat(price).isEmpty();
         mockServer.verify();
@@ -182,7 +182,7 @@ class StooqPriceClientTest {
                 .expect(requestTo("https://stooq.pl/q/l/?s=pko&f=sd2t2ohlcv&h=&e=csv"))
                 .andRespond(withServerError());
 
-        assertThatThrownBy(() -> client.fetchPrice(InstrumentSymbol.of("PKO")))
+        assertThatThrownBy(() -> client.fetchPrice(InstrumentSymbol.of("PKO.PL")))
                 .isInstanceOf(RestClientException.class);
         mockServer.verify();
     }
@@ -208,7 +208,7 @@ class StooqPriceClientTest {
                                 """,
                                 MediaType.TEXT_PLAIN));
 
-        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("ETFBTBSP"));
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("ETFBTBSP.PL"));
 
         assertThat(price).isPresent();
         assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("230.5"));
@@ -233,12 +233,12 @@ class StooqPriceClientTest {
 
         Map<InstrumentSymbol, Price> prices =
                 client.fetchPrices(
-                        List.of(InstrumentSymbol.of("PKO"), InstrumentSymbol.of("ETFSP500")));
+                        List.of(InstrumentSymbol.of("PKO.PL"), InstrumentSymbol.of("ETFSP500.PL")));
 
         assertThat(prices).hasSize(2);
-        assertThat(prices.get(InstrumentSymbol.of("PKO")).money().amount())
+        assertThat(prices.get(InstrumentSymbol.of("PKO.PL")).money().amount())
                 .isEqualByComparingTo(new BigDecimal("91.4"));
-        assertThat(prices.get(InstrumentSymbol.of("ETFSP500")).money().amount())
+        assertThat(prices.get(InstrumentSymbol.of("ETFSP500.PL")).money().amount())
                 .isEqualByComparingTo(new BigDecimal("254"));
         mockServer.verify();
     }
@@ -256,7 +256,7 @@ class StooqPriceClientTest {
                                 """,
                                 MediaType.TEXT_PLAIN));
 
-        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("PZU"));
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("PZU.PL"));
 
         assertThat(price).isPresent();
         assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("45.85"));
