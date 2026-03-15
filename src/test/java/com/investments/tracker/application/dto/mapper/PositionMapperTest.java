@@ -23,6 +23,7 @@ import com.investments.tracker.domain.model.value.ExchangeRate;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
+import com.investments.tracker.domain.model.value.Market;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.model.value.Quantity;
@@ -167,6 +168,10 @@ class PositionMapperTest {
 
     private Instrument createInstrument(String symbol, String name, InstrumentType type) {
         return new Instrument(
-                new InstrumentSymbol(symbol), new InstrumentName(name), type, Currency.PLN);
+                new InstrumentSymbol(symbol),
+                new InstrumentName(name),
+                type,
+                Currency.PLN,
+                Market.GPW);
     }
 }

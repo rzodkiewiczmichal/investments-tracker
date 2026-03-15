@@ -23,6 +23,7 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
+import com.investments.tracker.domain.model.value.Market;
 import com.investments.tracker.domain.repository.InstrumentCatalogProvider;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 
@@ -139,7 +140,8 @@ class InstrumentSyncUseCaseServiceTest {
                 InstrumentSymbol.of(symbol),
                 new InstrumentName(name),
                 InstrumentType.STOCK,
-                Currency.USD);
+                Currency.USD,
+                Market.US);
     }
 
     private Instrument plnInstrument(String symbol, String name) {
@@ -147,6 +149,7 @@ class InstrumentSyncUseCaseServiceTest {
                 InstrumentSymbol.of(symbol),
                 new InstrumentName(name),
                 InstrumentType.STOCK,
-                Currency.PLN);
+                Currency.PLN,
+                Market.GPW);
     }
 }

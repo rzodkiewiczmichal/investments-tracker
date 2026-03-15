@@ -16,6 +16,7 @@ import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentName;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.InstrumentType;
+import com.investments.tracker.domain.model.value.Market;
 import com.investments.tracker.domain.repository.InstrumentCatalogProvider;
 
 /** Finnhub API client that fetches the US instrument catalog. */
@@ -87,7 +88,8 @@ public class FinnhubCatalogClient implements InstrumentCatalogProvider {
                 new InstrumentSymbol(response.symbol()),
                 new InstrumentName(response.description()),
                 TYPE_MAPPING.get(response.type()),
-                Currency.USD);
+                Currency.USD,
+                Market.US);
     }
 
     private boolean isValidSymbol(String symbol) {

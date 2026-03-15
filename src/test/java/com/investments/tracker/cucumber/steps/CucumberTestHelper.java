@@ -56,16 +56,30 @@ final class CucumberTestHelper {
      */
     static void ensureInstrumentExists(
             JdbcTemplate jdbcTemplate, String symbol, String name, String instrumentType) {
+        ensureInstrumentExists(jdbcTemplate, symbol, name, instrumentType, "GPW");
+    }
+
+    /**
+     * Ensures an instrument exists in the catalog with the given type and market. Used for setting
+     * up US or GPW instruments in tests.
+     */
+    static void ensureInstrumentExists(
+            JdbcTemplate jdbcTemplate,
+            String symbol,
+            String name,
+            String instrumentType,
+            String market) {
         Integer count =
                 jdbcTemplate.queryForObject(
                         "SELECT COUNT(*) FROM instruments WHERE symbol = ?", Integer.class, symbol);
 
         if (count == null || count == 0) {
             jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, currency, version) VALUES (?, ?, ?, 'PLN', 0)",
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, market, version) VALUES (?, ?, ?, 'PLN', ?, 0)",
                     symbol,
                     name != null ? name : symbol,
-                    instrumentType);
+                    instrumentType,
+                    market);
         }
     }
 
@@ -116,7 +130,7 @@ final class CucumberTestHelper {
 
         if (count == null || count == 0) {
             jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, currency, version) VALUES (?, ?, ?, 'PLN', 0)",
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, market, version) VALUES (?, ?, ?, 'PLN', 'GPW', 0)",
                     symbol,
                     name != null ? name : symbol,
                     "STOCK");

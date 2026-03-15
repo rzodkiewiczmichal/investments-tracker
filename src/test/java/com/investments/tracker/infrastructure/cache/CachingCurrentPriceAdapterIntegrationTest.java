@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.web.client.RestClientException;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -25,7 +24,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
-import com.investments.tracker.infrastructure.external.stooq.StooqPriceClient;
 
 @Testcontainers
 @DisplayName("CachingCurrentPriceAdapter integration test")
@@ -38,7 +36,7 @@ class CachingCurrentPriceAdapterIntegrationTest {
     private CachingCurrentPriceAdapter adapter;
     private RedisCurrentPriceAdapter redisAdapter;
     private RedisTemplate<String, String> redisTemplate;
-    private StooqPriceClient stooqClient;
+    private PriceProviderRouter priceProviderRouter;
 
     @BeforeEach
     void setUp() {
@@ -57,22 +55,22 @@ class CachingCurrentPriceAdapterIntegrationTest {
         redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
 
         redisAdapter = new RedisCurrentPriceAdapter(redisTemplate);
-        stooqClient = mock(StooqPriceClient.class);
-        adapter = new CachingCurrentPriceAdapter(redisAdapter, stooqClient);
+        priceProviderRouter = mock(PriceProviderRouter.class);
+        adapter = new CachingCurrentPriceAdapter(redisAdapter, priceProviderRouter);
     }
 
     @Test
-    @DisplayName("should fetch from Stooq on cache miss and cache result")
-    void shouldFetchFromStooqOnCacheMissAndCacheResult() {
+    @DisplayName("should fetch from provider on cache miss and cache result")
+    void shouldFetchFromProviderOnCacheMissAndCacheResult() {
         InstrumentSymbol symbol = InstrumentSymbol.of("PKO");
-        Price stooqPrice = new Price(Money.pln(new BigDecimal("92")));
-        when(stooqClient.fetchPrice(symbol)).thenReturn(Optional.of(stooqPrice));
+        Price fetchedPrice = new Price(Money.pln(new BigDecimal("92")));
+        when(priceProviderRouter.fetchPrice(symbol)).thenReturn(Optional.of(fetchedPrice));
 
         Optional<Price> result = adapter.getPrice(symbol);
 
         assertThat(result).isPresent();
         assertThat(result.get().money().amount()).isEqualByComparingTo(new BigDecimal("92"));
-        verify(stooqClient).fetchPrice(symbol);
+        verify(priceProviderRouter).fetchPrice(symbol);
 
         // Verify cached in Redis
         Object storedAmount = redisTemplate.opsForHash().get("price:current:PKO", "amount");
@@ -80,8 +78,8 @@ class CachingCurrentPriceAdapterIntegrationTest {
     }
 
     @Test
-    @DisplayName("should return cached price without Stooq call")
-    void shouldReturnCachedPriceWithoutStooqCall() {
+    @DisplayName("should return cached price without provider call")
+    void shouldReturnCachedPriceWithoutProviderCall() {
         InstrumentSymbol symbol = InstrumentSymbol.of("PZU");
         redisAdapter.putPrice(symbol, new Price(Money.pln(new BigDecimal("45.80"))));
 
@@ -89,15 +87,15 @@ class CachingCurrentPriceAdapterIntegrationTest {
 
         assertThat(result).isPresent();
         assertThat(result.get().money().amount()).isEqualByComparingTo(new BigDecimal("45.80"));
-        verify(stooqClient, never()).fetchPrice(symbol);
+        verify(priceProviderRouter, never()).fetchPrice(symbol);
     }
 
     @Test
     @DisplayName("should set 24h TTL on cached price")
     void shouldSetTtlOnCachedPrice() {
         InstrumentSymbol symbol = InstrumentSymbol.of("KGHM");
-        Price stooqPrice = new Price(Money.pln(new BigDecimal("141.20")));
-        when(stooqClient.fetchPrice(symbol)).thenReturn(Optional.of(stooqPrice));
+        Price fetchedPrice = new Price(Money.pln(new BigDecimal("141.20")));
+        when(priceProviderRouter.fetchPrice(symbol)).thenReturn(Optional.of(fetchedPrice));
 
         adapter.getPrice(symbol);
 
@@ -107,22 +105,10 @@ class CachingCurrentPriceAdapterIntegrationTest {
     }
 
     @Test
-    @DisplayName("should return empty when Stooq fails on cache miss")
-    void shouldReturnEmptyWhenStooqFailsOnCacheMiss() {
-        InstrumentSymbol symbol = InstrumentSymbol.of("PKO");
-        when(stooqClient.fetchPrice(symbol))
-                .thenThrow(new RestClientException("Connection refused"));
-
-        Optional<Price> result = adapter.getPrice(symbol);
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("should return empty when Stooq has no data for symbol")
-    void shouldReturnEmptyWhenStooqHasNoData() {
+    @DisplayName("should return empty when provider has no data for symbol")
+    void shouldReturnEmptyWhenProviderHasNoData() {
         InstrumentSymbol symbol = InstrumentSymbol.of("UNKNOWN");
-        when(stooqClient.fetchPrice(symbol)).thenReturn(Optional.empty());
+        when(priceProviderRouter.fetchPrice(symbol)).thenReturn(Optional.empty());
 
         Optional<Price> result = adapter.getPrice(symbol);
 
@@ -141,7 +127,7 @@ class CachingCurrentPriceAdapterIntegrationTest {
 
         Price pzuPrice = new Price(Money.pln(new BigDecimal("45.80")));
         Price kghmPrice = new Price(Money.pln(new BigDecimal("141.20")));
-        when(stooqClient.fetchPrices(List.of(pzu, kghm)))
+        when(priceProviderRouter.fetchPrices(List.of(pzu, kghm)))
                 .thenReturn(Map.of(pzu, pzuPrice, kghm, kghmPrice));
 
         Map<InstrumentSymbol, Price> result = adapter.getPrices(List.of(pko, pzu, kghm));
@@ -152,19 +138,18 @@ class CachingCurrentPriceAdapterIntegrationTest {
         assertThat(result.get(kghm).money().amount())
                 .isEqualByComparingTo(new BigDecimal("141.20"));
 
-        // Only PZU and KGHM should have been fetched from Stooq
-        verify(stooqClient).fetchPrices(List.of(pzu, kghm));
+        // Only PZU and KGHM should have been fetched from provider
+        verify(priceProviderRouter).fetchPrices(List.of(pzu, kghm));
     }
 
     @Test
-    @DisplayName("should return only cached prices when Stooq fails for missing symbols")
-    void shouldReturnOnlyCachedWhenStooqFailsForMissing() {
+    @DisplayName("should return only cached prices when provider returns empty for missing symbols")
+    void shouldReturnOnlyCachedWhenProviderReturnsEmptyForMissing() {
         InstrumentSymbol pko = InstrumentSymbol.of("PKO");
         InstrumentSymbol pzu = InstrumentSymbol.of("PZU");
 
         redisAdapter.putPrice(pko, new Price(Money.pln(new BigDecimal("92"))));
-        when(stooqClient.fetchPrices(List.of(pzu)))
-                .thenThrow(new RestClientException("Stooq down"));
+        when(priceProviderRouter.fetchPrices(List.of(pzu))).thenReturn(Map.of());
 
         Map<InstrumentSymbol, Price> result = adapter.getPrices(List.of(pko, pzu));
 
@@ -174,8 +159,8 @@ class CachingCurrentPriceAdapterIntegrationTest {
     }
 
     @Test
-    @DisplayName("should skip Stooq call when all prices are cached")
-    void shouldSkipStooqWhenAllCached() {
+    @DisplayName("should skip provider call when all prices are cached")
+    void shouldSkipProviderCallWhenAllCached() {
         InstrumentSymbol pko = InstrumentSymbol.of("PKO");
         InstrumentSymbol pzu = InstrumentSymbol.of("PZU");
 
@@ -185,7 +170,7 @@ class CachingCurrentPriceAdapterIntegrationTest {
         Map<InstrumentSymbol, Price> result = adapter.getPrices(List.of(pko, pzu));
 
         assertThat(result).hasSize(2);
-        verify(stooqClient, never()).fetchPrices(List.of());
+        verify(priceProviderRouter, never()).fetchPrices(List.of());
     }
 
     @Test
