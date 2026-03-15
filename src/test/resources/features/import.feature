@@ -133,3 +133,56 @@ Feature: Broker Transaction History Import
     Then the import session status should be "READY_TO_CONFIRM"
     And the import summary should show 1 matched instruments
     And the import summary should show 0 unmatched instruments
+
+  @FR-021 @FR-032
+  @v0.2 @import @xtb
+  Scenario: XTB import with auto-matched instruments via Closed Positions
+    Given the instrument catalog contains "MSFT.US" with name "Microsoft" and type "STOCK" on market "US" in currency "USD"
+    When I upload an XTB XLSX for account "XTB" with closed positions and transactions:
+      | closedInstrument | closedTicker |
+      | Microsoft        | MSFT.US      |
+    And the following XTB cash operations:
+      | type           | instrument | comment                   |
+      | Stock purchase | Microsoft  | OPEN BUY 10 @ 420.50      |
+    Then the import session status should be "READY_TO_CONFIRM"
+    And the import summary should show 1 matched instruments
+    And the import summary should show 0 unmatched instruments
+    When I confirm the import for account "XTB"
+    Then the import session status should be "PENDING_PRICES"
+    When I provide prices for the import:
+      | symbol  | price  | currency |
+      | MSFT.US | 425.00 | USD      |
+    Then the import session status should be "COMPLETED"
+    And a position for "MSFT.US" should exist with quantity 10
+
+  @FR-021 @FR-032
+  @v0.2 @import @xtb
+  Scenario: XTB import with unmatched instruments requires user mapping
+    Given the instrument catalog contains "NVDA.US" with name "Nvidia" and type "STOCK" on market "US" in currency "USD"
+    When I upload an XTB XLSX for account "XTB" with transactions:
+      | type           | instrument | comment              |
+      | Stock purchase | Nvidia     | OPEN BUY 5 @ 900.00 |
+    Then the import session status should be "PENDING_REVIEW"
+    And the import summary should show 0 matched instruments
+    And the import summary should show 1 unmatched instruments
+    When I confirm the import with mappings for account "XTB":
+      | brokerName | catalogSymbol |
+      | Nvidia     | NVDA.US       |
+    Then the import session status should be "PENDING_PRICES"
+    When I provide prices for the import:
+      | symbol  | price  | currency |
+      | NVDA.US | 910.00 | USD      |
+    Then the import session status should be "COMPLETED"
+    And a position for "NVDA.US" should exist with quantity 5
+
+  @FR-021 @FR-032
+  @v0.2 @import @xtb
+  Scenario: XTB import reuses previously persisted mapping
+    Given the instrument catalog contains "AAPL.US" with name "Apple" and type "STOCK" on market "US" in currency "USD"
+    And a broker mapping exists for "XTB" mapping "Apple Inc." to "AAPL.US"
+    When I upload an XTB XLSX for account "XTB" with transactions:
+      | type           | instrument | comment               |
+      | Stock purchase | Apple Inc. | OPEN BUY 20 @ 185.00  |
+    Then the import session status should be "READY_TO_CONFIRM"
+    And the import summary should show 1 matched instruments
+    And the import summary should show 0 unmatched instruments

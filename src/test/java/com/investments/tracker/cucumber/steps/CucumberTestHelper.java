@@ -69,16 +69,31 @@ final class CucumberTestHelper {
             String name,
             String instrumentType,
             String market) {
+        ensureInstrumentExists(jdbcTemplate, symbol, name, instrumentType, market, "PLN");
+    }
+
+    /**
+     * Ensures an instrument exists in the catalog with the given type, market, and currency. Used
+     * for setting up instruments with non-PLN currencies (e.g., US stocks in USD).
+     */
+    static void ensureInstrumentExists(
+            JdbcTemplate jdbcTemplate,
+            String symbol,
+            String name,
+            String instrumentType,
+            String market,
+            String currency) {
         Integer count =
                 jdbcTemplate.queryForObject(
                         "SELECT COUNT(*) FROM instruments WHERE symbol = ?", Integer.class, symbol);
 
         if (count == null || count == 0) {
             jdbcTemplate.update(
-                    "INSERT INTO instruments (symbol, name, instrument_type, currency, market, version) VALUES (?, ?, ?, 'PLN', ?, 0)",
+                    "INSERT INTO instruments (symbol, name, instrument_type, currency, market, version) VALUES (?, ?, ?, ?, ?, 0)",
                     symbol,
                     name != null ? name : symbol,
                     instrumentType,
+                    currency,
                     market);
         }
     }

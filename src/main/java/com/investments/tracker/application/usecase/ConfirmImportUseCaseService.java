@@ -17,6 +17,7 @@ import com.investments.tracker.domain.exception.IncompleteMappingsException;
 import com.investments.tracker.domain.exception.InvalidMappingException;
 import com.investments.tracker.domain.model.Account;
 import com.investments.tracker.domain.model.AccountHolding;
+import com.investments.tracker.domain.model.BrokerInstrumentMapping;
 import com.investments.tracker.domain.model.ImportSession;
 import com.investments.tracker.domain.model.InstrumentMapping;
 import com.investments.tracker.domain.model.Position;
@@ -24,11 +25,13 @@ import com.investments.tracker.domain.model.RawTransaction;
 import com.investments.tracker.domain.model.Transaction;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.BrokerInstrumentName;
+import com.investments.tracker.domain.model.value.BrokerName;
 import com.investments.tracker.domain.model.value.ImportSessionId;
 import com.investments.tracker.domain.model.value.ImportSessionStatus;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.AccountRepository;
+import com.investments.tracker.domain.repository.BrokerInstrumentMappingRepository;
 import com.investments.tracker.domain.repository.CurrentPriceProvider;
 import com.investments.tracker.domain.repository.ImportSessionRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
@@ -46,6 +49,7 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
     private final PositionRepository positionRepository;
     private final ImportCalculationService importCalculationService;
     private final CurrentPriceProvider currentPriceProvider;
+    private final BrokerInstrumentMappingRepository brokerMappingRepository;
 
     public ConfirmImportUseCaseService(
             ImportSessionRepository importSessionRepository,
@@ -53,13 +57,15 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
             AccountRepository accountRepository,
             PositionRepository positionRepository,
             ImportCalculationService importCalculationService,
-            CurrentPriceProvider currentPriceProvider) {
+            CurrentPriceProvider currentPriceProvider,
+            BrokerInstrumentMappingRepository brokerMappingRepository) {
         this.importSessionRepository = importSessionRepository;
         this.instrumentRepository = instrumentRepository;
         this.accountRepository = accountRepository;
         this.positionRepository = positionRepository;
         this.importCalculationService = importCalculationService;
         this.currentPriceProvider = currentPriceProvider;
+        this.brokerMappingRepository = brokerMappingRepository;
     }
 
     @Override
@@ -75,6 +81,7 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
         List<InstrumentMapping> mergedMappings = mergeMappings(session, userMappings);
         validateMappingsComplete(mergedMappings);
         validateCatalogSymbolsExist(userMappings);
+        persistUserMappings(session.broker(), userMappings);
 
         Set<InstrumentSymbol> resolvedSymbols =
                 mergedMappings.stream()
@@ -213,6 +220,16 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
         return accountRepository
                 .findByName(session.accountName())
                 .orElseGet(() -> accountRepository.create(session.accountName(), session.broker()));
+    }
+
+    private void persistUserMappings(BrokerName broker, List<InstrumentMapping> userMappings) {
+        for (InstrumentMapping mapping : userMappings) {
+            if (mapping.isResolved()) {
+                brokerMappingRepository.save(
+                        new BrokerInstrumentMapping(
+                                broker, mapping.brokerName(), mapping.catalogSymbol()));
+            }
+        }
     }
 
     private void replaceHoldings(

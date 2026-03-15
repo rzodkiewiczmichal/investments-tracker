@@ -12,6 +12,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.investments.tracker.application.port.out.ParseResult;
 import com.investments.tracker.application.port.out.TransactionHistoryParser;
 import com.investments.tracker.domain.exception.DomainException;
 import com.investments.tracker.domain.exception.ImportParsingException;
@@ -25,6 +26,7 @@ import com.investments.tracker.domain.model.value.ImportSessionId;
 import com.investments.tracker.domain.model.value.ImportSessionStatus;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.TransactionType;
+import com.investments.tracker.domain.repository.BrokerInstrumentMappingRepository;
 import com.investments.tracker.domain.repository.ImportSessionRepository;
 import com.investments.tracker.domain.repository.InstrumentRepository;
 
@@ -36,14 +38,17 @@ public class InitiateImportUseCaseService implements InitiateImportUseCase {
     private final List<TransactionHistoryParser> parsers;
     private final InstrumentRepository instrumentRepository;
     private final ImportSessionRepository importSessionRepository;
+    private final BrokerInstrumentMappingRepository brokerMappingRepository;
 
     public InitiateImportUseCaseService(
             List<TransactionHistoryParser> parsers,
             InstrumentRepository instrumentRepository,
-            ImportSessionRepository importSessionRepository) {
+            ImportSessionRepository importSessionRepository,
+            BrokerInstrumentMappingRepository brokerMappingRepository) {
         this.parsers = parsers;
         this.instrumentRepository = instrumentRepository;
         this.importSessionRepository = importSessionRepository;
+        this.brokerMappingRepository = brokerMappingRepository;
     }
 
     @Override
@@ -54,10 +59,12 @@ public class InitiateImportUseCaseService implements InitiateImportUseCase {
         Objects.requireNonNull(file, "file cannot be null");
 
         TransactionHistoryParser parser = findParser(brokerName);
-        List<RawTransaction> transactions = parser.parse(file);
+        ParseResult parseResult = parser.parse(file);
 
-        Map<BrokerInstrumentName, BigDecimal> netQuantities = computeNetQuantities(transactions);
-        List<InstrumentMapping> mappings = buildMappings(netQuantities);
+        Map<BrokerInstrumentName, BigDecimal> netQuantities =
+                computeNetQuantities(parseResult.transactions());
+        List<InstrumentMapping> mappings =
+                buildMappings(BrokerName.of(brokerName), netQuantities, parseResult.tickerHints());
 
         boolean allResolved = mappings.stream().allMatch(InstrumentMapping::isResolved);
         ImportSessionStatus status =
@@ -71,7 +78,7 @@ public class InitiateImportUseCaseService implements InitiateImportUseCase {
                         status,
                         BrokerName.of(brokerName),
                         accountName,
-                        transactions,
+                        parseResult.transactions(),
                         mappings,
                         LocalDateTime.now(),
                         null);
@@ -101,7 +108,9 @@ public class InitiateImportUseCaseService implements InitiateImportUseCase {
     }
 
     private List<InstrumentMapping> buildMappings(
-            Map<BrokerInstrumentName, BigDecimal> netQuantities) {
+            BrokerName broker,
+            Map<BrokerInstrumentName, BigDecimal> netQuantities,
+            Map<BrokerInstrumentName, InstrumentSymbol> tickerHints) {
         List<InstrumentMapping> mappings = new ArrayList<>();
 
         for (var entry : netQuantities.entrySet()) {
@@ -109,19 +118,38 @@ public class InitiateImportUseCaseService implements InitiateImportUseCase {
                 continue;
             }
 
-            BrokerInstrumentName brokerName = entry.getKey();
+            BrokerInstrumentName brokerInstrumentName = entry.getKey();
 
+            // 1. Try parse broker name as InstrumentSymbol → check catalog
             try {
-                InstrumentSymbol symbol = new InstrumentSymbol(brokerName.value());
+                InstrumentSymbol symbol = new InstrumentSymbol(brokerInstrumentName.value());
                 if (instrumentRepository.findBySymbol(symbol).isPresent()) {
-                    mappings.add(InstrumentMapping.resolved(brokerName, symbol));
+                    mappings.add(InstrumentMapping.resolved(brokerInstrumentName, symbol));
                     continue;
                 }
             } catch (DomainException ignored) {
-                // Broker name is not a valid symbol format — treat as unmatched
+                // Broker name is not a valid symbol format
             }
 
-            mappings.add(InstrumentMapping.unresolved(brokerName));
+            // 2. Look up persistent broker mapping from prior imports
+            var persistedMapping =
+                    brokerMappingRepository.findMapping(broker, brokerInstrumentName);
+            if (persistedMapping.isPresent()) {
+                mappings.add(
+                        InstrumentMapping.resolved(
+                                brokerInstrumentName, persistedMapping.get().catalogSymbol()));
+                continue;
+            }
+
+            // 3. Check parser-provided ticker hints
+            InstrumentSymbol hintSymbol = tickerHints.get(brokerInstrumentName);
+            if (hintSymbol != null && instrumentRepository.findBySymbol(hintSymbol).isPresent()) {
+                mappings.add(InstrumentMapping.resolved(brokerInstrumentName, hintSymbol));
+                continue;
+            }
+
+            // 4. Unresolved — requires user mapping
+            mappings.add(InstrumentMapping.unresolved(brokerInstrumentName));
         }
 
         return mappings;

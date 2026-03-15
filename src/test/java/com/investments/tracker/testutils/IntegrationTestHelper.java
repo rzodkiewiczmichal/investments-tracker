@@ -27,6 +27,10 @@ public final class IntegrationTestHelper {
     /** Cleans all tables in the correct order (respecting foreign key constraints). */
     public void cleanDatabase() {
         // Clean in reverse order of foreign key dependencies
+        jdbcTemplate.execute("DELETE FROM import_session_mappings WHERE true");
+        jdbcTemplate.execute("DELETE FROM import_session_transactions WHERE true");
+        jdbcTemplate.execute("DELETE FROM import_sessions WHERE true");
+        jdbcTemplate.execute("DELETE FROM broker_instrument_mappings WHERE true");
         jdbcTemplate.execute("DELETE FROM account_holdings WHERE true");
         jdbcTemplate.execute("DELETE FROM positions WHERE true");
         jdbcTemplate.execute("DELETE FROM instruments WHERE true");

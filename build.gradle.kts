@@ -43,6 +43,9 @@ dependencies {
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")
 
+    // XLSX parsing (XTB import)
+    implementation("org.apache.poi:poi-ooxml:5.3.0")
+
     // OpenAPI / Swagger UI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
 

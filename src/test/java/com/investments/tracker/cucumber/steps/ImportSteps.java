@@ -2,6 +2,8 @@ package com.investments.tracker.cucumber.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -10,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -42,6 +47,10 @@ public class ImportSteps {
     private ResponseEntity<Map> confirmResponse;
     private ResponseEntity<Map> pricesResponse;
     private String importSessionId;
+
+    // XTB XLSX builder state (accumulated across steps)
+    private List<Map<String, String>> pendingClosedPositions = new ArrayList<>();
+    private List<Map<String, String>> pendingCashOperations = new ArrayList<>();
 
     @Given("account {string} exists with broker {string}")
     public void accountExistsWithBroker(String accountName, String broker) {
@@ -209,6 +218,117 @@ public class ImportSteps {
                         symbol);
         assertThat(totalQuantity).isNotNull();
         assertThat(totalQuantity.intValue()).isEqualTo(expectedQuantity);
+    }
+
+    @Given(
+            "the instrument catalog contains {string} with name {string} and type {string} on market {string} in currency {string}")
+    public void theInstrumentCatalogContainsOnMarket(
+            String symbol, String name, String type, String market, String currency) {
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, symbol, name, type, market, currency);
+    }
+
+    @Given("a broker mapping exists for {string} mapping {string} to {string}")
+    public void brokerMappingExists(String broker, String brokerInstrumentName, String symbol) {
+        CucumberTestHelper.ensureInstrumentExists(
+                jdbcTemplate, symbol, symbol, "STOCK", "US", "USD");
+        jdbcTemplate.update(
+                "INSERT INTO broker_instrument_mappings (broker, broker_instrument_name, catalog_symbol) "
+                        + "VALUES (?, ?, ?) "
+                        + "ON CONFLICT (broker, broker_instrument_name) DO UPDATE SET catalog_symbol = EXCLUDED.catalog_symbol",
+                broker,
+                brokerInstrumentName,
+                symbol);
+    }
+
+    @When("I upload an XTB XLSX for account {string} with closed positions and transactions:")
+    public void iUploadXtbXlsxWithClosedPositions(String accountName, DataTable dataTable) {
+        pendingClosedPositions = dataTable.asMaps();
+        pendingCashOperations = new ArrayList<>();
+        // Cash operations will be provided in the next step
+        // Store accountName for later upload
+        this.pendingXtbAccountName = accountName;
+    }
+
+    @When("the following XTB cash operations:")
+    public void theFollowingXtbCashOperations(DataTable dataTable) {
+        pendingCashOperations = dataTable.asMaps();
+        uploadXtbXlsx(pendingXtbAccountName, pendingClosedPositions, pendingCashOperations);
+    }
+
+    @When("I upload an XTB XLSX for account {string} with transactions:")
+    public void iUploadXtbXlsxWithTransactions(String accountName, DataTable dataTable) {
+        List<Map<String, String>> cashRows = dataTable.asMaps();
+        uploadXtbXlsx(accountName, List.of(), cashRows);
+    }
+
+    private String pendingXtbAccountName;
+
+    private void uploadXtbXlsx(
+            String accountName,
+            List<Map<String, String>> closedPositions,
+            List<Map<String, String>> cashOperations) {
+        byte[] xlsxBytes = buildXtbXlsx(closedPositions, cashOperations);
+
+        ByteArrayResource resource =
+                new ByteArrayResource(xlsxBytes) {
+                    @Override
+                    public String getFilename() {
+                        return "transactions.xlsx";
+                    }
+                };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("broker", "XTB");
+        body.add("accountName", accountName);
+        body.add("file", resource);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        importResponse =
+                restTemplate.postForEntity(
+                        baseUrl() + "/api/v1/imports", new HttpEntity<>(body, headers), Map.class);
+
+        if (importResponse.getStatusCode().is2xxSuccessful() && importResponse.getBody() != null) {
+            importSessionId = (String) importResponse.getBody().get("importSessionId");
+        }
+    }
+
+    private byte[] buildXtbXlsx(
+            List<Map<String, String>> closedPositions, List<Map<String, String>> cashOperations) {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            // Closed Positions sheet
+            XSSFSheet closedSheet = workbook.createSheet("Closed Positions");
+            for (int i = 0; i < 5; i++) {
+                closedSheet.createRow(i);
+            }
+            for (int i = 0; i < closedPositions.size(); i++) {
+                Map<String, String> cp = closedPositions.get(i);
+                XSSFRow row = closedSheet.createRow(5 + i);
+                row.createCell(0).setCellValue(cp.get("closedInstrument"));
+                row.createCell(2).setCellValue(cp.get("closedTicker"));
+            }
+
+            // Cash Operations sheet
+            XSSFSheet cashSheet = workbook.createSheet("Cash Operations");
+            for (int i = 0; i < 5; i++) {
+                cashSheet.createRow(i);
+            }
+            for (int i = 0; i < cashOperations.size(); i++) {
+                Map<String, String> co = cashOperations.get(i);
+                XSSFRow row = cashSheet.createRow(5 + i);
+                row.createCell(0).setCellValue(co.get("type"));
+                row.createCell(1).setCellValue(co.get("instrument"));
+                row.createCell(5).setCellValue(co.get("comment"));
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to build XTB XLSX", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
