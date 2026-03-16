@@ -12,7 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * Resolves instrument names to tickers by reading the Closed Positions sheet.
  *
  * <p>Closed Positions sheet has instrument name in column A and ticker in column C (e.g.,
- * "Microsoft" → "MSFT.US").
+ * "Microsoft" -> "MSFT.US").
  */
 final class XtbTickerResolver {
 
@@ -22,10 +22,10 @@ final class XtbTickerResolver {
     private XtbTickerResolver() {}
 
     /**
-     * Builds a map of instrument name → ticker from the Closed Positions sheet.
+     * Builds a map of instrument name -> ticker from the Closed Positions sheet.
      *
      * @param workbook the XTB XLSX workbook
-     * @return map of instrument full name → ticker (e.g., "Microsoft" → "MSFT.US")
+     * @return map of instrument full name -> ticker (e.g., "Microsoft" -> "MSFT.US")
      */
     static Map<String, String> resolve(XSSFWorkbook workbook) {
         Map<String, String> nameToTicker = new HashMap<>();
