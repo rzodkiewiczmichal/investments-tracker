@@ -52,7 +52,7 @@ public class FinnhubPriceClient {
     /**
      * Fetches the current price for a single US instrument.
      *
-     * @param symbol the instrument symbol (e.g., AAPL, VOO)
+     * @param symbol the instrument symbol (e.g., AAPL.US, VOO.US)
      * @return the current price in USD, or empty if unavailable
      */
     public Optional<Price> fetchPrice(InstrumentSymbol symbol) {
@@ -67,7 +67,7 @@ public class FinnhubPriceClient {
                                     uriBuilder ->
                                             uriBuilder
                                                     .path("/api/v1/quote")
-                                                    .queryParam("symbol", symbol.value())
+                                                    .queryParam("symbol", toFinnhubSymbol(symbol))
                                                     .build())
                             .retrieve()
                             .body(FinnhubQuoteResponse.class);
@@ -106,5 +106,14 @@ public class FinnhubPriceClient {
             fetchPrice(symbol).ifPresent(price -> result.put(symbol, price));
         }
         return Map.copyOf(result);
+    }
+
+    /** Strips the {@code .US} market suffix to get the bare Finnhub API symbol. */
+    private static String toFinnhubSymbol(InstrumentSymbol symbol) {
+        String value = symbol.value();
+        if (value.endsWith(".US")) {
+            return value.substring(0, value.length() - 3);
+        }
+        return value;
     }
 }

@@ -85,7 +85,7 @@ public class FinnhubCatalogClient implements InstrumentCatalogProvider {
 
     private Instrument toDomainInstrument(FinnhubSymbolResponse response) {
         return new Instrument(
-                new InstrumentSymbol(response.symbol()),
+                new InstrumentSymbol(toDomainSymbol(response.symbol())),
                 new InstrumentName(response.description()),
                 TYPE_MAPPING.get(response.type()),
                 Currency.USD,
@@ -94,11 +94,20 @@ public class FinnhubCatalogClient implements InstrumentCatalogProvider {
 
     private boolean isValidSymbol(String symbol) {
         try {
-            new InstrumentSymbol(symbol);
+            new InstrumentSymbol(toDomainSymbol(symbol));
             return true;
         } catch (Exception e) {
             log.debug("Skipping invalid symbol from Finnhub: {}", symbol);
             return false;
         }
+    }
+
+    /**
+     * Translates a Finnhub symbol to domain TICKER.MARKET format. Dotted share-class symbols (e.g.,
+     * BRK.B) are flattened to avoid double dots (BRK.B.US is invalid).
+     */
+    static String toDomainSymbol(String finnhubSymbol) {
+        String base = finnhubSymbol.contains(".") ? finnhubSymbol.replace(".", "") : finnhubSymbol;
+        return base + ".US";
     }
 }

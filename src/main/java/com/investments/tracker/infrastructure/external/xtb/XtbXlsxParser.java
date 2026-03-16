@@ -104,9 +104,11 @@ public class XtbXlsxParser implements TransactionHistoryParser {
             Currency currency =
                     ticker != null ? XtbMarketCurrencyMapper.resolveCurrency(ticker) : Currency.PLN;
 
+            String brokerName = ticker != null ? ticker : instrumentName;
+
             transactions.add(
                     new RawTransaction(
-                            BrokerInstrumentName.of(instrumentName),
+                            BrokerInstrumentName.of(brokerName),
                             txType,
                             Quantity.of(commentData.quantity()),
                             Price.of(new Money(commentData.price(), currency)),
@@ -122,9 +124,8 @@ public class XtbXlsxParser implements TransactionHistoryParser {
         Map<BrokerInstrumentName, InstrumentSymbol> hints = new HashMap<>();
         for (var entry : nameToTicker.entrySet()) {
             try {
-                hints.put(
-                        BrokerInstrumentName.of(entry.getKey()),
-                        InstrumentSymbol.of(entry.getValue()));
+                InstrumentSymbol symbol = InstrumentSymbol.of(entry.getValue());
+                hints.put(BrokerInstrumentName.of(symbol.value()), symbol);
             } catch (Exception ignored) {
                 // Skip invalid ticker formats
             }
