@@ -37,10 +37,10 @@ public class InstrumentController {
     }
 
     /**
-     * Searches instruments by symbol or name. Returns all instruments if no query is provided.
+     * Searches instruments by symbol or name. Returns an empty list if no query is provided.
      *
-     * @param query the search query (optional)
-     * @return instrument list response
+     * @param query the search query (optional, min 1 character)
+     * @return instrument list response (max 20 results)
      */
     @GetMapping
     public InstrumentListResponse searchInstruments(

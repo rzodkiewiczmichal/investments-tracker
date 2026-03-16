@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Load .env if present (exports vars like FINNHUB_API_KEY for bootRun)
+if [ -f "$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )/.env" ]; then
+    set -a
+    source "$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )/.env"
+    set +a
+fi
+
 COMPOSE_CMD="docker compose"
 CONTAINERS=(investments-tracker-postgres investments-tracker-redis investments-tracker-tempo investments-tracker-grafana)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,6 +22,7 @@ print_usage() {
     echo "  stop      Stop everything (app processes + Docker containers)"
     echo "  restart   Stop and start everything"
     echo "  reset     Stop apps, clear DB (positions/imports), rebuild and start fresh"
+    echo "  clear     Clear positions and import data from DB (infra must be running)"
     echo "  infra     Start only infrastructure (PostgreSQL, Redis, Tempo, Grafana)"
     echo ""
     echo "Services:"
@@ -86,6 +94,40 @@ stop_apps() {
     stop_process "$FRONTEND_PID_FILE" "frontend"
 }
 
+clear_db() {
+    local container="${POSTGRES_CONTAINER:-investments-tracker-postgres}"
+    local db="${POSTGRES_DB:-investments_tracker}"
+    local user="${POSTGRES_USER:-tracker_user}"
+
+    echo "Clearing positions and import data from ${db} (container: ${container})..."
+
+    docker exec -i "$container" psql -U "$user" -d "$db" -v ON_ERROR_STOP=1 <<'SQL'
+DO $$
+BEGIN
+    -- Skip if tables don't exist yet (fresh DB before Flyway)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'positions') THEN
+        RAISE NOTICE 'Tables not found (fresh DB) — skipping clear.';
+        RETURN;
+    END IF;
+
+    DELETE FROM import_session_transactions;
+    DELETE FROM import_session_mappings;
+    DELETE FROM import_sessions;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'broker_instrument_mappings') THEN
+        DELETE FROM broker_instrument_mappings;
+    END IF;
+    DELETE FROM account_holdings;
+    DELETE FROM positions;
+    DELETE FROM accounts;
+END $$;
+SQL
+
+    echo "Flushing Redis cache..."
+    docker exec investments-tracker-redis redis-cli FLUSHDB > /dev/null 2>&1 || echo "  (Redis not running — skipped)"
+
+    echo "Done."
+}
+
 stop_all() {
     stop_apps
     echo "Stopping Docker containers..."
@@ -127,8 +169,7 @@ case "${1:-start}" in
     reset)
         stop_apps
         start_infra
-        echo "Clearing positions and import data..."
-        "$SCRIPT_DIR/scripts/clear-positions.sh"
+        clear_db
         echo "Building project..."
         ./gradlew spotlessApply clean build -x test
         echo "Restarting apps..."
@@ -138,6 +179,9 @@ case "${1:-start}" in
         echo ""
         echo "All services started (DB cleared). Press Ctrl+C to stop the applications."
         wait
+        ;;
+    clear)
+        clear_db
         ;;
     infra)
         start_infra

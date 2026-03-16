@@ -63,6 +63,10 @@ public class PriceProviderRouter {
             return switch (instrument.get().market()) {
                 case GPW -> stooqClient.fetchPrice(symbol);
                 case US -> finnhubClient.fetchPrice(symbol);
+                case UK, DE -> {
+                    log.debug("No price provider for {} market yet", instrument.get().market());
+                    yield Optional.empty();
+                }
             };
         } catch (RestClientException e) {
             log.warn("Failed to fetch price for {}: {}", symbol.value(), e.getMessage());
@@ -93,6 +97,11 @@ public class PriceProviderRouter {
                                 switch (instrument.market()) {
                                     case GPW -> gpwSymbols.add(symbol);
                                     case US -> usSymbols.add(symbol);
+                                    case UK, DE ->
+                                            log.debug(
+                                                    "Skipping {} — no price provider for {} market",
+                                                    symbol.value(),
+                                                    instrument.market());
                                 }
                             },
                             () ->

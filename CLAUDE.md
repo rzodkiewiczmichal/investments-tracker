@@ -39,6 +39,19 @@ All work must happen on a feature branch, never directly on `main`. Branch names
 
 When a task spans multiple issues under the same epic, use the primary issue number.
 
+## Local Development Scripts
+
+The project has `dev.sh` for local development. Always use it instead of suggesting generic Docker/Gradle commands.
+
+- **`./dev.sh start`** — Start infra + backend + frontend (default)
+- **`./dev.sh stop`** — Stop everything (apps + Docker containers)
+- **`./dev.sh restart`** — Full stop + start
+- **`./dev.sh reset`** — Stop apps, clear DB (positions/imports/broker mappings), rebuild, start fresh. Keeps instrument masterdata from Flyway migrations.
+- **`./dev.sh clear`** — Clear positions, imports, and broker mappings from DB (infra must be running)
+- **`./dev.sh infra`** — Start only Docker containers (PostgreSQL, Redis, Tempo, Grafana)
+
+Backend runs with `--spring.profiles.active=local`. Flyway migrations seed instrument masterdata — it survives `reset`/`clear`.
+
 ## Project Location
 GitHub repository cloned in this directory
 

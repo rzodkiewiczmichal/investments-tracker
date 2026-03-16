@@ -32,9 +32,9 @@
       <label for="fileUpload">Transaction History File *</label>
       <p-fileUpload
         mode="basic"
-        chooseLabel="Choose CSV File"
+        chooseLabel="Choose File"
         chooseIcon="pi pi-upload"
-        accept=".csv"
+        accept=".csv,.xlsx"
         [auto]="false"
         [customUpload]="true"
         (onSelect)="onFileSelect($event)"
