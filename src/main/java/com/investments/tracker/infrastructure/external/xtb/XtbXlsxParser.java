@@ -31,7 +31,7 @@ import com.investments.tracker.domain.model.value.TransactionType;
  *
  * <p>Reads the Cash Operations sheet for buy/sell transactions. Quantity and price are extracted
  * from the Comment field. Ticker resolution is done by cross-referencing with the Closed Positions
- * sheet and dividend comments.
+ * sheet.
  */
 @Component
 public class XtbXlsxParser implements TransactionHistoryParser {

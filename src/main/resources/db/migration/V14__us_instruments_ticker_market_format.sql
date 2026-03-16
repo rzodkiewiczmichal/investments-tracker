@@ -10,7 +10,36 @@
 ALTER TABLE account_holdings DROP CONSTRAINT fk_account_holdings_position;
 ALTER TABLE positions DROP CONSTRAINT fk_positions_instrument;
 
--- Step 2: Rename US instruments that don't already have .US suffix.
+-- Step 2: Delete bare duplicates where the .US version already exists.
+-- V12 renamed some instruments (e.g., BABA → BABA.US). Finnhub sync may have
+-- re-created bare versions (BABA). Delete the bare duplicate before renaming.
+-- First, cascade deletions from child tables.
+DELETE FROM account_holdings
+WHERE instrument_symbol IN (
+    SELECT symbol FROM instruments
+    WHERE market = 'US' AND symbol NOT LIKE '%.US'
+      AND REPLACE(symbol, '.', '') || '.US' IN (SELECT symbol FROM instruments WHERE market = 'US')
+);
+
+DELETE FROM positions
+WHERE instrument_symbol IN (
+    SELECT symbol FROM instruments
+    WHERE market = 'US' AND symbol NOT LIKE '%.US'
+      AND REPLACE(symbol, '.', '') || '.US' IN (SELECT symbol FROM instruments WHERE market = 'US')
+);
+
+DELETE FROM import_session_mappings
+WHERE catalog_symbol IN (
+    SELECT symbol FROM instruments
+    WHERE market = 'US' AND symbol NOT LIKE '%.US'
+      AND REPLACE(symbol, '.', '') || '.US' IN (SELECT symbol FROM instruments WHERE market = 'US')
+);
+
+DELETE FROM instruments
+WHERE market = 'US' AND symbol NOT LIKE '%.US'
+  AND REPLACE(symbol, '.', '') || '.US' IN (SELECT symbol FROM instruments WHERE market = 'US');
+
+-- Step 3: Rename remaining US instruments that don't already have .US suffix.
 -- REPLACE(symbol, '.', '') flattens dotted share-class symbols (BRK.B → BRKB).
 -- For plain symbols (MSFT), REPLACE is a no-op.
 
@@ -19,7 +48,7 @@ UPDATE instruments
 SET symbol = REPLACE(symbol, '.', '') || '.US'
 WHERE market = 'US' AND symbol NOT LIKE '%.US';
 
--- Cascade to positions table
+-- Cascade rename to positions table
 UPDATE positions p
 SET instrument_symbol = REPLACE(instrument_symbol, '.', '') || '.US'
 WHERE EXISTS (
@@ -29,7 +58,7 @@ WHERE EXISTS (
 )
 AND instrument_symbol NOT LIKE '%.US';
 
--- Cascade to account_holdings table
+-- Cascade rename to account_holdings table
 UPDATE account_holdings ah
 SET instrument_symbol = REPLACE(instrument_symbol, '.', '') || '.US'
 WHERE EXISTS (
@@ -39,7 +68,7 @@ WHERE EXISTS (
 )
 AND instrument_symbol NOT LIKE '%.US';
 
--- Cascade to import_session_mappings table
+-- Cascade rename to import_session_mappings table
 UPDATE import_session_mappings ism
 SET catalog_symbol = REPLACE(catalog_symbol, '.', '') || '.US'
 WHERE catalog_symbol IS NOT NULL
@@ -50,7 +79,7 @@ WHERE catalog_symbol IS NOT NULL
       AND i.market = 'US'
 );
 
--- Step 3: Re-add FK constraints
+-- Step 4: Re-add FK constraints
 ALTER TABLE positions
     ADD CONSTRAINT fk_positions_instrument
     FOREIGN KEY (instrument_symbol) REFERENCES instruments(symbol) ON DELETE RESTRICT;
