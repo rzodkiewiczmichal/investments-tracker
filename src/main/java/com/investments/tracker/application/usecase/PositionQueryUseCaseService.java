@@ -79,7 +79,13 @@ public class PositionQueryUseCaseService implements PositionQueryUseCase {
                 positions.stream()
                         .flatMap(p -> p.holdings().stream())
                         .map(h -> h.costBasis().currency())
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toCollection(java.util.HashSet::new));
+        // Also include instrument currencies for price-to-PLN conversion
+        positions.stream()
+                .map(p -> instrumentMap.get(p.symbol()))
+                .filter(Objects::nonNull)
+                .map(Instrument::currency)
+                .forEach(currencies::add);
         Map<Currency, ExchangeRate> exchangeRates =
                 exchangeRateProvider.getExchangeRatesToPln(currencies);
 
@@ -112,17 +118,20 @@ public class PositionQueryUseCaseService implements PositionQueryUseCase {
         Instrument instrument = instrumentQueryUseCase.getInstrument(symbol);
         Price currentPrice = currentPriceProvider.getPrice(symbol).orElse(null);
         Map<AccountId, String> accountNames = resolveAccountNames(position);
-        Map<Currency, ExchangeRate> exchangeRates = resolveExchangeRates(position);
+        Map<Currency, ExchangeRate> exchangeRates = resolveExchangeRates(position, instrument);
 
         return new PositionDetailData(
                 position, instrument, currentPrice, accountNames, exchangeRates);
     }
 
-    private Map<Currency, ExchangeRate> resolveExchangeRates(Position position) {
+    private Map<Currency, ExchangeRate> resolveExchangeRates(
+            Position position, Instrument instrument) {
         Set<Currency> currencies =
                 position.holdings().stream()
                         .map(h -> h.costBasis().currency())
-                        .collect(Collectors.toSet());
+                        .collect(Collectors.toCollection(java.util.HashSet::new));
+        // Include instrument currency for price-to-PLN conversion
+        currencies.add(instrument.currency());
         return exchangeRateProvider.getExchangeRatesToPln(currencies);
     }
 

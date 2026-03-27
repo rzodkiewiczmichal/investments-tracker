@@ -53,10 +53,8 @@ public class ImportSessionPersistenceMapper {
     public ImportSessionJdbcEntity toEntity(ImportSession session, Long version) {
         Objects.requireNonNull(session, "session cannot be null");
 
-        Set<ImportSessionTransactionJdbcEntity> transactionEntities =
-                session.transactions().stream()
-                        .map(this::mapToTransactionEntity)
-                        .collect(Collectors.toSet());
+        List<ImportSessionTransactionJdbcEntity> transactionEntities =
+                session.transactions().stream().map(this::mapToTransactionEntity).toList();
 
         Set<ImportSessionMappingJdbcEntity> mappingEntities =
                 session.instrumentMappings().stream()

@@ -1,6 +1,7 @@
 package com.investments.tracker.infrastructure.persistence.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -23,7 +24,7 @@ public record ImportSessionJdbcEntity(
         @Column("created_at") LocalDateTime createdAt,
         @Column("completed_at") LocalDateTime completedAt,
         @MappedCollection(idColumn = "import_session_id")
-                Set<ImportSessionTransactionJdbcEntity> transactions,
+                List<ImportSessionTransactionJdbcEntity> transactions,
         @MappedCollection(idColumn = "import_session_id")
                 Set<ImportSessionMappingJdbcEntity> mappings,
         @Version Long version) {}
