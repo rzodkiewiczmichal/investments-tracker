@@ -59,7 +59,7 @@ class FinnhubCatalogClientTest {
         assertThat(instruments).hasSize(2);
         assertThat(instruments)
                 .extracting(i -> i.symbol().value())
-                .containsExactlyInAnyOrder("AAPL", "SPY");
+                .containsExactlyInAnyOrder("AAPL.US", "SPY.US");
         mockServer.verify();
     }
 
@@ -151,7 +151,7 @@ class FinnhubCatalogClientTest {
         Collection<Instrument> instruments = client.fetchUsStockCatalog();
 
         assertThat(instruments).hasSize(1);
-        assertThat(instruments.iterator().next().symbol().value()).isEqualTo("AAPL");
+        assertThat(instruments.iterator().next().symbol().value()).isEqualTo("AAPL.US");
         mockServer.verify();
     }
 
@@ -175,7 +175,7 @@ class FinnhubCatalogClientTest {
         Collection<Instrument> instruments = client.fetchUsStockCatalog();
 
         assertThat(instruments).hasSize(1);
-        assertThat(instruments.iterator().next().symbol().value()).isEqualTo("AAPL");
+        assertThat(instruments.iterator().next().symbol().value()).isEqualTo("AAPL.US");
         mockServer.verify();
     }
 
@@ -199,13 +199,13 @@ class FinnhubCatalogClientTest {
         Collection<Instrument> instruments = client.fetchUsStockCatalog();
 
         assertThat(instruments).hasSize(1);
-        assertThat(instruments.iterator().next().symbol().value()).isEqualTo("AAPL");
+        assertThat(instruments.iterator().next().symbol().value()).isEqualTo("AAPL.US");
         mockServer.verify();
     }
 
     @Test
-    @DisplayName("should accept dotted ticker symbols like BRK.B")
-    void shouldAcceptDottedTickerSymbols() {
+    @DisplayName("should flatten dotted share-class symbols like BRK.B to BRKB.US")
+    void shouldFlattenDottedShareClassSymbols() {
         mockServer
                 .expect(
                         requestTo(
@@ -220,7 +220,8 @@ class FinnhubCatalogClientTest {
         Collection<Instrument> instruments = client.fetchUsStockCatalog();
 
         assertThat(instruments).hasSize(1);
-        assertThat(instruments.iterator().next().symbol()).isEqualTo(InstrumentSymbol.of("BRK.B"));
+        assertThat(instruments.iterator().next().symbol())
+                .isEqualTo(InstrumentSymbol.of("BRKB.US"));
         mockServer.verify();
     }
 

@@ -5,21 +5,30 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.investments.tracker.domain.model.value.TransactionType;
+
 /**
- * Parses XTB Cash Operations comment field to extract quantity and price.
+ * Parses XTB Cash Operations comment field to extract transaction direction, quantity and price.
  *
- * <p>Comment patterns:
+ * <p>XTB comment encodes the actual trade direction:
  *
  * <ul>
- *   <li>{@code OPEN BUY 20 @ 16.50} — simple buy, qty=20, price=16.50
- *   <li>{@code OPEN BUY 3/20 @ 17.00} — partial fill buy, qty=3, price=17.00
- *   <li>{@code CLOSE BUY 20/60 @ 22.31} — sell (close), qty=20, price=22.31
+ *   <li>{@code OPEN BUY 20 @ 16.50} -- BUY: opening a long position
+ *   <li>{@code OPEN BUY 3/20 @ 17.00} -- BUY: partial fill
+ *   <li>{@code CLOSE BUY 20/60 @ 22.31} -- SELL: closing a long position (selling shares)
+ *   <li>{@code OPEN SELL 10 @ 200.00} -- SELL: opening a short position
+ *   <li>{@code CLOSE SELL 5/10 @ 100.00} -- BUY: closing a short position (buying back)
+ *   <li>{@code OPEN BUY 0.5 @ 150.00} -- BUY: fractional share
  * </ul>
+ *
+ * <p>The Type column ("Stock purchase"/"Stock sell") does NOT reliably indicate direction. The
+ * comment is the source of truth: OPEN BUY and CLOSE SELL are buys; CLOSE BUY and OPEN SELL are
+ * sells.
  */
 final class XtbCommentParser {
 
     private static final Pattern TRADE_PATTERN =
-            Pattern.compile("(OPEN|CLOSE) BUY (\\d+)(?:/\\d+)? @ ([\\d.]+)");
+            Pattern.compile("(OPEN|CLOSE) (BUY|SELL) ([\\d.]+)(?:/[\\d.]+)? @ ([\\d.]+)");
 
     private XtbCommentParser() {}
 
@@ -33,11 +42,20 @@ final class XtbCommentParser {
             return Optional.empty();
         }
 
-        BigDecimal quantity = new BigDecimal(matcher.group(2));
-        BigDecimal price = new BigDecimal(matcher.group(3));
+        String action = matcher.group(1);
+        String side = matcher.group(2);
+        BigDecimal quantity = new BigDecimal(matcher.group(3));
+        BigDecimal price = new BigDecimal(matcher.group(4));
 
-        return Optional.of(new ParsedComment(quantity, price));
+        // OPEN BUY = buying shares, CLOSE SELL = buying back short -> both are BUY
+        // CLOSE BUY = selling shares, OPEN SELL = shorting -> both are SELL
+        TransactionType txType =
+                ("OPEN".equals(action) == "BUY".equals(side))
+                        ? TransactionType.BUY
+                        : TransactionType.SELL;
+
+        return Optional.of(new ParsedComment(txType, quantity, price));
     }
 
-    record ParsedComment(BigDecimal quantity, BigDecimal price) {}
+    record ParsedComment(TransactionType transactionType, BigDecimal quantity, BigDecimal price) {}
 }

@@ -26,9 +26,11 @@ import com.investments.tracker.domain.model.Transaction;
 import com.investments.tracker.domain.model.value.AccountId;
 import com.investments.tracker.domain.model.value.BrokerInstrumentName;
 import com.investments.tracker.domain.model.value.BrokerName;
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.ImportSessionId;
 import com.investments.tracker.domain.model.value.ImportSessionStatus;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
+import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
 import com.investments.tracker.domain.repository.AccountRepository;
 import com.investments.tracker.domain.repository.BrokerInstrumentMappingRepository;
@@ -205,15 +207,28 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
         return rawTransactions.stream()
                 .filter(tx -> symbolMap.containsKey(tx.brokerInstrumentName()))
                 .map(
-                        tx ->
-                                new Transaction(
-                                        symbolMap.get(tx.brokerInstrumentName()),
-                                        tx.type(),
-                                        tx.quantity(),
-                                        tx.unitPrice(),
-                                        tx.commission(),
-                                        tx.currency()))
+                        tx -> {
+                            InstrumentSymbol catalogSymbol =
+                                    symbolMap.get(tx.brokerInstrumentName());
+                            Currency currency = resolveInstrumentCurrency(catalogSymbol, tx);
+                            Price unitPrice =
+                                    Price.of(new Money(tx.unitPrice().money().amount(), currency));
+                            return new Transaction(
+                                    catalogSymbol,
+                                    tx.type(),
+                                    tx.quantity(),
+                                    unitPrice,
+                                    tx.commission(),
+                                    currency);
+                        })
                 .toList();
+    }
+
+    private Currency resolveInstrumentCurrency(InstrumentSymbol symbol, RawTransaction fallback) {
+        return instrumentRepository
+                .findBySymbol(symbol)
+                .map(instrument -> instrument.currency())
+                .orElse(fallback.currency());
     }
 
     private Account findOrCreateAccount(ImportSession session) {

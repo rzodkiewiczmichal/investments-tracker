@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.investments.tracker.application.port.out.ParseResult;
@@ -31,11 +34,12 @@ import com.investments.tracker.domain.model.value.TransactionType;
  *
  * <p>Reads the Cash Operations sheet for buy/sell transactions. Quantity and price are extracted
  * from the Comment field. Ticker resolution is done by cross-referencing with the Closed Positions
- * sheet and dividend comments.
+ * sheet.
  */
 @Component
 public class XtbXlsxParser implements TransactionHistoryParser {
 
+    private static final Logger log = LoggerFactory.getLogger(XtbXlsxParser.class);
     private static final String BROKER_NAME = "XTB";
     private static final String CASH_OPERATIONS_SHEET = "Cash Operations";
     private static final int DATA_START_ROW = 5;
@@ -94,19 +98,27 @@ public class XtbXlsxParser implements TransactionHistoryParser {
             String comment = getStringValue(row.getCell(5));
             var parsed = XtbCommentParser.parse(comment);
             if (parsed.isEmpty()) {
+                log.warn(
+                        "Skipped row {} -- type='{}', instrument='{}', comment='{}' (no match)",
+                        i,
+                        type,
+                        instrumentName,
+                        comment);
                 continue;
             }
 
-            TransactionType txType = mapTransactionType(type);
             var commentData = parsed.get();
+            TransactionType txType = commentData.transactionType();
 
             String ticker = nameToTicker.get(instrumentName);
             Currency currency =
                     ticker != null ? XtbMarketCurrencyMapper.resolveCurrency(ticker) : Currency.PLN;
 
+            String brokerName = ticker != null ? ticker : instrumentName;
+
             transactions.add(
                     new RawTransaction(
-                            BrokerInstrumentName.of(instrumentName),
+                            BrokerInstrumentName.of(brokerName),
                             txType,
                             Quantity.of(commentData.quantity()),
                             Price.of(new Money(commentData.price(), currency)),
@@ -122,9 +134,8 @@ public class XtbXlsxParser implements TransactionHistoryParser {
         Map<BrokerInstrumentName, InstrumentSymbol> hints = new HashMap<>();
         for (var entry : nameToTicker.entrySet()) {
             try {
-                hints.put(
-                        BrokerInstrumentName.of(entry.getKey()),
-                        InstrumentSymbol.of(entry.getValue()));
+                InstrumentSymbol symbol = InstrumentSymbol.of(entry.getValue());
+                hints.put(BrokerInstrumentName.of(symbol.value()), symbol);
             } catch (Exception ignored) {
                 // Skip invalid ticker formats
             }
@@ -136,15 +147,15 @@ public class XtbXlsxParser implements TransactionHistoryParser {
         return "Stock purchase".equals(type) || "Stock sell".equals(type);
     }
 
-    private static TransactionType mapTransactionType(String type) {
-        return "Stock purchase".equals(type) ? TransactionType.BUY : TransactionType.SELL;
-    }
-
     private static String getStringValue(Cell cell) {
         if (cell == null) {
             return "";
         }
-        return switch (cell.getCellType()) {
+        CellType type = cell.getCellType();
+        if (type == CellType.FORMULA) {
+            type = cell.getCachedFormulaResultType();
+        }
+        return switch (type) {
             case STRING -> cell.getStringCellValue().trim();
             case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
             default -> "";

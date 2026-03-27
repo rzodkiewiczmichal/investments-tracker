@@ -262,4 +262,65 @@ class StooqPriceClientTest {
         assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("45.85"));
         mockServer.verify();
     }
+
+    @Test
+    @DisplayName("should fetch UK instrument price with .uk suffix and correct currency")
+    void shouldFetchUkInstrumentPrice() {
+        mockServer
+                .expect(requestTo("https://stooq.pl/q/l/?s=cspx.uk&f=sd2t2ohlcv&h=&e=csv"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                Symbol,Date,Time,Open,High,Low,Close,Volume
+                                CSPX.UK,20260317,170000,721.96,723.5,720.1,721.96,12345
+                                """,
+                                MediaType.TEXT_PLAIN));
+
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("CSPX.UK"), Currency.USD);
+
+        assertThat(price).isPresent();
+        assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("721.96"));
+        assertThat(price.get().currency()).isEqualTo(Currency.USD);
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("should fetch UK instrument with GBP currency")
+    void shouldFetchUkInstrumentWithGbpCurrency() {
+        mockServer
+                .expect(requestTo("https://stooq.pl/q/l/?s=emim.uk&f=sd2t2ohlcv&h=&e=csv"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                Symbol,Date,Time,Open,High,Low,Close,Volume
+                                EMIM.UK,20260317,170000,35.93,36.1,35.8,35.93,8000
+                                """,
+                                MediaType.TEXT_PLAIN));
+
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("EMIM.UK"), Currency.GBP);
+
+        assertThat(price).isPresent();
+        assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("35.93"));
+        assertThat(price.get().currency()).isEqualTo(Currency.GBP);
+        mockServer.verify();
+    }
+
+    @Test
+    @DisplayName("should return empty for UK instrument with N/D data")
+    void shouldReturnEmptyForUkInstrumentWithNoData() {
+        mockServer
+                .expect(requestTo("https://stooq.pl/q/l/?s=unknown.uk&f=sd2t2ohlcv&h=&e=csv"))
+                .andRespond(
+                        withSuccess(
+                                """
+                                Symbol,Date,Time,Open,High,Low,Close,Volume
+                                UNKNOWN.UK,N/D,N/D,N/D,N/D,N/D,N/D,N/D
+                                """,
+                                MediaType.TEXT_PLAIN));
+
+        Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("UNKNOWN.UK"), Currency.USD);
+
+        assertThat(price).isEmpty();
+        mockServer.verify();
+    }
 }

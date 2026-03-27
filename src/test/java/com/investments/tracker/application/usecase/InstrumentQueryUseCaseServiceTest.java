@@ -3,6 +3,7 @@ package com.investments.tracker.application.usecase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -125,18 +126,14 @@ class InstrumentQueryUseCaseServiceTest {
     class SearchInstruments {
 
         @Test
-        @DisplayName("should return all instruments when query is blank")
-        void shouldReturnAllInstrumentsWhenQueryIsBlank() {
-            // Given
-            Instrument instrument1 = createInstrument("AAPL", "Apple Inc.", "STOCK");
-            Instrument instrument2 = createInstrument("MSFT", "Microsoft Corp.", "STOCK");
-            when(instrumentRepository.findAll()).thenReturn(List.of(instrument1, instrument2));
-
+        @DisplayName("should return empty list when query is blank")
+        void shouldReturnEmptyListWhenQueryIsBlank() {
             // When
             Collection<Instrument> results = instrumentQueryUseCaseService.searchInstruments("");
 
             // Then
-            assertThat(results).hasSize(2);
+            assertThat(results).isEmpty();
+            verifyNoInteractions(instrumentRepository);
         }
 
         @Test

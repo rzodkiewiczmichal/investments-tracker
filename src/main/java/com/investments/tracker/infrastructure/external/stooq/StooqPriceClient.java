@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import com.investments.tracker.domain.model.value.Currency;
 import com.investments.tracker.domain.model.value.InstrumentSymbol;
 import com.investments.tracker.domain.model.value.Money;
 import com.investments.tracker.domain.model.value.Price;
@@ -20,11 +21,17 @@ import com.investments.tracker.domain.model.value.Price;
 /**
  * HTTP client for the Stooq.pl CSV price endpoint.
  *
- * <p>Fetches end-of-day and intraday prices for GPW (Warsaw Stock Exchange) instruments. All GPW
- * instruments are priced in PLN.
+ * <p>Fetches end-of-day and intraday prices for GPW and LSE instruments. GPW instruments support
+ * batch fetching; UK instruments must be fetched individually (Stooq returns N/D for UK batch
+ * requests).
  *
- * <p>Stooq requires different symbol formats depending on instrument type: stocks use bare symbols
- * (e.g. {@code pko}), while ETFs require a {@code .pl} suffix (e.g. {@code etfsp500.pl}).
+ * <p>Stooq symbol conventions:
+ *
+ * <ul>
+ *   <li>GPW stocks: bare lowercase ({@code pko})
+ *   <li>GPW ETFs: lowercase with {@code .pl} suffix ({@code etfsp500.pl})
+ *   <li>UK instruments: lowercase with {@code .uk} suffix ({@code cspx.uk})
+ * </ul>
  *
  * @see <a href="https://stooq.pl">Stooq.pl</a>
  */
@@ -34,6 +41,7 @@ public class StooqPriceClient {
     private static final Logger log = LoggerFactory.getLogger(StooqPriceClient.class);
     private static final String ETF_PREFIX = "ETF";
     private static final String STOOQ_GPW_SUFFIX = ".pl";
+    private static final String STOOQ_UK_SUFFIX = ".uk";
 
     private final RestClient restClient;
     private final String csvPath;
@@ -45,10 +53,10 @@ public class StooqPriceClient {
     }
 
     /**
-     * Fetches current prices for multiple instruments in a single HTTP request.
+     * Fetches current prices for multiple GPW instruments in a single HTTP request.
      *
-     * @param symbols the instrument symbols to fetch
-     * @return map of symbol to price (symbols with no data are omitted)
+     * @param symbols the GPW instrument symbols to fetch
+     * @return map of symbol to price in PLN (symbols with no data are omitted)
      * @throws RestClientException if a network or server error occurs
      */
     public Map<InstrumentSymbol, Price> fetchPrices(List<InstrumentSymbol> symbols) {
@@ -61,29 +69,15 @@ public class StooqPriceClient {
 
         log.debug("Fetching prices from Stooq for: {}", symbolsParam);
 
-        String csv =
-                restClient
-                        .get()
-                        .uri(
-                                uriBuilder ->
-                                        uriBuilder
-                                                .path(csvPath)
-                                                .queryParam("s", symbolsParam)
-                                                .queryParam("f", "sd2t2ohlcv")
-                                                .queryParam("h", "")
-                                                .queryParam("e", "csv")
-                                                .build())
-                        .retrieve()
-                        .body(String.class);
-
-        return parseCsvResponse(csv);
+        String csv = fetchCsv(symbolsParam);
+        return parseCsvResponse(csv, Currency.PLN);
     }
 
     /**
-     * Fetches the current price for a single instrument.
+     * Fetches the current price for a single GPW instrument.
      *
      * @param symbol the instrument symbol
-     * @return the price, or empty if not available
+     * @return the price in PLN, or empty if not available
      * @throws RestClientException if a network or server error occurs
      */
     public Optional<Price> fetchPrice(InstrumentSymbol symbol) {
@@ -91,7 +85,43 @@ public class StooqPriceClient {
         return Optional.ofNullable(prices.get(symbol));
     }
 
-    private Map<InstrumentSymbol, Price> parseCsvResponse(String csv) {
+    /**
+     * Fetches the current price for a single instrument with the given currency.
+     *
+     * <p>Used for non-GPW markets (e.g. UK) where each instrument may have a different currency and
+     * batch requests are not supported.
+     *
+     * @param symbol the instrument symbol
+     * @param currency the instrument's trading currency
+     * @return the price, or empty if not available
+     * @throws RestClientException if a network or server error occurs
+     */
+    public Optional<Price> fetchPrice(InstrumentSymbol symbol, Currency currency) {
+        String stooqSymbol = toStooqSymbol(symbol);
+        log.debug("Fetching price from Stooq for: {}", stooqSymbol);
+
+        String csv = fetchCsv(stooqSymbol);
+        Map<InstrumentSymbol, Price> prices = parseCsvResponse(csv, currency);
+        return Optional.ofNullable(prices.get(symbol));
+    }
+
+    private String fetchCsv(String symbolsParam) {
+        return restClient
+                .get()
+                .uri(
+                        uriBuilder ->
+                                uriBuilder
+                                        .path(csvPath)
+                                        .queryParam("s", symbolsParam)
+                                        .queryParam("f", "sd2t2ohlcv")
+                                        .queryParam("h", "")
+                                        .queryParam("e", "csv")
+                                        .build())
+                .retrieve()
+                .body(String.class);
+    }
+
+    private Map<InstrumentSymbol, Price> parseCsvResponse(String csv, Currency currency) {
         if (csv == null || csv.isBlank()) {
             log.warn("Stooq returned empty response");
             return Map.of();
@@ -117,13 +147,13 @@ public class StooqPriceClient {
                                 row -> {
                                     InstrumentSymbol symbol =
                                             InstrumentSymbol.of(fromStooqSymbol(row.symbol()));
-                                    Price price = new Price(Money.pln(row.close()));
+                                    Price price = new Price(new Money(row.close(), currency));
                                     result.put(symbol, price);
                                     log.debug(
                                             "Stooq price for {}: {}", symbol.value(), row.close());
                                 });
             } catch (Exception e) {
-                log.warn("Failed to parse Stooq CSV row: '{}' — {}", line, e.getMessage());
+                log.warn("Failed to parse Stooq CSV row: '{}' -- {}", line, e.getMessage());
             }
         }
 
@@ -132,22 +162,32 @@ public class StooqPriceClient {
 
     private String toStooqSymbol(InstrumentSymbol symbol) {
         String value = symbol.value();
-        // Strip .PL market suffix (all GPW instruments now have TICKER.PL format)
+
+        // UK instruments: CSPX.UK -> cspx.uk
+        if (value.endsWith(".UK")) {
+            return value.substring(0, value.length() - 3).toLowerCase() + STOOQ_UK_SUFFIX;
+        }
+
+        // GPW instruments: strip .PL suffix
         if (value.endsWith(".PL")) {
             value = value.substring(0, value.length() - 3);
         }
         String lower = value.toLowerCase();
-        // Stooq requires .pl suffix for ETFs
+        // Stooq requires .pl suffix for GPW ETFs
         return lower.startsWith(ETF_PREFIX.toLowerCase()) ? lower + STOOQ_GPW_SUFFIX : lower;
     }
 
-    private static String fromStooqSymbol(String stooqSymbol) {
-        // Stooq returns ETFs with .PL suffix, regular stocks without
+    static String fromStooqSymbol(String stooqSymbol) {
+        // UK instruments: Stooq returns CSPX.UK -> already in domain format
+        if (stooqSymbol.endsWith(".UK")) {
+            return stooqSymbol;
+        }
+
+        // GPW: Stooq returns ETFs with .PL suffix, regular stocks without
         String base =
                 stooqSymbol.endsWith(STOOQ_GPW_SUFFIX.toUpperCase())
                         ? stooqSymbol.substring(0, stooqSymbol.length() - STOOQ_GPW_SUFFIX.length())
                         : stooqSymbol;
-        // All GPW instruments now use TICKER.PL format
         return base + ".PL";
     }
 }

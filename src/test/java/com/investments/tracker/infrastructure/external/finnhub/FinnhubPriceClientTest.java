@@ -51,7 +51,7 @@ class FinnhubPriceClientTest {
                         new BigDecimal("185.50"), null, null, null, null, null, null, null);
         when(responseSpec.body(FinnhubQuoteResponse.class)).thenReturn(response);
 
-        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("AAPL"));
+        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("AAPL.US"));
 
         assertThat(result).isPresent();
         assertThat(result.get().money().amount()).isEqualByComparingTo("185.50");
@@ -65,7 +65,7 @@ class FinnhubPriceClientTest {
                 new FinnhubQuoteResponse(BigDecimal.ZERO, null, null, null, null, null, null, null);
         when(responseSpec.body(FinnhubQuoteResponse.class)).thenReturn(response);
 
-        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("XYZXYZ"));
+        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("XYZXYZ.US"));
 
         assertThat(result).isEmpty();
     }
@@ -75,7 +75,7 @@ class FinnhubPriceClientTest {
     void shouldReturnEmptyForNullResponse() {
         when(responseSpec.body(FinnhubQuoteResponse.class)).thenReturn(null);
 
-        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("AAPL"));
+        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("AAPL.US"));
 
         assertThat(result).isEmpty();
     }
@@ -86,7 +86,7 @@ class FinnhubPriceClientTest {
         when(responseSpec.body(FinnhubQuoteResponse.class))
                 .thenThrow(new RestClientException("Connection refused"));
 
-        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("AAPL"));
+        Optional<Price> result = client.fetchPrice(InstrumentSymbol.of("AAPL.US"));
 
         assertThat(result).isEmpty();
     }
@@ -107,12 +107,12 @@ class FinnhubPriceClientTest {
 
         Map<InstrumentSymbol, Price> result =
                 client.fetchPrices(
-                        List.of(InstrumentSymbol.of("AAPL"), InstrumentSymbol.of("VOO")));
+                        List.of(InstrumentSymbol.of("AAPL.US"), InstrumentSymbol.of("VOO.US")));
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(InstrumentSymbol.of("AAPL")).money().amount())
+        assertThat(result.get(InstrumentSymbol.of("AAPL.US")).money().amount())
                 .isEqualByComparingTo("185.50");
-        assertThat(result.get(InstrumentSymbol.of("VOO")).money().amount())
+        assertThat(result.get(InstrumentSymbol.of("VOO.US")).money().amount())
                 .isEqualByComparingTo("480.20");
     }
 
@@ -129,7 +129,7 @@ class FinnhubPriceClientTest {
     void shouldReturnEmptyWhenApiNotConfigured() {
         FinnhubPriceClient disabledClient = new FinnhubPriceClient();
 
-        Optional<Price> result = disabledClient.fetchPrice(InstrumentSymbol.of("AAPL"));
+        Optional<Price> result = disabledClient.fetchPrice(InstrumentSymbol.of("AAPL.US"));
 
         assertThat(result).isEmpty();
     }

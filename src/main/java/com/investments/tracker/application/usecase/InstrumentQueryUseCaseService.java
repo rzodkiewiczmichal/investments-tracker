@@ -1,6 +1,7 @@
 package com.investments.tracker.application.usecase;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
@@ -42,7 +43,7 @@ public class InstrumentQueryUseCaseService implements InstrumentQueryUseCase {
     public Collection<Instrument> searchInstruments(String query) {
         Objects.requireNonNull(query, "query cannot be null");
         if (query.isBlank()) {
-            return instrumentRepository.findAll();
+            return List.of();
         }
         return instrumentRepository.searchBySymbolOrName(query);
     }

@@ -6,7 +6,13 @@ public enum Market {
     GPW("Warsaw Stock Exchange"),
 
     /** NYSE / NASDAQ — prices from Finnhub. */
-    US("NYSE / NASDAQ");
+    US("NYSE / NASDAQ"),
+
+    /** London Stock Exchange — no automatic price provider yet. */
+    UK("London Stock Exchange"),
+
+    /** XETRA (Deutsche Börse) — no automatic price provider yet. */
+    DE("XETRA");
 
     private final String displayName;
 

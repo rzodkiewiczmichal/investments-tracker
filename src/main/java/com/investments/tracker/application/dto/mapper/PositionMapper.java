@@ -147,24 +147,27 @@ public class PositionMapper {
         CostBasis avgCostBasis = position.calculateWeightedAverageCostBasis();
         InvestedAmount nativeInvested = position.calculateInvestedAmount();
 
-        Currency nativeCurrency = nativeInvested.currency();
-        ExchangeRate exchangeRate = exchangeRatesByCurrency.get(nativeCurrency);
+        Currency costBasisCurrency = nativeInvested.currency();
+        ExchangeRate costBasisRate = exchangeRatesByCurrency.get(costBasisCurrency);
         Objects.requireNonNull(
-                exchangeRate, "Missing exchange rate for currency: " + nativeCurrency);
+                costBasisRate, "Missing exchange rate for currency: " + costBasisCurrency);
 
         InvestedAmount investedAmount =
-                new InvestedAmount(nativeInvested.money().convertTo(exchangeRate));
+                new InvestedAmount(nativeInvested.money().convertTo(costBasisRate));
 
         CurrentValue currentValue = null;
         ProfitAndLoss profitAndLoss = null;
 
         if (currentPrice != null) {
+            Currency priceCurrency = currentPrice.currency();
+            ExchangeRate priceRate = exchangeRatesByCurrency.get(priceCurrency);
+            Objects.requireNonNull(
+                    priceRate, "Missing exchange rate for currency: " + priceCurrency);
+
             currentValue =
                     positionCalculationService.calculateCurrentValue(
-                            position, currentPrice, exchangeRate);
-            profitAndLoss =
-                    positionCalculationService.calculateProfitAndLoss(
-                            position, currentPrice, exchangeRate);
+                            position, currentPrice, priceRate);
+            profitAndLoss = ProfitAndLoss.calculate(currentValue, investedAmount);
         }
 
         return new PositionCalculations(
@@ -173,7 +176,7 @@ public class PositionMapper {
                 currentValue,
                 investedAmount,
                 profitAndLoss,
-                exchangeRate);
+                costBasisRate);
     }
 
     private AccountHoldingDTO toAccountHoldingDTO(

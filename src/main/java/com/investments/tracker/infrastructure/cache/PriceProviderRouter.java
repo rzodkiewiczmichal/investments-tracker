@@ -24,7 +24,8 @@ import com.investments.tracker.infrastructure.external.stooq.StooqPriceClient;
  * Routes price fetching to the correct provider based on instrument market.
  *
  * <p>Groups requested symbols by their {@link Market} and dispatches to the appropriate client:
- * {@link StooqPriceClient} for GPW instruments, {@link FinnhubPriceClient} for US instruments.
+ * {@link StooqPriceClient} for GPW and UK instruments, {@link FinnhubPriceClient} for US
+ * instruments.
  *
  * @see <a href="../../docs/adr/ADR-031-instrument-price-providers.md">ADR-031</a>
  */
@@ -59,10 +60,16 @@ public class PriceProviderRouter {
             return Optional.empty();
         }
 
+        Instrument inst = instrument.get();
         try {
-            return switch (instrument.get().market()) {
+            return switch (inst.market()) {
                 case GPW -> stooqClient.fetchPrice(symbol);
                 case US -> finnhubClient.fetchPrice(symbol);
+                case UK -> stooqClient.fetchPrice(symbol, inst.currency());
+                case DE -> {
+                    log.debug("No price provider for DE market yet");
+                    yield Optional.empty();
+                }
             };
         } catch (RestClientException e) {
             log.warn("Failed to fetch price for {}: {}", symbol.value(), e.getMessage());
@@ -84,6 +91,7 @@ public class PriceProviderRouter {
 
         List<InstrumentSymbol> gpwSymbols = new ArrayList<>();
         List<InstrumentSymbol> usSymbols = new ArrayList<>();
+        List<Instrument> ukInstruments = new ArrayList<>();
 
         for (InstrumentSymbol symbol : symbols) {
             instrumentRepository
@@ -93,6 +101,11 @@ public class PriceProviderRouter {
                                 switch (instrument.market()) {
                                     case GPW -> gpwSymbols.add(symbol);
                                     case US -> usSymbols.add(symbol);
+                                    case UK -> ukInstruments.add(instrument);
+                                    case DE ->
+                                            log.debug(
+                                                    "Skipping {} -- no price provider for DE market",
+                                                    symbol.value());
                                 }
                             },
                             () ->
@@ -115,6 +128,19 @@ public class PriceProviderRouter {
                 result.putAll(finnhubClient.fetchPrices(usSymbols));
             } catch (RestClientException e) {
                 log.warn("Failed to fetch US prices from Finnhub: {}", e.getMessage());
+            }
+        }
+        // UK instruments must be fetched individually (Stooq batch returns N/D for UK)
+        for (Instrument ukInstrument : ukInstruments) {
+            try {
+                stooqClient
+                        .fetchPrice(ukInstrument.symbol(), ukInstrument.currency())
+                        .ifPresent(price -> result.put(ukInstrument.symbol(), price));
+            } catch (RestClientException e) {
+                log.warn(
+                        "Failed to fetch UK price for {}: {}",
+                        ukInstrument.symbol().value(),
+                        e.getMessage());
             }
         }
 
