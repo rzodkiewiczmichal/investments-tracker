@@ -1,5 +1,6 @@
 package com.investments.tracker.domain.model;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import com.investments.tracker.domain.model.value.Commission;
@@ -22,7 +23,8 @@ public record Transaction(
         Quantity quantity,
         Price unitPrice,
         Commission commission,
-        Currency currency) {
+        Currency currency,
+        LocalDateTime transactionDate) {
 
     public Transaction {
         Objects.requireNonNull(symbol, "symbol cannot be null");

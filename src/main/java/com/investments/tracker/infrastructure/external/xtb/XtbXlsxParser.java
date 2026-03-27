@@ -2,6 +2,7 @@ package com.investments.tracker.infrastructure.external.xtb;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -115,6 +117,7 @@ public class XtbXlsxParser implements TransactionHistoryParser {
                     ticker != null ? XtbMarketCurrencyMapper.resolveCurrency(ticker) : Currency.PLN;
 
             String brokerName = ticker != null ? ticker : instrumentName;
+            LocalDateTime txDate = getDateValue(row.getCell(2));
 
             transactions.add(
                     new RawTransaction(
@@ -123,7 +126,8 @@ public class XtbXlsxParser implements TransactionHistoryParser {
                             Quantity.of(commentData.quantity()),
                             Price.of(new Money(commentData.price(), currency)),
                             Commission.zero(),
-                            currency));
+                            currency,
+                            txDate));
         }
 
         return transactions;
@@ -145,6 +149,24 @@ public class XtbXlsxParser implements TransactionHistoryParser {
 
     private static boolean isStockTransaction(String type) {
         return "Stock purchase".equals(type) || "Stock sell".equals(type);
+    }
+
+    private static LocalDateTime getDateValue(Cell cell) {
+        if (cell == null) {
+            return null;
+        }
+        try {
+            if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return cell.getLocalDateTimeCellValue();
+            }
+            if (cell.getCellType() == CellType.NUMERIC) {
+                // XTB stores dates as Excel serial numbers without date formatting
+                return DateUtil.getLocalDateTime(cell.getNumericCellValue());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse date from cell: {}", e.getMessage());
+        }
+        return null;
     }
 
     private static String getStringValue(Cell cell) {

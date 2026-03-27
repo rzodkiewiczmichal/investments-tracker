@@ -1,5 +1,6 @@
 package com.investments.tracker.domain.model;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import com.investments.tracker.domain.model.value.BrokerInstrumentName;
@@ -25,7 +26,8 @@ public record RawTransaction(
         Quantity quantity,
         Price unitPrice,
         Commission commission,
-        Currency currency) {
+        Currency currency,
+        LocalDateTime transactionDate) {
 
     public RawTransaction {
         Objects.requireNonNull(brokerInstrumentName, "brokerInstrumentName cannot be null");
