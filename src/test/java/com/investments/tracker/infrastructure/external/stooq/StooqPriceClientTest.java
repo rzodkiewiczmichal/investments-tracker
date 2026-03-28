@@ -285,7 +285,7 @@ class StooqPriceClientTest {
     }
 
     @Test
-    @DisplayName("should fetch UK instrument with GBP currency")
+    @DisplayName("should convert GBX pence to GBP for UK instrument with GBP currency")
     void shouldFetchUkInstrumentWithGbpCurrency() {
         mockServer
                 .expect(requestTo("https://stooq.pl/q/l/?s=emim.uk&f=sd2t2ohlcv&h=&e=csv"))
@@ -293,14 +293,15 @@ class StooqPriceClientTest {
                         withSuccess(
                                 """
                                 Symbol,Date,Time,Open,High,Low,Close,Volume
-                                EMIM.UK,20260317,170000,35.93,36.1,35.8,35.93,8000
+                                EMIM.UK,20260317,170000,3593,3610,3580,3593,8000
                                 """,
                                 MediaType.TEXT_PLAIN));
 
         Optional<Price> price = client.fetchPrice(InstrumentSymbol.of("EMIM.UK"), Currency.GBP);
 
         assertThat(price).isPresent();
-        assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("35.93"));
+        // Stooq returns GBX (pence), should be divided by 100 to get GBP
+        assertThat(price.get().money().amount()).isEqualByComparingTo(new BigDecimal("35.9300"));
         assertThat(price.get().currency()).isEqualTo(Currency.GBP);
         mockServer.verify();
     }
