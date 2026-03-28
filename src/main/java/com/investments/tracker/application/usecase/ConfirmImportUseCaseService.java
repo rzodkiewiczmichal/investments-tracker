@@ -219,7 +219,8 @@ public class ConfirmImportUseCaseService implements ConfirmImportUseCase {
                                     tx.quantity(),
                                     unitPrice,
                                     tx.commission(),
-                                    currency);
+                                    currency,
+                                    tx.transactionDate());
                         })
                 .toList();
     }

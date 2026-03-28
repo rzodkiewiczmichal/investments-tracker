@@ -163,7 +163,8 @@ class InitiateImportUseCaseServiceTest {
                 Quantity.of(qty),
                 Price.of(Money.pln("10.00")),
                 Commission.pln("1.00"),
-                Currency.PLN);
+                Currency.PLN,
+                null);
     }
 
     private Instrument instrument(String symbol) {

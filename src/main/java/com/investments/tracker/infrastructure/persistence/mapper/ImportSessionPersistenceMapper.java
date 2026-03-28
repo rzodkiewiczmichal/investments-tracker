@@ -83,7 +83,8 @@ public class ImportSessionPersistenceMapper {
                 Quantity.of(entity.quantity()),
                 Price.of(new Money(entity.unitPriceAmount(), priceCurrency)),
                 Commission.of(new Money(entity.commissionAmount(), commCurrency)),
-                Currency.valueOf(entity.currency()));
+                Currency.valueOf(entity.currency()),
+                entity.transactionDate());
     }
 
     private InstrumentMapping mapToInstrumentMapping(ImportSessionMappingJdbcEntity entity) {
@@ -106,7 +107,8 @@ public class ImportSessionPersistenceMapper {
                 tx.unitPrice().money().currency().getCode(),
                 tx.commission().money().amount(),
                 tx.commission().currency().getCode(),
-                tx.currency().getCode());
+                tx.currency().getCode(),
+                tx.transactionDate());
     }
 
     private ImportSessionMappingJdbcEntity mapToMappingEntity(InstrumentMapping mapping) {

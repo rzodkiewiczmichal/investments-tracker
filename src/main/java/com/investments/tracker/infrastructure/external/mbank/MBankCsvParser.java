@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +38,8 @@ public class MBankCsvParser implements TransactionHistoryParser {
 
     private static final String BROKER_NAME = "mBank";
     private static final Charset WINDOWS_1250 = Charset.forName("Windows-1250");
+    private static final DateTimeFormatter MBANK_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int METADATA_LINES = 34;
     private static final int HEADER_LINES = 1;
     private static final int LINES_TO_SKIP = METADATA_LINES + HEADER_LINES;
@@ -85,6 +90,7 @@ public class MBankCsvParser implements TransactionHistoryParser {
         TransactionType type = parseTransactionType(row.side(), lineNumber);
         Money priceMoney = new Money(row.unitPrice(), row.priceCurrency());
         Money commissionMoney = new Money(row.commission(), row.commissionCurrency());
+        LocalDateTime txDate = parseDate(row.timestamp());
 
         return new RawTransaction(
                 BrokerInstrumentName.of(row.instrumentName()),
@@ -92,7 +98,19 @@ public class MBankCsvParser implements TransactionHistoryParser {
                 Quantity.of(row.quantity()),
                 Price.of(priceMoney),
                 Commission.of(commissionMoney),
-                row.priceCurrency());
+                row.priceCurrency(),
+                txDate);
+    }
+
+    private static LocalDateTime parseDate(String timestamp) {
+        if (timestamp == null || timestamp.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(timestamp, MBANK_DATE_FORMAT);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     private TransactionType parseTransactionType(String side, int lineNumber) {
