@@ -1,5 +1,7 @@
 package com.investments.tracker.infrastructure.external.stooq;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,7 @@ public class StooqPriceClient {
     private static final String ETF_PREFIX = "ETF";
     private static final String STOOQ_GPW_SUFFIX = ".pl";
     private static final String STOOQ_UK_SUFFIX = ".uk";
+    private static final BigDecimal GBX_TO_GBP_DIVISOR = new BigDecimal("100");
 
     private final RestClient restClient;
     private final String csvPath;
@@ -147,10 +150,17 @@ public class StooqPriceClient {
                                 row -> {
                                     InstrumentSymbol symbol =
                                             InstrumentSymbol.of(fromStooqSymbol(row.symbol()));
-                                    Price price = new Price(new Money(row.close(), currency));
+                                    BigDecimal closePrice = row.close();
+                                    if (currency == Currency.GBP) {
+                                        closePrice =
+                                                closePrice.divide(
+                                                        GBX_TO_GBP_DIVISOR,
+                                                        4,
+                                                        RoundingMode.HALF_UP);
+                                    }
+                                    Price price = new Price(new Money(closePrice, currency));
                                     result.put(symbol, price);
-                                    log.debug(
-                                            "Stooq price for {}: {}", symbol.value(), row.close());
+                                    log.debug("Stooq price for {}: {}", symbol.value(), closePrice);
                                 });
             } catch (Exception e) {
                 log.warn("Failed to parse Stooq CSV row: '{}' -- {}", line, e.getMessage());
