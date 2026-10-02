@@ -35,6 +35,17 @@ Backend runs with profile `local`. Finnhub needs `FINNHUB_API_KEY`.
 - `docker-compose.yml` keeps its fixed `name: investments-tracker`, so volumes persist across Conductor workspaces.
 - `src/test/resources/docker-java.properties` pins Docker API 1.44 so Testcontainers works with Docker 29+.
 
+## Skills (`.claude/skills/`) — step-by-step procedures
+| Skill | Use for |
+|---|---|
+| `feature-slice` | implementing an FR or feature end-to-end (issue → design checkpoint → scenario → layers → green build) |
+| `bdd-scenario` | writing Cucumber scenarios and steps from an FR |
+| `add-broker-import` | a new broker parser, or a changed export format |
+| `add-instruments` | extending the instrument catalog via Flyway (includes a price-check script) |
+| `add-price-provider` | a new or replacement price or FX provider, or a new market |
+| `new-requirement` (`/` only) | adding or changing an FR, NFR or ADR while keeping traceability |
+| `project-status` (`/` only) | a Polish HTML status report built from parallel low-cost agents |
+
 ## Index — where to find things
 | Topic | Location |
 |---|---|
