@@ -56,3 +56,4 @@ reports/
 # SSL certificates
 *.cer
 *.pem
+.aider*
