@@ -9,7 +9,7 @@
 ## portfolio-viewing.feature
 
 ### Scenario: "View total portfolio value"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/portfolio-viewing.feature:16`
+**File:** `requirements/functional/features/portfolio-viewing.feature:16`
 **Requirements Covered:**
 - FR-001: View Portfolio Summary
 - FR-006: Portfolio XIRR Calculation
@@ -26,7 +26,7 @@
 ---
 
 ### Scenario: "View portfolio with positive returns"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/portfolio-viewing.feature:26`
+**File:** `requirements/functional/features/portfolio-viewing.feature:26`
 **Requirements Covered:**
 - FR-002: View Portfolio with Positive Returns
 - FR-081: Current Value Calculation
@@ -41,7 +41,7 @@
 ---
 
 ### Scenario: "View portfolio with negative returns"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/portfolio-viewing.feature:37`
+**File:** `requirements/functional/features/portfolio-viewing.feature:37`
 **Requirements Covered:**
 - FR-003: View Portfolio with Negative Returns
 - FR-081: Current Value Calculation
@@ -56,7 +56,7 @@
 ---
 
 ### Scenario: "View aggregated positions across accounts"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/portfolio-viewing.feature:48`
+**File:** `requirements/functional/features/portfolio-viewing.feature:48`
 **Requirements Covered:**
 - FR-005: Multi-Account Position Aggregation
 - FR-030: Import Aggregation Across Accounts
@@ -73,7 +73,7 @@
 ---
 
 ### Scenario: "View empty portfolio"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/portfolio-viewing.feature:60`
+**File:** `requirements/functional/features/portfolio-viewing.feature:60`
 **Requirements Covered:**
 - FR-004: View Empty Portfolio
 - FR-089: All Values Displayed in PLN
@@ -86,7 +86,7 @@
 ## position-details.feature
 
 ### Scenario: "View individual stock position"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/position-details.feature:16`
+**File:** `requirements/functional/features/position-details.feature:16`
 **Requirements Covered:**
 - FR-011: View Individual Position Details
 - FR-015: Position XIRR Calculation
@@ -104,7 +104,7 @@
 ---
 
 ### Scenario: "View ETF position with loss"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/position-details.feature:30`
+**File:** `requirements/functional/features/position-details.feature:30`
 **Requirements Covered:**
 - FR-012: View ETF Position with Loss
 - FR-081: Current Value Calculation
@@ -120,7 +120,7 @@
 ---
 
 ### Scenario: "View Polish government bond position"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/position-details.feature:43`
+**File:** `requirements/functional/features/position-details.feature:43`
 **Requirements Covered:**
 - FR-013: View Polish Government Bond Position
 - FR-081: Current Value Calculation
@@ -136,7 +136,7 @@
 ---
 
 ### Scenario: "List all positions"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/position-details.feature:54`
+**File:** `requirements/functional/features/position-details.feature:54`
 **Requirements Covered:**
 - FR-014: List All Positions
 - FR-081: Current Value Calculation
@@ -152,7 +152,7 @@
 ## data-import.feature
 
 ### Scenario: "Import positions from broker file"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:21`
+**File:** `requirements/functional/features/data-import.feature:21`
 **Requirements Covered:**
 - FR-021: Import Positions from Broker File
 
@@ -162,7 +162,7 @@
 ---
 
 ### Scenario: "Import validation - missing instrument identifier"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:34`
+**File:** `requirements/functional/features/data-import.feature:34`
 **Requirements Covered:**
 - FR-022: Import Validation - Missing Instrument Identifier
 
@@ -172,7 +172,7 @@
 ---
 
 ### Scenario: "Import validation - missing quantity"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:42`
+**File:** `requirements/functional/features/data-import.feature:42`
 **Requirements Covered:**
 - FR-023: Import Validation - Missing Quantity
 
@@ -182,7 +182,7 @@
 ---
 
 ### Scenario: "Import validation - missing account identifier"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:50`
+**File:** `requirements/functional/features/data-import.feature:50`
 **Requirements Covered:**
 - FR-024: Import Validation - Missing Account Identifier
 
@@ -192,7 +192,7 @@
 ---
 
 ### Scenario: "Import validation - invalid quantity (negative)"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:58`
+**File:** `requirements/functional/features/data-import.feature:58`
 **Requirements Covered:**
 - FR-025: Import Validation - Invalid Quantity (Negative)
 
@@ -202,7 +202,7 @@
 ---
 
 ### Scenario: "Import validation - invalid quantity (zero)"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:66`
+**File:** `requirements/functional/features/data-import.feature:66`
 **Requirements Covered:**
 - FR-026: Import Validation - Invalid Quantity (Zero)
 
@@ -212,7 +212,7 @@
 ---
 
 ### Scenario: "Import validation - invalid quantity (non-numeric)"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:74`
+**File:** `requirements/functional/features/data-import.feature:74`
 **Requirements Covered:**
 - FR-027: Import Validation - Invalid Quantity (Non-Numeric)
 
@@ -222,7 +222,7 @@
 ---
 
 ### Scenario: "Import validation - invalid average cost"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:82`
+**File:** `requirements/functional/features/data-import.feature:82`
 **Requirements Covered:**
 - FR-028: Import Validation - Invalid Average Cost
 
@@ -232,7 +232,7 @@
 ---
 
 ### Scenario: "Import with missing optional fields"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:90`
+**File:** `requirements/functional/features/data-import.feature:90`
 **Requirements Covered:**
 - FR-029: Import with Missing Optional Fields
 
@@ -242,7 +242,7 @@
 ---
 
 ### Scenario: "Import aggregation across accounts"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:102`
+**File:** `requirements/functional/features/data-import.feature:102`
 **Requirements Covered:**
 - FR-030: Import Aggregation Across Accounts
 - FR-005: Multi-Account Position Aggregation
@@ -255,7 +255,7 @@
 ---
 
 ### Scenario: "Import duplicate prevention"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/data-import.feature:110`
+**File:** `requirements/functional/features/data-import.feature:110`
 **Requirements Covered:**
 - FR-031: Import Duplicate Prevention
 
@@ -267,7 +267,7 @@
 ## manual-entry.feature
 
 ### Scenario: "Manual entry of stock position"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/manual-entry.feature:11`
+**File:** `requirements/functional/features/manual-entry.feature:11`
 **Requirements Covered:**
 - FR-041: Manual Entry of Stock Position
 - FR-091: Instrument Type Support (stocks)
@@ -278,7 +278,7 @@
 ---
 
 ### Scenario: "Manual entry of ETF position"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/manual-entry.feature:25`
+**File:** `requirements/functional/features/manual-entry.feature:25`
 **Requirements Covered:**
 - FR-042: Manual Entry of ETF Position
 - FR-091: Instrument Type Support (ETFs)
@@ -289,7 +289,7 @@
 ---
 
 ### Scenario: "Manual entry of Polish government bonds"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/manual-entry.feature:38`
+**File:** `requirements/functional/features/manual-entry.feature:38`
 **Requirements Covered:**
 - FR-043: Manual Entry of Polish Government Bonds
 - FR-091: Instrument Type Support (bonds)
@@ -300,7 +300,7 @@
 ---
 
 ### Scenario: "Manual entry validation - missing required fields"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/manual-entry.feature:53`
+**File:** `requirements/functional/features/manual-entry.feature:53`
 **Requirements Covered:**
 - FR-044: Manual Entry Validation - Missing Required Fields
 
@@ -310,7 +310,7 @@
 ---
 
 ### Scenario: "Manual entry validation - invalid quantity"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/manual-entry.feature:61`
+**File:** `requirements/functional/features/manual-entry.feature:61`
 **Requirements Covered:**
 - FR-045: Manual Entry Validation - Invalid Quantity
 
@@ -320,7 +320,7 @@
 ---
 
 ### Scenario: "Manual entry validation - invalid average cost"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/manual-entry.feature:69`
+**File:** `requirements/functional/features/manual-entry.feature:69`
 **Requirements Covered:**
 - FR-046: Manual Entry Validation - Invalid Average Cost
 
@@ -329,10 +329,10 @@
 
 ---
 
-## price-updates.feature
+## price-fetching.feature
 
 ### Scenario: "Manual price update for single instrument"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:11`
+**File:** `requirements/functional/features/price-fetching.feature:11`
 **Requirements Covered:**
 - FR-051: Manual Price Update for Single Instrument
 - FR-053: Price Update Affects Portfolio Metrics
@@ -344,7 +344,7 @@
 ---
 
 ### Scenario: "Bulk price update from file"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:21`
+**File:** `requirements/functional/features/price-fetching.feature:21`
 **Requirements Covered:**
 - FR-052: Bulk Price Update from File
 - FR-053: Price Update Affects Portfolio Metrics
@@ -356,7 +356,7 @@
 ---
 
 ### Scenario: "Price update affects portfolio metrics"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:34`
+**File:** `requirements/functional/features/price-fetching.feature:34`
 **Requirements Covered:**
 - FR-053: Price Update Affects Portfolio Metrics
 - FR-001: View Portfolio Summary
@@ -370,7 +370,7 @@
 ---
 
 ### Scenario: "Price validation - negative price"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:44`
+**File:** `requirements/functional/features/price-fetching.feature:44`
 **Requirements Covered:**
 - FR-054: Price Validation - Negative Price
 
@@ -380,7 +380,7 @@
 ---
 
 ### Scenario: "Price validation - zero price"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:52`
+**File:** `requirements/functional/features/price-fetching.feature:52`
 **Requirements Covered:**
 - FR-055: Price Validation - Zero Price
 
@@ -390,7 +390,7 @@
 ---
 
 ### Scenario: "View price update history"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:60`
+**File:** `requirements/functional/features/price-fetching.feature:60`
 **Requirements Covered:**
 - FR-056: View Price Update History
 
@@ -400,7 +400,7 @@
 ---
 
 ### Scenario: "Polish government bond value update"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/price-updates.feature:70`
+**File:** `requirements/functional/features/price-fetching.feature:70`
 **Requirements Covered:**
 - FR-057: Polish Government Bond Value Update
 - FR-043: Manual Entry of Polish Government Bonds
@@ -415,7 +415,7 @@
 ## reconciliation.feature
 
 ### Scenario: "Successful reconciliation"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/reconciliation.feature:11`
+**File:** `requirements/functional/features/reconciliation.feature:11`
 **Requirements Covered:**
 - FR-061: Successful Reconciliation
 - FR-014: List All Positions
@@ -426,7 +426,7 @@
 ---
 
 ### Scenario: "Reconciliation with quantity mismatch"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/reconciliation.feature:26`
+**File:** `requirements/functional/features/reconciliation.feature:26`
 **Requirements Covered:**
 - FR-062: Reconciliation with Quantity Mismatch
 - FR-061: Successful Reconciliation
@@ -437,7 +437,7 @@
 ---
 
 ### Scenario: "Reconciliation with missing position in system"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/reconciliation.feature:36`
+**File:** `requirements/functional/features/reconciliation.feature:36`
 **Requirements Covered:**
 - FR-063: Reconciliation with Missing Position in System
 - FR-061: Successful Reconciliation
@@ -448,7 +448,7 @@
 ---
 
 ### Scenario: "Reconciliation with extra position in system"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/reconciliation.feature:45`
+**File:** `requirements/functional/features/reconciliation.feature:45`
 **Requirements Covered:**
 - FR-064: Reconciliation with Extra Position in System
 - FR-061: Successful Reconciliation
@@ -459,7 +459,7 @@
 ---
 
 ### Scenario: "Value reconciliation within tolerance"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/reconciliation.feature:54`
+**File:** `requirements/functional/features/reconciliation.feature:54`
 **Requirements Covered:**
 - FR-065: Value Reconciliation within Tolerance
 - FR-061: Successful Reconciliation
@@ -470,7 +470,7 @@
 ---
 
 ### Scenario: "Reconciliation history"
-**File:** `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/features/reconciliation.feature:65`
+**File:** `requirements/functional/features/reconciliation.feature:65`
 **Requirements Covered:**
 - FR-066: Reconciliation History
 - FR-061: Successful Reconciliation
@@ -541,7 +541,7 @@
 - **position-details.feature:** 4 scenarios
 - **data-import.feature:** 11 scenarios
 - **manual-entry.feature:** 6 scenarios
-- **price-updates.feature:** 7 scenarios
+- **price-fetching.feature:** 7 scenarios
 - **reconciliation.feature:** 6 scenarios
 - **account-management.feature:** 5 scenarios
 
@@ -653,9 +653,9 @@ Note: System-level requirements (FR-092, FR-094, FR-095, FR-096) are constraints
 ---
 
 ## Related Documents
-- Functional Requirements: `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/functional-requirements.md`
-- Version Roadmap: `/Users/michalrzodkiewicz/private/investments-tracker/planning/VERSION-ROADMAP.md`
-- Ubiquitous Language: `/Users/michalrzodkiewicz/private/investments-tracker/requirements/functional/ubiquitous-language.md`
+- Functional Requirements: `requirements/functional/functional-requirements.md`
+- Version Roadmap: `planning/VERSION-ROADMAP.md`
+- Ubiquitous Language: `requirements/functional/ubiquitous-language.md`
 
 ---
 

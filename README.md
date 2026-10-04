@@ -197,6 +197,34 @@ See [ADR-001: Hexagonal Architecture](docs/adr/ADR-001-hexagonal-architecture.md
 - [Version Roadmap](planning/versions-roadmap.md) - v0.1 through v2.1+
 - [Requirements by Version](planning/requirements-by-version.md)
 
+## Working with Claude Code
+
+This project is built with Claude Code. The AI context has three layers. Each one loads only when it's needed, so sessions stay cheap.
+
+| Layer | Location | When it loads |
+|---|---|---|
+| Always-on rules and index | [`CLAUDE.md`](CLAUDE.md) | every session |
+| Coding conventions | [`.claude/rules/`](.claude/rules/) | automatically, when Claude touches files matching the rule's `paths:` |
+| Procedures (skills) | [`.claude/skills/`](.claude/skills/) | when a task matches the skill's description, or when you type `/<skill>` |
+
+### When to use which skill
+
+| Situation | Skill |
+|---|---|
+| Implement a requirement or feature that spans layers ("implement FR-072") | `/feature-slice` |
+| Write acceptance tests for an FR first, or fix failing Cucumber tests | `/bdd-scenario` |
+| Support a new broker, or a broker changed its export format | `/add-broker-import` |
+| An instrument is missing from the catalog | `/add-instruments` |
+| Prices are missing for a market, or a price/FX provider broke or needs replacing | `/add-price-provider` |
+| New or changed behavior, scope, version, or architectural decision | `/new-requirement` |
+| "Where are we?": status of code, requirements, issues and roadmap | `/project-status` |
+
+Tips:
+- Most skills trigger automatically from a plain request. Type `/<skill>` to force one.
+- `/new-requirement` and `/project-status` only run when you invoke them explicitly.
+- Skills put the procedure in order, and the rules supply the conventions. Changing a convention means editing a rule. Changing a workflow means editing a skill.
+- After any implementation, `CLAUDE.md` requires a `/ddd-java` and `/effective-java` review. The resulting `post-implementation.md` is never committed.
+
 ## Testing
 
 ### Run All Tests
